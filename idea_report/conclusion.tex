@@ -1,0 +1,36 @@
+
+\section{Discussion and possible improvements}
+
+\subsection{Strengths and weaknesses}
+The biggest strength was that the robot generally moved really well in the maze. One reason for this was that it was the part that we tested the most. 
+
+\bigskip
+\noindent The detection also generally worked well because we combined different methods in order to be able to detect all the different objects. It was also a good move to use the depth image because it works in different environments and lighting conditions. 
+
+\bigskip
+\noindent The object classification did not work as good as it should have. Some objects worked better than others which probably is because several objects were similar in color and shape and therefore harder to classify. The object classification also depended on the quality of the filter in the detection otherwise the background would mess up the histograms and feature detection. 
+
+\bigskip
+\noindent The biggest weakness was that we did not have time to do enough testing which lead to minor errors especially in the robot's control and detection. 
+
+
+\subsection{Lessons learned}
+Working in a big project like this we found that it was good to try to divide the tasks into smaller components. In this way it was also easier to divide tasks and responsibilities in the group. It also made it possible to have a simple version of the necessary components working early which we could build on and improve. We also found that it was really good to have at least one meeting per week where everyone was present. In this way everyone knew what everyone else was doing and we could discuss solutions to problems and plan for the future. Communication in the group is important and seemed to work best when we met in real life and discussed things than over e-mail or phone. 
+
+\bigskip
+\noindent Another lesson learned is to start with tasks early and have alternative plans if something is not working because things will not always go according to the plan. We also found that it is sometimes hard to estimate how much time is needed for different tasks and that we should have done more testing. We found that sometimes we should have just started working instead of thinking about all things which could go wrong.
+
+
+\subsection{Possible improvements}
+The path planning could have been improved by using a good search algorithm to be able to find the shortest path in the map once it was created. $A\ast$ search algorithm might have been a good algorithm for this.
+
+\bigskip
+\noindent Concerning the map, it should have been created with the Primesense to be more accurate. Then, with more information, it could be possible to use a SLAM algorithm.
+
+\bigskip
+\noindent The object classification could have been improved by dividing the objects into different groups according to shape and color. Then the classification could be divided into more steps in order to decide which group the object belongs to and then which object it is in the group. Another way to improve could have been to have more training data but that would also have taken more time processing and might have made performance worse. 
+
+\bigskip
+\noindent When the robot moved and bumped into a wall, it would sometimes get stuck and keep going into the wall. This might have been solved by backing up more before it tried again. Another improvement could have been to use the servo under the Primesense to explore the maze. For example, when the robot gets to an intersection, it could turn the Primesense left and right to detect new walls and objects.
+ 
+ 

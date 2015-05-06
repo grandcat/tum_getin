@@ -1,0 +1,126 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[latin1]{inputenc}	
+
+%\usepackage{colortbl}
+\usepackage[usenames,dvipsnames]{color} % for code listings
+
+\usepackage[top=3cm, left=3cm, right=3cm, bottom=3cm]{geometry}								% marges
+
+\usepackage{array,multirow,multicol,tabularx}		
+
+\usepackage{amsmath,amssymb,mathrsfs}	
+%\usepackage{mathtools}
+
+\usepackage{soul}
+%\usepackage{pifont}
+
+\usepackage{multicol}
+
+\usepackage{fancybox}
+
+%\usepackage{epic, eepic}
+\usepackage{graphicx}
+
+\usepackage{float,picins}
+
+\usepackage{hyperref}
+
+\usepackage{listings}
+
+\usepackage{ccaption}
+
+\usepackage{pgf,tikz}
+\usetikzlibrary{arrows}
+
+\usepackage{thmbox}
+
+\usepackage{placeins}
+
+\usepackage{etex}
+
+%\usepackage[ruled,vlined]{algorithm2e}
+
+
+\makeatletter
+
+\newskip\@bigflushglue \@bigflushglue = -100pt plus 1fil
+
+\def\bigcenter{\trivlist \bigcentering\item\relax}
+\def\bigcentering{\let\\\@centercr\rightskip\@bigflushglue%
+\leftskip\@bigflushglue
+\parindent\z@\parfillskip\z@skip}
+\def\endbigcenter{\endtrivlist}
+
+\makeatother
+
+%________________________________________________________
+
+\begin{document}
+
+\noindent %
+\begin{minipage}{0.5\textwidth}
+\begin{flushleft}
+
+    \begin{tabular}{lm{6cm}}
+\multirow{5}{*}{\includegraphics[scale=1]{images/IN_logo.png}} \\
+ & Bj\"{o}rn Kirschner \\
+ & Sebastian Schleemilch \\
+ & Stefan Smarzly \\
+ & \\
+ & \\
+\end{tabular}
+
+\end{flushleft}
+\end{minipage}
+\hfill
+\begin{minipage}{0.5\textwidth}
+\begin{flushright}
+   \includegraphics[scale=1]{images/tum_logo.png}
+\end{flushright}
+\end{minipage}
+
+\begin{center}
+{\LARGE\textbf{\textsc{GetInTUM - Door Entrance Access System}}}
+
+\large \textit{Idea Report for Android Practical Course (F13)} \\
+\large \today
+\end{center}
+
+\bigskip
+\bigskip
+
+\hrule
+\bigskip
+\bigskip
+
+\begin{bigcenter}
+\begin{tabular}{cccc}
+\includegraphics[height=3.4cm]{images/IN_logo.png}&
+\includegraphics[height=3.4cm]{images/IN_logo.png}&
+\includegraphics[height=3.4cm]{images/IN_logo.png}\\
+Bj\"{o}rn Kirschner & Sebastian Schleemilch & Stefan Smarzly
+\end{tabular}
+\end{bigcenter}
+
+\newpage
+\bigskip
+\tableofcontents
+
+\bigskip
+\bigskip
+\bigskip
+\hrule
+
+\input{introduction.tex}
+\input{idea.tex}
+\input{technical_proposals_architecture.tex}
+\input{technical_proposals_design_alternatives.tex}
+\input{team.tex}
+\input{plan.tex}
+%\input{conclusion.tex}
+
+
+\end{document}
