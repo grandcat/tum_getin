@@ -1,7 +1,36 @@
 \section{Design Alternatives}
-At the beginning, we thought about a robot (see figure \ref{img:robot1}) with two wheels (controlled by the two motors) in the front and a castor wheel in the back. The NUC and the Arduino sandwich are then put at the first level, at the barycenter of the wheels. The camera is placed at the top (second level).
+In the previous section, the overall architecture is presented without going into detail about the used hardware or how secure channels are implemented.
+This section demonstrates some drafts for the concrete design of central parts of our project. 
 
 \subsection{Hardware Setup}
+A major part is a reliable communication link between an Android smartphone and a NFC reader.
+To reach this goal, the NFC reader must support common NFC standards and stable transmission properties.
+Therefore, we examine two different approaches to finally get a proper solution:
+\begin{itemize}
+	\item Raspberry Pi with the Explore-NFC reader cape by NXP \footnote{\url{http://www.nxp.com/demoboard/PNEV512R.html}}.
+	\item Another smartphone with NFC capabilities and Android 4.4 or newer.
+\end{itemize}
 
-\subsection{Protocol for Authentication between Smartphone and NFC Reader}
+Raspberry Pi and Explore-NFC reader by NXP.
+\begin{itemize}
+	\item Advantage
+	\begin{itemize}
+		\item Cheap hardware.
+		\item Available GPIOs for opening the door.
+	\end{itemize}
+	%apt
+	\item Drawback
+	\begin{itemize}
+		\item SDK for interfacing with NFC cape might be unstable.
+		\item No integrated Wifi and Bluetooth.
+	\end{itemize}
+\end{itemize}
 
+Another Android smartphone with NFC support.
+--> advantages / difficulties
+
+\subsection{Protocols for Authentication between Smartphone and NFC Reader}
+
+\subsubsection{Public-key Cryptography}
+
+\subsubsection{Extended Randomized Hash Lock}
