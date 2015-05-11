@@ -1,33 +1,27 @@
 \section{Design Alternatives}\label{sec:alt}
 In the previous section, the overall architecture is presented without going into detail about the used hardware or how secure channels are implemented.
-This section demonstrates some drafts for the concrete design of central parts of our project. 
+This section demonstrates competing drafts for the concrete design of central parts of our project. 
+% By showing its advantages and drawbacks, it points out why different approaches are reasonable.
+Due to dependent advantages and drawbacks, different approaches are reasonable for the same goal. These are discussed as follows.
 
 \subsection{Hardware Setup}
 A major part is a reliable communication link between an Android smartphone and a NFC reader.
-To reach this goal, the NFC reader must support common NFC standards and stable transmission properties.
-Therefore, we examine two different approaches to finally get a proper solution:
+To reach this goal, the NFC reader must support common NFC standards (e.g., ISO/IEC 14443) and provide stable transmission properties.
+Therefore, we examine two different hardware setups to finally get a proper solution:
+%
 \begin{itemize}
-	\item Raspberry Pi with the Explore-NFC reader cape by NXP \footnote{\url{http://www.nxp.com/demoboard/PNEV512R.html}}.
-	\item Another smartphone with NFC capabilities and Android 4.4 or newer.
+	\item Raspberry Pi with Explore-NFC reader cape by NXP \footnote{\url{http://www.nxp.com/demoboard/PNEV512R.html}} or PN531 compliant cape.
+	\item Smartphone with NFC capabilities and Android 4.4 or newer.
 \end{itemize}
+%
+Using the Raspberry Pi as underlying platform and a NFC transceiver, a cheap and powerful setup is possible.
+Providing a rich interface to interact with the environment, it allows an easy integration into existing door electronics.
+For communication, either the vendors of these NFC capes provide SDKs or free libraries exist to abstract low-level functionality. 
+However, the protocol layer is often incomplete and needs tweaks. This might influence the stability in the communication link.
 
-Raspberry Pi and Explore-NFC reader by NXP.
-\begin{itemize}
-	\item Advantage
-	\begin{itemize}
-		\item Cheap hardware.
-		\item Available GPIOs for opening the door.
-	\end{itemize}
-	%apt
-	\item Drawback
-	\begin{itemize}
-		\item SDK for interfacing with NFC cape might be unstable.
-		\item No integrated Wifi and Bluetooth.
-	\end{itemize}
-\end{itemize}
+On the other side, a smartphone with NFC transceiver and Android 4.4 (or higher versions) offers all required APIs in a simple way to exchange data between two Android smartphones over NFC.
+Additionally, integrated capabilities like Wifi or Bluetooth allows enhanced applications. The downside of this approach are much higher costs, missing interfaces to interact directly with most door electronics and required user interaction for certain tasks (e.g., OS upgrade).
 
-Another Android smartphone with NFC support.
---> advantages / difficulties
 
 \subsection{Protocols for Authentication between Smartphone and NFC Reader}
 
