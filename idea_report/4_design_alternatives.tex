@@ -63,17 +63,21 @@ Protocol draft:$ R_S $: fresh random value by S
 	%\filldraw[fill=black!30] ($(RRC Connection Setup to)+(0,-.3)$) rectangle ($(Synchronization Indication from) +(0,.3)$)
 	%node[midway] {L1 Synchronization};
 \end{sequencediagram}
-
+%
+Explanation:
+%
 \begin{enumerate}
 	% 1.
 	\item $ S \rightarrow R $:
 	\begin{itemize}
 		\item $ S $ generates a random number $ R_S $ and sends it to $ T $ together with the studentID and further data, encrypted with the reader's public key $ K_{T-pub} $.
+		\item The studentID can be a pseudonym associated with the official ID of this student. Like this, a MITM attack would not allow to directly gain information about the requesting person. 
 	\end{itemize}	
 	% 2.
 	\item $ S \leftarrow R $:
 	\begin{itemize}
 		\item TODO
+		\item Providing the identity $ T $ (i.e., hash of public key: $H(K_T)$), the requesting party can verify whether a MITM attack happened in 1. In that case, abort further communication.
 	\end{itemize}	
 	% 3.
 	\item $ S \rightarrow R $:
