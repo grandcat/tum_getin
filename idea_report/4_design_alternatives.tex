@@ -4,6 +4,7 @@ This section demonstrates competing drafts for the concrete design of central pa
 % By showing its advantages and drawbacks, it points out why different approaches are reasonable.
 Due to dependent advantages and drawbacks, different approaches are reasonable for the same goal. These are discussed as follows.
 
+
 \subsection{Hardware Setup}
 A major part is a reliable communication link between an Android smartphone and a NFC reader.
 To reach this goal, the NFC reader must support common NFC standards (e.g., ISO/IEC 14443) and provide stable transmission properties.
@@ -24,7 +25,65 @@ Additionally, integrated capabilities like Wifi or Bluetooth allows enhanced app
 
 
 \subsection{Protocols for Authentication between Smartphone and NFC Reader}
+A critical aspect in our project is the communication between a smartphone $ S $ and the NFC component $ T $.
+It is important that it is safe so that no unauthorized party can easily gain access.
+By placing the reader's antenna in the inner side of the door, it should be safe from physical threats from outside.
+% In 
 
 \subsubsection{Public-key Cryptography}
+
+Protocol draft:$ R_S $: fresh random value by S
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Redefine the \mess due to problems with math support $ \some_function $ %
+% See: http://tex.stackexchange.com/questions/164707/how-to-use-greek-    %
+%      letters-in-pgf-umlsd-or-generally-terms-starting-with              %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\renewcommand{\mess}[4][0]{
+  \stepcounter{seqlevel}
+  \path
+  (#2)+(0,-\theseqlevel*\unitfactor-0.7*\unitfactor) node (mess from) {};
+  \addtocounter{seqlevel}{#1}
+  \path
+  (#4)+(0,-\theseqlevel*\unitfactor-0.7*\unitfactor) node (mess to) {};
+  \draw[->,>=angle 60] (mess from) -- (mess to) node[midway, above]
+  {#3};
+}
+%
+\begin{sequencediagram}
+	\newinst{S}{Smartphone $ S $}
+	\newinst[9]{T}{NFC Reader $ T $}
+	% \newinst[4]{rnc}{RNC}
+	\mess{S}{1. $ {\{R_S, studentID, command\}}_{K_{T-pub}} $}{T}
+	\postlevel
+	\mess{T}{2. $ {\{R_S, R_T, T\}}_{K_{S-pub}} $}{S}
+	\postlevel
+	\mess{S}{3. $ {\{R_T, studentToken\}}_{K_{T-pub}} $}{T}
+	%\mess{nodeb}{Synchronization Indication}{rnc}
+	%\filldraw[fill=black!30] ($(RRC Connection Setup to)+(0,-.3)$) rectangle ($(Synchronization Indication from) +(0,.3)$)
+	%node[midway] {L1 Synchronization};
+\end{sequencediagram}
+
+\begin{enumerate}
+	% 1.
+	\item $ S \rightarrow R $:
+	\begin{itemize}
+		\item $ S $ generates a random number $ R_S $ and sends it to $ T $ together with the studentID and further data, encrypted with the reader's public key $ K_{T-pub} $.
+	\end{itemize}	
+	% 2.
+	\item $ S \leftarrow R $:
+	\begin{itemize}
+		\item TODO
+	\end{itemize}	
+	% 3.
+	\item $ S \rightarrow R $:
+	\begin{itemize}
+		\item TODO
+		\item $ studentToken $ : additional secret the attacker doesn't know beside the fresh $ R_T $ number.
+	\end{itemize}
+\end{enumerate}
+
+Points to mention:
+Key revocation
 
 \subsubsection{Extended Randomized Hash Lock}
