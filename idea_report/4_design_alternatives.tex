@@ -26,13 +26,15 @@ Additionally, integrated capabilities like Wifi or Bluetooth allows enhanced app
 
 \subsection{Protocols for Authentication between Smartphone and NFC Reader}
 A critical aspect in our project is the communication between a smartphone $ S $ and the NFC component $ T $.
-It is important that it is safe so that no unauthorized party can easily gain access.
+It is important that it is safe so that no unauthorized party can easily gain access or eavesdrop sensitive information like the student ID.
 By placing the reader's antenna in the inner side of the door, it should be safe from physical threats from outside.
-% In 
+To ensure a secure communication on top of the data carrier, we plan to use one of the following two protocols.
 
 \subsubsection{Public-key Cryptography}
+The first proposed protocol
+% TODO: add details about used terminology
 
-Protocol draft:$ R_S $: fresh random value by S
+Contains ideas of the Needham-Schroeder-Lowe Public Key protocol, but the fixed version by Lowe.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Redefine the \mess due to problems with math support $ \some_function $ %
@@ -54,11 +56,11 @@ Protocol draft:$ R_S $: fresh random value by S
 	\newinst{S}{Smartphone $ S $}
 	\newinst[9]{T}{NFC Reader $ T $}
 	% \newinst[4]{rnc}{RNC}
-	\mess{S}{1. $ {\{R_S, studentID, command\}}_{K_{T-pub}} $}{T}
+	\mess{S}{1. $ {\{r_S, pseudoStudentID\}}_{K_{T-pub}} $}{T}
 	\postlevel
-	\mess{T}{2. $ {\{R_S, R_T, T\}}_{K_{S-pub}} $}{S}
+	\mess{T}{2. $ {\{r_S, r_T, T\}}_{K_{S-pub}} $}{S}
 	\postlevel
-	\mess{S}{3. $ {\{R_T, studentToken\}}_{K_{T-pub}} $}{T}
+	\mess{S}{3. $ {\{r_T, studentToken, commands\}}_{K_{T-pub}} $}{T}
 	%\mess{nodeb}{Synchronization Indication}{rnc}
 	%\filldraw[fill=black!30] ($(RRC Connection Setup to)+(0,-.3)$) rectangle ($(Synchronization Indication from) +(0,.3)$)
 	%node[midway] {L1 Synchronization};
@@ -70,24 +72,27 @@ Explanation:
 	% 1.
 	\item $ S \rightarrow R $:
 	\begin{itemize}
-		\item $ S $ generates a random number $ R_S $ and sends it to $ T $ together with the studentID and further data, encrypted with the reader's public key $ K_{T-pub} $.
-		\item The studentID can be a pseudonym associated with the official ID of this student. Like this, a MITM attack would not allow to directly gain information about the requesting person. 
+		\item $ S $ generates a random number $ r_S $ and sends it to $ T $ together with the $ pseudoStudentID $, encrypted with the reader's public key $ K_{T-pub} $.
+		\item The official student ID is replaced by the pseudonym $ pseudoStudentID $, which is associated with the official ID of the student in the backend.
+		Like this, a MITM attack would not allow to directly gain information about the requesting person's ID. 
 	\end{itemize}	
 	% 2.
 	\item $ S \leftarrow R $:
 	\begin{itemize}
-		\item TODO
-		\item Providing the identity $ T $ (i.e., hash of public key: $H(K_T)$), the requesting party can verify whether a MITM attack happened in 1. In that case, abort further communication.
+		\item The reader $ T $ looks up the public key $ K_{S-pub} $ based on the pseudo student ID. If it doesn't exist, further communication stops here.
+		\item On success, $ T $ generates a random number $ r_T $ and sends it back to $ S $ together with $ r_S $ and a hash of its own public key, encrypted with the user's public key $ K_{S-pub} $.
+		\item Providing the identity $ T $, the requesting party can verify whether the reader's public key changed. This could originate from an attack in step 1 (e.g., fake reader). In that case, abort further communication to assure confidentiality.
 	\end{itemize}	
 	% 3.
 	\item $ S \rightarrow R $:
 	\begin{itemize}
-		\item TODO
-		\item $ studentToken $ : additional secret the attacker doesn't know beside the fresh $ R_T $ number.
+		\item If $ S $ receives a valid answer in step 2, it should be fine to proceed.
+		\item $ S $ sends $ r_T $, the optional $ studentToken $ and data to $ T $, encrypted with $ K_{T-pub} $. The key was verified in step 2.
+		\item Optional $ studentToken $: additional secret value the attacker doesn't know beside $ r_T $.
 	\end{itemize}
 \end{enumerate}
 
-Points to mention:
-Key revocation
+%Points to mention:
+%Key revocation
 
 \subsubsection{Extended Randomized Hash Lock}
