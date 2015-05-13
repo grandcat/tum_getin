@@ -8,5 +8,18 @@
 
 TODO: blabla und Bild kleiner machen!
 
+%\newpage
 
-\includegraphics[angle=270]{plan-crop.pdf}
+
+
+\par\vfill\break % Break Last Page
+
+\advance\vsize by 6cm % Advance page height
+\advance\voffset by -2cm % Shift top margin
+% Start big page
+\centerline{\includegraphics[angle=270]{plan-crop.pdf}}
+% End big page
+\par\vfill\break % Break the page with different margins
+
+\advance\vsize by -6cm % Return old margings and page height
+\advance\voffset by 2cm % Return old margings and page height
