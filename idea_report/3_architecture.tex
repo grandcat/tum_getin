@@ -12,10 +12,14 @@ The basic architecture to develop a system like this, regarding the existing TUM
  
  A complete overview of the basic architecture: \newline
  \begin{center}
- \includegraphics[scale=0.8]{basic_architecture.jpg}
+	\includegraphics[scale=0.8]{basic_architecture.jpg}
 \end{center}
 
 
 \subsection{Registration with Backend}
+To initialize the system, the user has to contact the backend system once for authentification. The connection is planned to be secured by HTTPS. The Backend system can check if the proposed login data of the user is valid or not. For that purpose, the connection to the TUMOnline service is needed to get this kind of  information. If the user has sent the right login combination, the backend system will create a public key pair and will send the user his private key. Therefore, a key storage and management system, a simple database has to be implemented.
+
 
 \subsection{Authentication between Smartphone and NFC Transceiver}
+After the user has registered with the backend system, he can communicate with the NFC Reader. As an initialization, there is a 3-Way-Handshake to provide a secure connection where the NFC Reader and the system behind will fetch the public key of the specific user. Further, the door system will check if the user has access to the requested area and will unlock the door depending on the outcome.
+
