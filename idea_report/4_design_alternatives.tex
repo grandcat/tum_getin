@@ -28,13 +28,13 @@ Additionally, integrated capabilities like Wifi or Bluetooth allows enhanced app
 A critical aspect in our project is the communication between a smartphone $ S $ and the NFC component $ T $.
 It is important that it is safe so that no unauthorized party can easily gain access or eavesdrop sensitive information like the student ID.
 By placing the reader's antenna in the inner side of the door, it should be safe from physical threats from outside.
-To ensure a secure communication on top of the data carrier, we plan to use one of the following two protocols.
-% The notation is as follows:
+To ensure a secure communication on top of the data carrier, we plan to use one of the protocols introduced in this section.
+Which one to finally choose depends on multiple aspects like the capabilities of the NFC hardware (e.g., processing power), Android support or fault tolerance. This needs some testing done during the project. 
 
 \subsubsection{Public-Key Cryptography}
 The first proposed protocol uses a Public Key Infrastructure to establish secure communication links between the participants.
 For authentication on both sides and mitigation of several attack scenarios, it used some ideas of the Needham-Schroeder-Lowe Public Key protocol. Lowe contributes an important security fix we use.
-The scheme is enhanced to provide further security features specific for the utilized backend and scenario.
+The scheme is enhanced to provide further security features specific for the utilized backend and the scenario.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Redefine the \mess due to problems with math support $ \some_function $ %
@@ -74,7 +74,8 @@ Explanation:
 	\begin{itemize}
 		\item $ S $ generates a random number $ r_S $ and sends it to $ T $ together with the $ pseudoStudentID $, encrypted with the reader's public key $ K_{T-pub} $.
 		\item The official student ID is replaced by the pseudonym $ pseudoStudentID $, which is associated with the official ID of the student in the backend.
-		Like this, a MITM attack would not allow to directly gain information about the requesting person's ID. 
+		Like this, a MITM attack would not allow to directly gain information about the requesting person's ID.
+		In addition to that, this pseudonym association can be changed regularly.
 	\end{itemize}	
 	% 2.
 	\item $ S \leftarrow R $:
@@ -96,8 +97,9 @@ Explanation:
 %Key revocation
 
 \subsubsection{SRFID: Extended Randomized Hash Lock}
-A second interesting protocol is the hashed-based security scheme by Walid I. Khedr.
-This might be an alternative to the public key based system, because it is more lightweight. For cryptography on both sides, it only needs a strong hash function.
+A second interesting protocol is the hashed-based security scheme by Walid I. Khedr \footnote{\url{http://www.sciencedirect.com/science/article/pii/S1110866513000054}}.
+This might be an alternative to the public key based system, because it is more lightweight. For cryptography on both sides, it only needs a strong hash function $ H $.
+%In case that this protocol is used instead of the more demanding public key cryptography, 
 %
 \begin{sequencediagram}
 	\newinst{S}{Smartphone $ S $}
@@ -105,12 +107,21 @@ This might be an alternative to the public key based system, because it is more 
 	% \newinst[4]{rnc}{RNC}
 	\mess{T}{1. $ r_T $}{S}
 	\postlevel
-	\mess{S}{2. $ ID_T = H(ID_H || SQN), M_1 = H(ID_H || r_T) $}{T}
+	\mess{S}{2. $ ID_T = H(ID_H || SQN), M_1 = H(ID_H || r_T || r_S), r_S $}{T}
 	\postlevel
-	\mess{T}{3. $ ID_T, M_2 = H(ID_H || SQN || r_T), r_T $}{S}
+	\mess{T}{3. $ ID_T, M_2 = H(ID_H || SQN || r_T || r_S), r_T, r_S $}{S}
 	%\mess{nodeb}{Synchronization Indication}{rnc}
 	%\filldraw[fill=black!30] ($(RRC Connection Setup to)+(0,-.3)$) rectangle ($(Synchronization Indication from) +(0,.3)$)
 	%node[midway] {L1 Synchronization};
 \end{sequencediagram}
 %
-3. Reader increments SQN. $ID_{H_{old}} = ID_H$, $ID_H = H(ID_H || SQN)$, $ M_2 = H(ID_H || SQN || r_T) $
+Details will not be presented here, because it is discussed in detail in the referred paper above.
+Nevertheless, some aspects have to be highlighted in the scope of this project:
+\begin{itemize}
+	\item In contrast to the original protocol, the smartphone $ S $ also generates a random number $ r_S $ beside $ r_T $ from the reader.
+	Consequently, it is more likely to identify a replay attack by a fake reader. This could optionally be reported by the app.
+	\item The sequence counter $ SQN $ is incremented both on the back-end and the smartphone for each handshake.
+	Like this, the identifier of the smartphone $ ID_T $, derived from the shared secrets $ID_H$ and $SQN$, is not the same on every connection to mitigate tracing.
+	Still the reader / back-end is able to identify the communicating party, because it also knows the shared secrets $ID_H$ and $SQN$.
+	In case of a desynchronization attack, the relation can be re-established by asking the back-end presenting the unique $studentToken$ (from TUM Webservice).
+\end{itemize}
