@@ -11,7 +11,7 @@ To reach this goal, the NFC reader must support common NFC standards (e.g., ISO/
 Therefore, we examine two different hardware setups to finally get a proper solution:
 %
 \begin{itemize}
-	\item Raspberry Pi with Explore-NFC reader cape by NXP \footnote{\url{http://www.nxp.com/demoboard/PNEV512R.html}} or PN531 compliant cape.
+	\item Raspberry Pi with Explore-NFC PN521 reader cape by NXP \footnote{\url{http://www.nxp.com/demoboard/PNEV512R.html}} or PN532 compliant cape.
 	\item Smartphone with NFC capabilities and Android 4.4 or newer.
 \end{itemize}
 %
@@ -29,12 +29,12 @@ A critical aspect in our project is the communication between a smartphone $ S $
 It is important that it is safe so that no unauthorized party can easily gain access or eavesdrop sensitive information like the student ID.
 By placing the reader's antenna in the inner side of the door, it should be safe from physical threats from outside.
 To ensure a secure communication on top of the data carrier, we plan to use one of the following two protocols.
+% The notation is as follows:
 
-\subsubsection{Public-key Cryptography}
-The first proposed protocol
-% TODO: add details about used terminology
-
-Contains ideas of the Needham-Schroeder-Lowe Public Key protocol, but the fixed version by Lowe.
+\subsubsection{Public-Key Cryptography}
+The first proposed protocol uses a Public Key Infrastructure to establish secure communication links between the participants.
+For authentication on both sides and mitigation of several attack scenarios, it used some ideas of the Needham-Schroeder-Lowe Public Key protocol. Lowe contributes an important security fix we use.
+The scheme is enhanced to provide further security features specific for the utilized backend and scenario.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Redefine the \mess due to problems with math support $ \some_function $ %
@@ -95,4 +95,22 @@ Explanation:
 %Points to mention:
 %Key revocation
 
-\subsubsection{Extended Randomized Hash Lock}
+\subsubsection{SRFID: Extended Randomized Hash Lock}
+A second interesting protocol is the hashed-based security scheme by Walid I. Khedr.
+This might be an alternative to the public key based system, because it is more lightweight. For cryptography on both sides, it only needs a strong hash function.
+%
+\begin{sequencediagram}
+	\newinst{S}{Smartphone $ S $}
+	\newinst[9]{T}{NFC Reader $ T $}
+	% \newinst[4]{rnc}{RNC}
+	\mess{T}{1. $ r_T $}{S}
+	\postlevel
+	\mess{S}{2. $ ID_T = H(ID_H || SQN), M_1 = H(ID_H || r_T) $}{T}
+	\postlevel
+	\mess{T}{3. $ ID_T, M_2 = H(ID_H || SQN || r_T), r_T $}{S}
+	%\mess{nodeb}{Synchronization Indication}{rnc}
+	%\filldraw[fill=black!30] ($(RRC Connection Setup to)+(0,-.3)$) rectangle ($(Synchronization Indication from) +(0,.3)$)
+	%node[midway] {L1 Synchronization};
+\end{sequencediagram}
+%
+3. Reader increments SQN. $ID_{H_{old}} = ID_H$, $ID_H = H(ID_H || SQN)$, $ M_2 = H(ID_H || SQN || r_T) $
