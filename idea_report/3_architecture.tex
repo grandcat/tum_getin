@@ -1,6 +1,6 @@
 \section{Architectural Overview}\label{sec:arch}
 
-The basic architecture to develop a system like this, regarding the existing TUMOnline system where you can check if a student is enrolled or not, will consist of the following parts:
+The basic architecture to develop the system outlined above will consist of the following parts:
 
 \begin{itemize}
 \item The smartphone, including a NFC chip as well as an internet connection to register with the service. The internet connection will be needed only one time to initialize the system or to negotiate a new key in case of revocation.
@@ -26,6 +26,8 @@ All connections to the back-end are planned to be secured by TLS.
 
 
 \subsection{Authentication between Smartphone and NFC Transceiver}
-After the user has registered with the back-end system, he can communicate with the NFC reader. As an initialization, there is a 3-Way-Handshake to provide a secure connection utilizing the public key of the specific user the NFC reader fetches from the back-end.
-Further, the Door Access System will check if the user has access to the requested area and will unlock the door depending on the outcome.
-
+After the user has registered with the back-end system, he can communicate with the NFC reader. 
+A three-way handshake assures a secure connection between smartphone and NFC reader.
+In order to verify the soundness of the procedure, in particular the authenticity of the communication partner, the NFC reader (i.e.~the system behind it) will fetch the public key of the user who wants to authenticate from the back-end system.
+Further, the Door Access System will check if the user has access to the requested area.
+It will finally unlock the door if all checks were positive.
