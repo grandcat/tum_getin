@@ -3,7 +3,8 @@
 The basic architecture to develop the system outlined above will consist of the following parts:
 
 \begin{itemize}
-\item The smartphone, including a NFC chip as well as an internet connection to register with the service. The internet connection will be needed only one time to initialize the system or to negotiate a new key in case of revocation.
+\item The smartphone, including a NFC chip as well as an internet connection to register with the service.
+An internet connection will only be needed once during initialization of the system or to negotiate a new key in case of revocation.
 \item The Door Access System, also including a NFC chip which can send and receive. A simple NFC reader would not be enough due to simple replay attacks. The Door Access System also needs access to the internet or at least to an intranet to check if the student or the employee has access to the specific area and to get other information for realizing security features like encryption of the communication. Therefore, some kind of computer is needed, interacting with the NFC hardware as well as with the back-end.
 \item A back-end system, which will take care of key generation and storage in case of a public-key system or other sensitive data like hash values.
 
