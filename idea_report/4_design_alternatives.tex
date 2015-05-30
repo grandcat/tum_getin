@@ -27,9 +27,9 @@ Additionally, integrated capabilities like Wifi or Bluetooth allow enhanced appl
 \subsection{Back-end}\label{sec:alt:backend}
 As introduced in section \ref{sec:arch}, a central part of the overall project is a reliable back-end.
 Its task is either to distribute public keys for the public-key cryptography implementation (see section \ref{sec:alt:proto:pubkey}) or to manage secret hashes as dynamic keys for the hash lock implementation (see section \ref{sec:alt:proto:hashlock}).
-It is also responsible to authenticate a new user using TUM Web Services to prevent identity theft.
+It is also responsible for authentication a new user using TUM Web Services to prevent identity theft.
 
-We intent to use Node.js as a back-end. Referring to projects it is already used for, it provides a reliable and fast service.
+We intend to use Node.js as technology for the back-end. Referring to projects it is already used for, it provides a reliable and fast service.
 The exposed web service API allows a fast integration with Android and provides a secure communication channel using standards like TLS.
 For data storage, the key-value database MongoDB is the preferred choice.
 
