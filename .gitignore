@@ -22,4 +22,3 @@
 *.mtc1
 *.out
 *.synctex.gz
-/code/backendServer/node_modules/*

@@ -1,5 +1,9 @@
-Wenn ihr das Backend zum Laufen bekommen möchtet, müsst ihr eine MongoDB am Laufen haben.
-Weil OS-abhängig, werde ich die nicht hier hochladen.
-> Einfach runterladen und mit <pfad>/bin/mongod starten.
-> Standard-Settings funktionieren in der Testphase.
-> Falls nötig, den Node.js-MongoDB-Connector installieren: npm install mongodb
+Weil OS-abhängig, werde ich die MongoDB nicht hier hochladen.
+
+1.) MongoDB runterladen und mit  $ <pfad>/bin/mongod starten.
+
+2.) Node libraries installieren: $ npm install
+
+3.) Server starten: 		 $ node server.js
+
+(4.) Tests laufen lassen:	 $ ...
