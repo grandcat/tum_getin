@@ -6,7 +6,7 @@ var frisby = require('frisby');
 var tc = require('./config/test_config');
 
 frisby.create('POST missing TUM ID')
-    .post(tc.url + '/user/register',
+    .post(tc.url + '/register',
           { 'token' : TU1_Token })
     .expectStatus(400)
     .expectHeader('Content-Type', 'application/json; charset=utf-8')

@@ -1,4 +1,4 @@
-function 
+function
 connectDB(callback)
 {
 	mongoClient.connect(dbConfig.testDBURL, function(err, db) {
@@ -9,7 +9,7 @@ connectDB(callback)
 	});
 }
 
-function 
+function
 dropUserCollection(callback)
 {
 	console.log("dropUserCollection");
@@ -17,6 +17,7 @@ dropUserCollection(callback)
 	if (undefined != user) {
 		user.drop(function(err, reply) {
 			console.log('user collection dropped');
+
 			callback(0);
 		});
 	} else {
@@ -24,7 +25,7 @@ dropUserCollection(callback)
 	}
 }
 
-function 
+function
 getApplication(callback)
 {
 	console.log("getApplication");
@@ -41,7 +42,7 @@ name:		SP_APP_NAME
 	});
 }
 
-function 
+function
 closeDB(callback)
 {
 	reader_test_db.close();
