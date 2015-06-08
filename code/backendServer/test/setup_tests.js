@@ -1,19 +1,25 @@
-function
-connectDB(callback)
+var async = require('async');
+var dbConfig = require('./config/db.js');
+var mongodb = require('mongodb');
+assert = require('assert');
+
+var mongoClient = mongodb.MongoClient
+var test_db = null;
+
+function connectDB(callback)
 {
-	mongoClient.connect(dbConfig.testDBURL, function(err, db) {
+	mongoClient.connect(dbConfig.url, function(err, db) {
 		assert.equal(null, err);
-		reader_test_db = db;
+		test_db = db;
 		console.log("Connected correctly to server");
 		callback(0);
 	});
 }
 
-function
-dropUserCollection(callback)
+function dropUserCollection(callback)
 {
 	console.log("dropUserCollection");
-	user = reader_test_db.collection('user');
+	user = test_db.collection('user');
 	if (undefined != user) {
 		user.drop(function(err, reply) {
 			console.log('user collection dropped');
@@ -25,27 +31,9 @@ dropUserCollection(callback)
 	}
 }
 
-function
-getApplication(callback)
+function closeDB(callback)
 {
-	console.log("getApplication");
-	client.getApplications({
-name:		SP_APP_NAME
-	}, function(err, applications) {
-		console.log(applications);
-		if (err) {
-			log("Error in getApplications");
-			throw		err;
-		}
-		app = applications.items[0];
-		callback(0);
-	});
+	test_db.close();
 }
 
-function
-closeDB(callback)
-{
-	reader_test_db.close();
-}
-
-async.series([connectDB, dropUserCollection, getApplication, closeDB]);
+async.series([connectDB, dropUserCollection, closeDB]);
