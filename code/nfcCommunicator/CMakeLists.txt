@@ -5,6 +5,8 @@ add_definitions(
     -std=c++0x  # Or -std=c++11
     # Other flags
 )
+# Debug build
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/")
 
