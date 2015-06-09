@@ -26,7 +26,7 @@ exports.addAPIRouter = function(app, mongoose) {
     // --------- define content type ------- //
     // GET
     app.get('/*', function(req, res, next) {
-        res.contentType('application/json');
+        //res.contentType('application/json');
         next();
     });
     // POST
@@ -49,12 +49,15 @@ exports.addAPIRouter = function(app, mongoose) {
 
     // route at root is for testing if the server responds.
     router.get('/', function(req, res) {
+        logger.debug('Router for /');
+        console.log('Router for /');
         res.json({ message: 'Backend running! Welcome!' });
     });
     
     // main functionality: register new user
     router.post('/register', function(req, res) {
         logger.debug('Router for /register');
+        console.log('Router for /register');
         res.json({ message: 'Test answer...' });
     });
 
