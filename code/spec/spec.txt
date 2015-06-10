@@ -1,0 +1,27 @@
+Python:
+- Python-Reader
+- Python-Backend
+
+Backend:
+
+
+
+
+Smartphone:
+-Schlüsselgenerierung RSA - 2048
+-AES256 
+-->siehe TestResources generate-ssl-certs.sh
+-Speicherung public Key Backend B (statisch eincodiert)
+-Speicherung public Key Reader R (statisch eincodiert)
+
+Ablauf:
+-Verbindung mit Backend (Return Token)
+-Key Generation
+-Verbindungsaufbau mit Backend (ID, Token, Public Key U) HTTPS
+-Handshake mit Reader
+
+
+
+
+
+
