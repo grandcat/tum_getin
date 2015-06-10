@@ -39,22 +39,22 @@ nfc_connector::nfc_connector()
  */
 nfc_connector::~nfc_connector()
 {
-    if (_pnd != NULL)
+    if (_pnd != nullptr)
         nfc_close(_pnd);
-    if (_context != NULL)
+    if (_context != nullptr)
         nfc_exit(_context);
 }
 
 void nfc_connector::open_nfc_hardware()
 {
     nfc_init(&_context);
-    if (_context == NULL) {
+    if (_context == nullptr) {
         throw std::runtime_error("nfc_init: unable to init libnfc (malloc).");
     }
 
     // Try to open the NFC reader
-    _pnd = nfc_open(_context, NULL);
-    if (_pnd == NULL) {
+    _pnd = nfc_open(_context, 0);
+    if (_pnd == nullptr) {
         throw std::runtime_error("nfc_open: unable to open NFC device.");
     }
 }

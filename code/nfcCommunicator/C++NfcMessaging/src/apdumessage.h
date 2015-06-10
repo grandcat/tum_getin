@@ -20,6 +20,7 @@ private:
 
 public:
     APDUMessage();
+    APDUMessage(const char fromByteArray);
 
     void setActionType(ISO7816_ActionType type);
 };
