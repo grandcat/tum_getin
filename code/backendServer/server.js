@@ -31,3 +31,4 @@ exports = module.exports = app;
 
 // Logging initialization
 console.log('TUM_getin backend started on port ' + config.port);
+

@@ -2,6 +2,7 @@ Quick guide to start the tum_getin backend server:
 
 
 >>> Install necessary stuff (needed only once): <<<
+- Install Node.js
 - Download MongoDB
 $ npm install -g bower
 $ npm install -g grunt-cli
@@ -11,9 +12,8 @@ $ npm install	(-> if dependencies change, this may
 
 >>>------------	Run the server:	----------------<<<
 $ <path-to-mongodb>/bin/mongod
-$ NODE_ENV=secure grunt
-	(-> we only support the secure mode)
-
+$ grunt
+	(also possible: $ NODE_ENV=test grunt)
 
 >>>------------ Testing: -----------------------<<<
 /test contains a basic https client.
