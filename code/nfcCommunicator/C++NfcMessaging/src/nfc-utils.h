@@ -42,9 +42,12 @@
 #ifndef _EXAMPLES_NFC_UTILS_H_
 #  define _EXAMPLES_NFC_UTILS_H_
 
+#  include <stdint.h>
 #  include <stdlib.h>
 #  include <string.h>
 #  include <err.h>
+
+#  include <nfc/nfc.h>
 
 /**
  * @macro DBG

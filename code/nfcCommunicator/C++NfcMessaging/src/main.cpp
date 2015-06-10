@@ -19,6 +19,8 @@
 #include <nfc/nfc-emulation.h>
 #include "nfc-utils.h"
 
+#include "nfc_connector.h"
+
 static nfc_device *pnd;
 static nfc_context *context;
 static bool quiet_output = false;
@@ -333,9 +335,14 @@ main(int argc, char *argv[])
     };
 
     struct nfc_emulator emulator = {
-        target : &nt, state_machine : &state_machine,
+        target : &nt,
+        state_machine : &state_machine,
         user_data : &nfcforum_tag4_data,
    };
+
+    // TEST
+    nfc_communicator::nfc_connector dv;
+    dv.open_nfc_hardware();
 
     if ((argc > (1 + options)) && (0 == strcmp("-h", argv[1 + options]))) {
         usage(argv[0]);
