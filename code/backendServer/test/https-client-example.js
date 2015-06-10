@@ -1,4 +1,4 @@
-var PORT = 8443;
+var PORT = 3000;
 var HOST = 'localhost';
 var tls = require('tls');
 var fs = require('fs');
