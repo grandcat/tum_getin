@@ -1,7 +1,4 @@
-"""Test for a simple Mifare NFC Authentication"""
-
-#  Pynfc is a python wrapper for the libnfc library
-#  Copyright (C) 2009  Mike Auty
+"""Simple NFC card emulation"""
 
 import logging
 import ctypes
