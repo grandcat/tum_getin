@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = function(app) {
-	// Root routing
-	var core = require('../../app/controllers/register.server.controller');
-	app.route('/register').get(core.init);
+	var register = require('../../app/controllers/register.server.controller');
+	app.route('/register').get(register.register_get_token);
+	app.route('/register').post(register.register_store_key);
 };
