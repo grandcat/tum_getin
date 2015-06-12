@@ -6,6 +6,7 @@ Quick guide to start the tum_getin backend server:
 - Download MongoDB
 $ npm install -g bower
 $ npm install -g grunt-cli
+$ npm install -g mocha (program for running tests)
 $ npm install	(-> if dependencies change, this may
 		be necessary again...)
 
@@ -16,7 +17,14 @@ $ grunt
 	(also possible: $ NODE_ENV=test grunt)
 
 >>>------------ Testing: -----------------------<<<
-/test contains a basic https client.
+/test contains a test suite for all backend interfaces.
+Acts as a client (the smartphone or the NFC reader).
+Does black-box testing basically.
+Run tests with:
+$ mocha test.js
+
+White-box tests of the interal functioning of the backend
+can be found in /app/tests
 
 
 >>>------------ Important infos ----------------<<<
