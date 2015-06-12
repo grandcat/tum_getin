@@ -21,7 +21,7 @@ var client = tls.connect(PORT, HOST, options, function() {
         // Time to make some request to the server
         // We will write straight to the socket, but recommended way is to use a client library like 'request' or 'superagent'
         //client.write('POST /register?tumid=ga00aaa HTTP/1.1\r\n');
-        client.write('GET /register?tumid=ga00aaa&token=491652672440A20D6BD49B63E60DADB9 HTTP/1.1\r\n');
+        client.write('GET /register?tum_id=ga00aaa&token=491652672440A20D6BD49B63E60DADB9 HTTP/1.1\r\n');
         client.write('\r\n');
         
     }

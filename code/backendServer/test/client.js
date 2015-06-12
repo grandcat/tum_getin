@@ -1,9 +1,16 @@
 var https = require('https');
 var fs = require('fs');
+// getting test data from central test data folder
+var testUser1 = require('../../testResources/user_01.json');
+var config = require('./test_config');
 
+//var user = {
+//  tum_id: 'ga00aaa',
+//  token: '491652672440A20D6BD49B63E60DADB9'
+//};
 var user = {
-  tumid: 'ga00aaa',
-  token: '491652672440A20D6BD49B63E60DADB9'
+  tum_id: testUser1.tum_id,
+  token: testUser1.token
 };
 
 var userString = JSON.stringify(user);
@@ -14,16 +21,15 @@ var headers = {
 };
 
 var options = {
-  host: 'localhost',
-  port: 3000,
+  host: config.host,
+  port: config.port,
   path: '/register',
   method: 'POST',
   headers: headers,
   ca: [ fs.readFileSync('./cert.pem') ]
 };
 
-// Setup the request.  The options parameter is
-// the object we defined above.
+// Setup the request. 
 var req = https.request(options, function(res) {
   res.setEncoding('utf-8');
 
