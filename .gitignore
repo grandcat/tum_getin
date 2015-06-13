@@ -24,5 +24,10 @@
 *.synctex.gz
 *.pdf
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
 # IDE project files
 **/.idea/
