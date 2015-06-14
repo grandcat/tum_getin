@@ -192,10 +192,10 @@ class CommStateMachine:
     data_out = bytearray(b'\xbe\xef\xaf\xfe' * 128 * 2)
     data_out.extend([0x11, 0x22, 0x33])
     data_out_ready = False  # If true, buffer is complete and ready for transmission (NOTE: must be atomic)
-    data_out_offset = 0
+    # data_out_offset = 0
     data_in = bytearray()
     data_in_ready = False
-    data_in_offset = 0
+    data_in_size = 0
 
     def __init__(self, log=None):
         self.log = log or logging.getLogger(__name__)
@@ -226,10 +226,12 @@ class CommStateMachine:
 
         # TODO: remove the following test
         self.data_out_ready = True
+        self.data_in_ready = True
 
         if rx_len > 0:
             action = rx_buffer[APDU.INS]
 
+            # TODO: try, expect for malformed user input tries to kill our reader
             if APDU.ISO7816_SELECT == action:
                 # Check for supported target device running our App
                 if rx_buffer[APDU.P1] == 0x04 and rx_buffer[APDU.P2] == 0x00:
@@ -245,28 +247,27 @@ class CommStateMachine:
 
             elif (APDU.ISO7816_READ_DATA == action) and self.conn_established:
                 # Client asks to receive available data
-                if self.data_out_ready:
-                    # Push next chunk of data to client
-                    return self._push_data_to_client(rx_buffer)
-                else:
-                    # No data here right now
-                    return APDU.msg_err_no_data()
+                return self._push_data_to_client(rx_buffer)
+
+            elif (APDU.ISO7816_WRITE_DATA == action) and self.conn_established:
+                # Client sends data to reader
+                return self._retrieve_data_from_client(rx_buffer)
 
             elif (APDU.CUSTOM_DATA_SIZE == action) and self.conn_established:
                 if APDU.ISO7816_READ_DATA == rx_buffer[APDU.P1]:
                     # Client requests length of available data
-                    return self._push_data_out_size(rx_buffer)
+                    return self._get_data_out_size(rx_buffer)
 
                 elif APDU.ISO7816_WRITE_DATA == rx_buffer[APDU.P1]:
-                    # Client requests amount of available data
-                    pass
+                    # Client sets length of data he wants to send to the reader
+                    return self._set_data_in_size(rx_buffer)
                 else:
                     return APDU.msg_err_param()
 
         # Default fallback to keep the connection alive
         return APDU.msg_success()
 
-    def _push_data_out_size(self, rx_buffer):
+    def _get_data_out_size(self, rx_buffer):
         if not self.data_out_ready:
             return APDU.msg_err_no_data()
 
@@ -282,6 +283,8 @@ class CommStateMachine:
 
     def _push_data_to_client(self, rx_buffer):
         """Read data_out bytearray and transmit fragmented packets to client"""
+        if not self.data_out_ready:
+            return APDU.msg_err_no_data()
 
         # Unpack starting from P1: [ .. | P1 | P2 | LC | .. ]
         #                                 ^offset^  ^requested_bytes
@@ -298,6 +301,55 @@ class CommStateMachine:
 
         return buf_out, len(buf_out)
 
+    def _set_data_in_size(self, rx_buffer):
+        """Announces the length for the incoming data"""
+        if not self.data_in_ready:
+            return APDU.msg_err_not_ready()
+
+        # Extract requested size, but upper bound to our limit
+        requested_size = struct.unpack_from('!H', rx_buffer, APDU.P2)[0]
+        requested_size = min(requested_size, self.MAX_BYTES)
+
+        # Prepare data_in bytearray for merging data chunks
+        self.data_in = bytearray()
+        self.data_in_size = requested_size
+        self.log.debug('_set_data_in_size: allocating %d bytes for data input', requested_size)
+        # Response: actually reserved bytes
+        response = struct.pack('!H2s', requested_size, APDU.SUCCESS)
+
+        return response, 4
+
+    def _retrieve_data_from_client(self, rx_buffer):
+        """Collect received chunks into data_in and notifies a listener if the transfer is finished"""
+        if not self.data_in_ready:
+            return APDU.msg_err_not_ready()
+
+        # Message size without header
+        input_len = len(rx_buffer) - APDU.DATA
+        # Offset starting from P1: [ .. | P1 | P2 | LC | .. ] (unsigned short: 2 bytes)
+        #                                 ^offset^  ^ignore as given by input_len
+        offset = struct.unpack_from('!H', rx_buffer, APDU.P1)[0]
+
+        if (offset + input_len) > self.data_in_size:
+            return APDU.msg_err_param()
+
+        if (len(self.data_in) + input_len) > self.data_in_size:
+            return APDU.msg_err_not_enough_space()
+
+        # Insert message chunk into buffer
+        # - If no offset is defined, data is assembled automatically
+        if offset == 0:
+            self.data_in.extend(rx_buffer[APDU.DATA:])
+        else:
+            self.data_in[offset:offset+input_len] = rx_buffer[APDU.DATA:]
+
+        # Notify about finished data transfer and deny external modification by client
+        if len(self.data_in) == self.data_in_size:
+            self.data_in_ready = False
+            # TODO: add notification
+
+        return APDU.msg_success()
+
 class APDU:
     # C-APDU offsets for header and payload
     # [CLA | INS | P1 | P2 | LC | DATA]
@@ -313,32 +365,44 @@ class APDU:
     ISO7816_WRITE_DATA  = 0xD0
     CUSTOM_DATA_SIZE    = 0xCB  # if P1 = 0xB0: read data size, if P1 = OxD0: write data size
 
-    # Status messages
-    SUCCESS = b'\x90\x00'
-    ERR_PARAMS = b'\x6a\x00'
-    ERR_WRONG_DATA = b'\x6a\x80'
-    ERR_NO_DATA = b'\x6a\x82'
+    # APDU status messages
+    SUCCESS                 = b'\x90\x00'
+    ERR_PARAMS              = b'\x6a\x00'
+    ERR_WRONG_DATA          = b'\x6a\x80'
+    ERR_NO_DATA             = b'\x6a\x82'
+    ERR_NOT_ENOUGH_SPACE    = b'\x6a\x84'
+    # Custom status messages
+    ERR_NOT_READY           = b'\x6a\x90'
 
     @staticmethod
     def msg_success():
-        return (APDU.SUCCESS, 2)
+        return APDU.SUCCESS, 2
 
     @staticmethod
     def msg_success_with_data_ready(available_bytes):
-        buf = [0x61] + [available_bytes]
-        return (buf, 2)
+        assert available_bytes < 256
+        buf = b'\x61' + bytes(available_bytes)
+        return buf, 2
 
     @staticmethod
     def msg_err_param():
-        return (APDU.ERR_PARAMS, 2)
+        return APDU.ERR_PARAMS, 2
 
     @staticmethod
     def msg_err_wrong_data():
-        return (APDU.ERR_WRONG_DATA, 2)
+        return APDU.ERR_WRONG_DATA, 2
 
     @staticmethod
     def msg_err_no_data():
-        return (APDU.ERR_NO_DATA, 2)
+        return APDU.ERR_NO_DATA, 2
+
+    @staticmethod
+    def msg_err_not_enough_space():
+        return APDU.ERR_NOT_ENOUGH_SPACE, 2
+
+    @staticmethod
+    def msg_err_not_ready():
+        return APDU.ERR_NOT_READY, 2
 
 
 if __name__ == '__main__':
