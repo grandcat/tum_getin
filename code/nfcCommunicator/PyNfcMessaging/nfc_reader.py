@@ -106,16 +106,14 @@ class NFCReader(object):
 
             while connection_loop:
                 # Reset all state variables
-                self.log.debug('Wait for NFC initiator for 5s')
+                self.log.info('Wait for NFC initiator for 5s')
                 # NFC abstraction: target_init
                 connection_res = nfc.nfc_target_init(self.__device,
                                                      ctypes.byref(self.__target),
                                                      ctypes.pointer(self.__rx_msg),
                                                      self.ISO7816_SHORT_APDU_MAX_LEN, 5000)
-                print(connection_res)
                 if connection_res >= 0:
-                    self.log.debug(self.__rx_msg[:])
-
+                    self.log.debug(self.__rx_msg[:connection_res])
                     # Start message exchange state machine
                     self._message_loop()
 
@@ -139,13 +137,12 @@ class NFCReader(object):
 
 
     def _message_loop(self):
-        """Starts a loop that simulates a smartcard"""
+        """Starts a loop that simulates a smart card"""
         stm = CommStateMachine()
 
         loop = True
         while loop:
             # Receive APDU message
-            print("Receive first string")
             rx_len = nfc.nfc_target_receive_bytes(self.__device,
                                                   ctypes.byref(self.__rx_msg),
                                                   self.ISO7816_SHORT_APDU_MAX_LEN, 0)
@@ -182,9 +179,9 @@ class NFCReader(object):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(format='[%(levelname)s:%(name)s:%(funcName)s] %(message)s', level=logging.DEBUG)
     logger = logging.getLogger(__name__)
-
-    reader = NFCReader(logger)
+    # Do not pass logger object to generate unique names per module
+    reader = NFCReader()
     while reader.run():
         pass

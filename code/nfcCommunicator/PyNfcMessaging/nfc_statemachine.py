@@ -37,9 +37,6 @@ class CommStateMachine:
         :param rx_len:
         :return:
         """
-        # Default transmission buffer
-        tx_buffer = []
-        tx_len = 0
 
         if rx_len > 0:
             action = rx_buffer[APDU.INS]
@@ -112,12 +109,13 @@ class CommStateMachine:
         if (offset + requested_bytes) > len(self.data_out): # TODO: check for requested_bytes > 0
             return APDU.msg_err_param()
 
-        self.log.debug('_push_data_to_client: offset %d, available %d', offset, len(self.data_out))
+        self.log.debug('Offset %d, available %d', offset, len(self.data_out))
         buf_out = bytearray(self.data_out[offset:offset+requested_bytes])
         buf_out.extend(APDU.SUCCESS)
 
          # Notify about finished data transfer and free for new data if end of data is reached
         if (offset + requested_bytes) == len(self.data_out):
+            self.log.debug('Pushed successfully %d bytes to client', len(self.data_out))
             self.data_out = bytearray()
             self.data_out_ready = False
             self.data_out_offset = 0
@@ -137,7 +135,7 @@ class CommStateMachine:
         self.data_in = bytearray()  # BUG: could be misused to trigger a lot of small-sized memory allocations.
                                     #      Hopefully, GC is fast enough for cleaning up.
         self.data_in_size = requested_size
-        self.log.debug('_set_data_in_size: allocating %d bytes for data input', requested_size)
+        self.log.debug('Allocating %d bytes for data input', requested_size)
         # Response: actually reserved bytes
         response = struct.pack('!H2s', requested_size, APDU.SUCCESS)
 
@@ -158,7 +156,7 @@ class CommStateMachine:
             return APDU.msg_err_param()
 
         if (len(self.data_in) + input_len) > self.data_in_size:
-            # TODO: Clear buffer as received data is only rubbish now
+            # TODO: Clear buffer as received data might be only rubbish now
             return APDU.msg_err_not_enough_space()
 
         # Insert message chunk into buffer
@@ -173,6 +171,7 @@ class CommStateMachine:
             self.data_in_ready = False
             # TODO: add notification
             print('Finished data: %s' % self.data_in)
+            self.log.debug('data_in buffer (%d bytes) completed', self.data_in_size)
             # data_in is now complete for local processing. This tells the client that all data was received
             # successfully, but we need some time until we have data to push back to the client.
             return APDU.msg_success_with_data_ready(0x00)
