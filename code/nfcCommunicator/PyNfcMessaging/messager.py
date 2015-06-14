@@ -1,6 +1,7 @@
 """Simple NFC card emulation"""
 
 import logging
+import struct
 import time
 
 from nfc_error import HWError
@@ -157,7 +158,7 @@ class NFCReader(object):
                 return
 
             rx_buf = bytes((ctypes.c_char * rx_len).from_buffer(self.__rx_msg))
-            self.log.info('Receive [%d bytes]: %s', rx_len, hex_dump(rx_buf[:]))
+            self.log.debug('Receive [%d bytes]: %s', rx_len, hex_dump(rx_buf[:]))
 
             # State machine for communication with end device
             tx_buf, tx_len = stm.do_IO(rx_buf, rx_len)
@@ -171,7 +172,7 @@ class NFCReader(object):
                 tx_len = nfc.nfc_target_send_bytes(self.__device,
                                                    ctypes.byref(self.__tx_msg),
                                                    tx_len, 0)
-                self.log.info('Send [%d bytes]: %s', tx_len, hex_dump(tx_buf[:]))
+                self.log.debug('Send [%d bytes]: %s', tx_len, hex_dump(tx_buf[:]))
                 if (tx_len < 0):
                     # Error occurred (e.g., target was removed from the carrier field) --> restart
                     self.log.warning('Error %d in nfc_target_send_bytes', tx_len)
@@ -186,9 +187,9 @@ class NFCReader(object):
 class CommStateMachine:
     IDENTIFICATION = b'tumgetin\x01' # hex: 74 75 6D 67 65 74 69 6E 01
     MAX_BYTES = 4096
-    MAX_CHUNK_SIZE = 200
+    MAX_CHUNK_SIZE = 250
 
-    data_out = bytearray(b'\xbe\xef\xaf\xfe' * 128)
+    data_out = bytearray(b'\xbe\xef\xaf\xfe' * 128 * 2)
     data_out.extend([0x11, 0x22, 0x33])
     data_out_ready = False  # If true, buffer is complete and ready for transmission (NOTE: must be atomic)
     data_out_offset = 0
@@ -254,7 +255,7 @@ class CommStateMachine:
             elif (APDU.CUSTOM_DATA_SIZE == action) and self.conn_established:
                 if APDU.ISO7816_READ_DATA == rx_buffer[APDU.P1]:
                     # Client requests length of available data
-                    return self._get_data_out_size(rx_buffer)
+                    return self._push_data_out_size(rx_buffer)
 
                 elif APDU.ISO7816_WRITE_DATA == rx_buffer[APDU.P1]:
                     # Client requests amount of available data
@@ -265,34 +266,37 @@ class CommStateMachine:
         # Default fallback to keep the connection alive
         return APDU.msg_success()
 
-    def _get_data_out_size(self, rx_buffer):
+    def _push_data_out_size(self, rx_buffer):
         if not self.data_out_ready:
             return APDU.msg_err_no_data()
 
         elif 0x02 == rx_buffer[APDU.LC]:
             # Request: size of available data
+            data_size = len(self.data_out)
             # Answer: P1 * 256 + P2 encodes size
-             data_size = len(self.data_out)
-             return (([data_size // 256, data_size % 256] + APDU.SUCCESS), 4)
+            response = struct.pack('!H2s', data_size, APDU.SUCCESS)  # Put as unsigned short with 2 bytes
+            return response, 4
 
         else:
             return APDU.msg_err_param()
 
     def _push_data_to_client(self, rx_buffer):
         """Read data_out bytearray and transmit fragmented packets to client"""
-        offset = rx_buffer[APDU.P1] * 256 + rx_buffer[APDU.P2]
-        requested_bytes = min(rx_buffer[APDU.LC], self.MAX_CHUNK_SIZE)
-        data_size = len(self.data_out)
+
+        # Unpack starting from P1: [ .. | P1 | P2 | LC | .. ]
+        #                                 ^offset^  ^requested_bytes
+        offset, requested_bytes = struct.unpack_from('!HB', rx_buffer, APDU.P1)
+        requested_bytes = min(requested_bytes, self.MAX_CHUNK_SIZE)
 
         # Requested data has to be within bounds of data_out buffer
-        if (offset + requested_bytes) > data_size: # TODO: check for requested_bytes > 0
+        if (offset + requested_bytes) > len(self.data_out): # TODO: check for requested_bytes > 0
             return APDU.msg_err_param()
 
         self.log.debug('_push_data_to_client: offset %d, available %d', offset, len(self.data_out))
         buf_out = bytearray(self.data_out[offset:offset+requested_bytes])
         buf_out.extend(APDU.SUCCESS)
 
-        return (buf_out, len(buf_out))
+        return buf_out, len(buf_out)
 
 class APDU:
     # C-APDU offsets for header and payload
@@ -310,10 +314,10 @@ class APDU:
     CUSTOM_DATA_SIZE    = 0xCB  # if P1 = 0xB0: read data size, if P1 = OxD0: write data size
 
     # Status messages
-    SUCCESS = [0x90, 0x00]
-    ERR_PARAMS = [0x6a, 0x00]
-    ERR_WRONG_DATA = [0x6a, 0x80]
-    ERR_NO_DATA = [0x6a, 0x82]
+    SUCCESS = b'\x90\x00'
+    ERR_PARAMS = b'\x6a\x00'
+    ERR_WRONG_DATA = b'\x6a\x80'
+    ERR_NO_DATA = b'\x6a\x82'
 
     @staticmethod
     def msg_success():
