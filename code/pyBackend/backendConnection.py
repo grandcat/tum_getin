@@ -13,9 +13,8 @@ host = 'localhost'
 port = 3000
 
 #Cert Stuff
-certfile = 'cert.pem'
 ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-ctx.load_default_certs(ssl.Purpose.CLIENT_AUTH)
+ctx.set_default_verify_paths()
 
 
 #The HTTPS Connection
