@@ -13,16 +13,6 @@ var user = {
 };
 
 vows.describe('Backend Interface Unit Tests:').addBatch({
-	'/register post key correct': {
-		topic: function() {
-			callback = this.callback;
-			sendPost('/register', user);
-		},
-		'Response status is 200': function (topic) {
-            		assert.equal (topic.status, 200);
-        	}
-	}
-}).addBatch({
 	'/register get token correct': {
 		topic: function() {
 			callback = this.callback;
@@ -31,6 +21,16 @@ vows.describe('Backend Interface Unit Tests:').addBatch({
 		'Response status is 200': function (topic) {
             		assert.equal (topic.status, 200);
 			//assert.equal(4,4);
+        	}
+	}
+}).addBatch({
+	'/register post key correct': {
+		topic: function() {
+			callback = this.callback;
+			sendPost('/register', user);
+		},
+		'Response status is 200': function (topic) {
+            		assert.equal (topic.status, 200);
         	}
 	}
 }).run();
