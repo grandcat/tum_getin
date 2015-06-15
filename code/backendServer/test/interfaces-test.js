@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 var vows = require('vows'),
     assert = require('assert'),
     https = require('https'),
@@ -7,10 +7,6 @@ var vows = require('vows'),
 var testUser1 = require('../../testResources/user_01.json');
 var config = require('./test_config');
 
-var user = {
-  tum_id: testUser1.tum_id,
-  token: testUser1.token
-};
 
 vows.describe('Backend Interface Unit Tests:').addBatch({
 	'/register get token correct': {
@@ -18,15 +14,24 @@ vows.describe('Backend Interface Unit Tests:').addBatch({
 			callback = this.callback;
 			sendGet('/register?tum_id=' + testUser1.tum_id);
 		},
-		'Response status is 200': function (topic) {
+		'Check response status': function (topic) {
             		assert.equal (topic.status, 200);
-			//assert.equal(4,4);
+        	},
+		'Check response user data': function (topic) {
+            		assert.equal (topic.tum_id, testUser1.tum_id);
+			assert.equal (topic.pseudo_id, testUser1.pseudo_id);
+			assert.equal (topic.token, testUser1.token);
         	}
+
 	}
 }).addBatch({
 	'/register post key correct': {
 		topic: function() {
 			callback = this.callback;
+			var user = {
+			  tum_id: testUser1.tum_id,
+			  token: testUser1.token
+			};
 			sendPost('/register', user);
 		},
 		'Response status is 200': function (topic) {
