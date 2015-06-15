@@ -9,7 +9,7 @@ class CommStateMachine:
     data_out = bytearray(b'\xbe\xef\xaf\xfe' * 128)
     data_out.extend([0x11, 0x22, 0x33])
     data_out_ready = False  # If true, buffer is complete and ready for transmission (NOTE: must be atomic)
-    data_out_offset = 0     # For lazy client that doesn't want to index the data, we do it for him =)
+    data_out_offset = 0     # For lazy client that doesn't want to index the data, we do it =)
     data_in = bytearray()
     data_in_ready = False
     data_in_size = 0
@@ -37,7 +37,6 @@ class CommStateMachine:
         :param rx_len:
         :return:
         """
-
         if rx_len > 0:
             action = rx_buffer[APDU.INS]
 
@@ -48,6 +47,7 @@ class CommStateMachine:
                     # Select by name
                     if rx_buffer[APDU.DATA:] == self.IDENTIFICATION:
                         self.conn_established = True
+                        self.log.info('Valid client connected')
                         # TODO: remove the following test
                         self.data_out_ready = True
                         self.data_in_ready = True
@@ -65,27 +65,28 @@ class CommStateMachine:
 
             elif (APDU.ISO7816_WRITE_DATA == action) and self.conn_established:
                 # Client sends data to reader
-                return self._retrieve_data_from_client(rx_buffer)
+                return self._fetch_data_from_client(rx_buffer)
 
             elif (APDU.CUSTOM_DATA_SIZE == action) and self.conn_established:
                 if APDU.ISO7816_READ_DATA == rx_buffer[APDU.P1]:
                     # Client requests length of available data
-                    return self._get_data_out_size(rx_buffer)
+                    return self._push_data_out_size(rx_buffer)
 
                 elif APDU.ISO7816_WRITE_DATA == rx_buffer[APDU.P1]:
                     # Client sets length of data he wants to send to the reader
-                    return self._set_data_in_size(rx_buffer)
+                    return self._fetch_data_in_size(rx_buffer)
                 else:
                     return APDU.msg_err_param()
 
         # Default fallback to keep the connection alive
         return APDU.msg_success()
 
-    def _get_data_out_size(self, rx_buffer):
+    def _push_data_out_size(self, rx_buffer):
         if not self.data_out_ready:
             return APDU.msg_err_no_data()
 
         elif 0x02 == rx_buffer[APDU.LC]:
+            self.data_out_offset = 0
             # Request: size of available data
             data_size = len(self.data_out)
             # Answer: P1 * 256 + P2 encodes size
@@ -109,9 +110,14 @@ class CommStateMachine:
         if (offset + requested_bytes) > len(self.data_out): # TODO: check for requested_bytes > 0
             return APDU.msg_err_param()
 
+        # Set offset automatically for lazy client (might become default, then remove code with indexing)
+        if offset == 0:
+            offset = self.data_out_offset
+
         self.log.debug('Offset %d, available %d', offset, len(self.data_out))
         buf_out = bytearray(self.data_out[offset:offset+requested_bytes])
         buf_out.extend(APDU.SUCCESS)
+        self.data_out_offset += requested_bytes
 
          # Notify about finished data transfer and free for new data if end of data is reached
         if (offset + requested_bytes) == len(self.data_out):
@@ -122,7 +128,7 @@ class CommStateMachine:
 
         return buf_out, len(buf_out)
 
-    def _set_data_in_size(self, rx_buffer):
+    def _fetch_data_in_size(self, rx_buffer):
         """Announces the length for the incoming data"""
         if not self.data_in_ready:
             return APDU.msg_err_not_ready()
@@ -141,7 +147,7 @@ class CommStateMachine:
 
         return response, 4
 
-    def _retrieve_data_from_client(self, rx_buffer):
+    def _fetch_data_from_client(self, rx_buffer):
         """Collect received chunks into data_in and notifies a listener if the transfer is finished"""
         if not self.data_in_ready:
             return APDU.msg_err_not_ready()
