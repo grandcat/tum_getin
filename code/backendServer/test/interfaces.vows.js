@@ -1,7 +1,7 @@
-var should = require('should');
-var mocha = require('mocha');
+var vows = require('vows'),
+    assert = require('assert');
 var https = require('https');
-var http = require('http');
+var request = require('request');
 var fs = require('fs');
 // getting test data from central test data folder
 var testUser1 = require('../../testResources/user_01.json');
@@ -12,25 +12,47 @@ var user = {
   token: testUser1.token
 };
 
-describe('Backend Interface Unit Tests:', function() {
-	// @before : do setup tasks
-	before(function(done) {
-		done();
-	});
+var message = {
+  tum_id: testUser1.tum_id,
+  token: testUser1.token
+};
 
-	it('/register get token correct', function(done) {
-//		sendGet('/register?tum_id=ga00aaa');
-		done();
+var headers = {
+  'Content-Type': 'application/json',
+  'Content-Length': message.length
+};
+
+var options = {
+  uri: 'https://localhost:3000/register',
+  ca: [ fs.readFileSync('./cert.pem') ],
+  'content-type': 'application/json',
+  headers: headers,
+  form: message
+};
+
+var fkt = function() {
+	request.post(options, function (err, res, body) {
+	  if (err) {
+	    console.error('Error: ', err);
+	  }
+	  console.log('Server response: ', body);
 	});
-	it('/register post key correct', function(done) {
-		sendPost('/register', user);
-		done();
-	});
-	it('test222', function(done) {
-		true.should.equal(true);
-		done();
-	});
-});
+};
+//fkt();
+
+vows.describe('Backend Interface Unit Tests:').addBatch({
+	'/register get token correct': {
+		topic: function() {
+			console.log('testing something');
+			fkt();
+			return 0;
+		},
+		'we get 0': function (topic) {
+            		assert.equal (topic, 0);
+        	}
+	}
+	//it('/register post key correct', function(done) {
+}).run();
 
 var req; // request object
 

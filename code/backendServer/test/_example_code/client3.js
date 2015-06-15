@@ -25,10 +25,12 @@ var options = {
   form: body
 };
 
-request.post(options, function (err, res, body) {
-  if (err) {
-    console.error('Error: ', err);
-  }
-  console.log('Server response: ', body);
-});
-
+var fkt = function() {
+	request.post(options, function (err, res, body) {
+	  if (err) {
+	    console.error('Error: ', err);
+	  }
+	  console.log('Server response: ', body);
+	});
+};
+fkt();
