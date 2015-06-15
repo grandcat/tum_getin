@@ -2,6 +2,7 @@ import json
 import http.client
 import ssl
 
+
 user = {"tum_id" : "ga00aaa", "token" : "491652672440A20D6BD49B63E60DADB9"}
 
 userString = json.dumps(user)
@@ -19,10 +20,21 @@ ctx.set_default_verify_paths()
 
 #The HTTPS Connection
 conn = http.client.HTTPSConnection(host, port, context=ctx)
-conn.request('POST', '/register', userString, headers)
-response = conn.getresponse()
 
-print(response.status, response.reason)
+#Pseudo ID creation?
+pseudoID = user['tum_id'] + "1234"
+
+#POST example
+#conn.request('POST', '/register', userString, headers)
+#response = conn.getresponse()
+#print(response.status, response.reason)
+
+#GET example
+conn.request('GET', '/check?pseudo_id=' + pseudoID)
+response = conn.getresponse()
+print(response.status, response.reason, response.msg)
+
+
 conn.close()
 
 
