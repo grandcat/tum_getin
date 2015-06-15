@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="#ff0073cf">
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/register_button"
+        android:id="@+id/buttonRegister"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:onClick="registerWithBackend"/>
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:hint="@string/register_tum_id_input"
+        android:ems="10"
+        android:id="@+id/editText_tum_id"
+        android:layout_above="@+id/buttonRegister"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/register_explanation"
+        android:id="@+id/textViewRegisterExplanation"
+        android:layout_above="@+id/editText_tum_id"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="87dp" />
+
+</RelativeLayout>

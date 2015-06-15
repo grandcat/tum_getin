@@ -32,6 +32,16 @@ Ablauf:
 		  tum_id: 'ga00aaa',
 		  pseudo_id: 'sdifuz563',
 		  token: '491652672440A20D6BD49B63E60DADB9' }
+  Error possibility: 	No key 'tum_id' in request
+  Answer:	{ status: 400,
+		  message: 'Please set tum_id in the HTTPS request!' }
+  Error possibility: 	'tum_id' in request does not have the correct form
+  Answer:	{ status: 400,
+		  message: 'tum_id does not have the correct form!' }
+  Error possibility: 	'tum_id' in request formally correct, 
+			but TUMonline does not respond token
+  Answer:	{ status: 404,
+		  message: 'TUMonline did not answer with a token for this tum_id!' }
 
 - Step 2: Hand over public key for storage on the backend.
   Request: 	POST /register

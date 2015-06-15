@@ -31,6 +31,8 @@ var options = {
 
 // Setup the request. 
 var req = https.request(options, function(res) {
+  console.log("statusCode: ", res.statusCode);
+
   res.setEncoding('utf-8');
 
   var responseString = '';
@@ -41,7 +43,9 @@ var req = https.request(options, function(res) {
 
   res.on('end', function() {
     var resultObject = JSON.parse(responseString);
+    console.log(resultObject);
   });
+
 });
 
 req.on('error', function(e) {

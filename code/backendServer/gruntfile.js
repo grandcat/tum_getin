@@ -174,4 +174,6 @@ module.exports = function(grunt) {
 
 	// Test task.
 	grunt.registerTask('test', ['env:test', 'mochaTest', 'karma:unit']);
+
+	//grunt.loadNpmTasks('grunt-mocha-debug');
 };
