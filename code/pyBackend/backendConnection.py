@@ -9,14 +9,13 @@ userString = json.dumps(user)
 headers = {"Content-Type" : "application/json",
            "Content-Length" : len(userString)}
 
-host = 'localhost'
+host = '192.168.178.37'
 port = 3000
 
 #Cert Stuff
-certfile = 'cert.pem'
-ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-ctx.load_default_certs(ssl.Purpose.CLIENT_AUTH)
-
+ctx = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+#ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+ctx.set_default_verify_paths()
 
 #The HTTPS Connection
 conn = http.client.HTTPSConnection(host, port, context=ctx)
@@ -25,6 +24,7 @@ response = conn.getresponse()
 
 print(response.status, response.reason)
 conn.close()
+
 
 
 
