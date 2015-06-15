@@ -13,13 +13,13 @@ exports.register_get_token = function(req, res) {
 		// and we ask TUMOnline for a new token.
 		console.log('\tNo token sent -> request in TUMOnline');
 		// ...
-		res.json({ message: '/register is sending a new token' });
+		res.json({ status: 200, message: '/register is sending a new token' });
 	} else {
 		// The user already has a token.
 		// Check if he sent a key and store the key.
 		var key = req.query.key;
 		// ...
-		res.json({ message: '/register successfully stored key' });
+		res.json({ status: 200, message: '/register successfully stored key' });
 	}
 };
 
@@ -39,7 +39,7 @@ exports.register_store_key = function(req, res) {
 		// and we ask TUMOnline for a new token.
 		console.log('\tNo token sent -> request in TUMOnline');
 		// ...
-		res.json({ message: '/register is sending a new token' });
+		res.json({ status: 200, message: '/register is sending a new token' });
 	} else {
 		// The user already has a token.
 		// Check if he sent a key and store the key.
@@ -47,6 +47,6 @@ exports.register_store_key = function(req, res) {
 		
 
 		// ...
-		res.json({ message: '/register successfully stored key' });
+		res.json({ status: 200, message: '/register successfully stored key' });
 	}
 };
