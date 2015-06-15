@@ -12,7 +12,7 @@ class CommStateMachine:
     data_out_offset = 0     # For lazy client that doesn't want to index the data, we do it =)
     data_in = bytearray()
     data_in_ready = False
-    data_in_size = 0
+    data_in_size = 0        # bytearray for input handles the offset itself, but needs a limit
 
     def __init__(self, log=None):
         self.log = log or logging.getLogger(__name__)
@@ -65,7 +65,7 @@ class CommStateMachine:
 
             elif (APDU.ISO7816_WRITE_DATA == action) and self.conn_established:
                 # Client sends data to reader
-                return self._fetch_data_from_client(rx_buffer)
+                return self._get_data_from_client(rx_buffer)
 
             elif (APDU.CUSTOM_DATA_SIZE == action) and self.conn_established:
                 if APDU.ISO7816_READ_DATA == rx_buffer[APDU.P1]:
@@ -74,7 +74,7 @@ class CommStateMachine:
 
                 elif APDU.ISO7816_WRITE_DATA == rx_buffer[APDU.P1]:
                     # Client sets length of data he wants to send to the reader
-                    return self._fetch_data_in_size(rx_buffer)
+                    return self._get_data_in_size(rx_buffer)
                 else:
                     return APDU.msg_err_param()
 
@@ -83,6 +83,7 @@ class CommStateMachine:
 
     def _push_data_out_size(self, rx_buffer):
         if not self.data_out_ready:
+            self.log.info('Memory locked, busy here.')
             return APDU.msg_err_no_data()
 
         elif 0x02 == rx_buffer[APDU.LC]:
@@ -128,9 +129,10 @@ class CommStateMachine:
 
         return buf_out, len(buf_out)
 
-    def _fetch_data_in_size(self, rx_buffer):
+    def _get_data_in_size(self, rx_buffer):
         """Announces the length for the incoming data"""
         if not self.data_in_ready:
+            self.log.info('Memory locked, busy here.')
             return APDU.msg_err_not_ready()
 
         # Extract requested size, but upper bound to our limit
@@ -147,7 +149,7 @@ class CommStateMachine:
 
         return response, 4
 
-    def _fetch_data_from_client(self, rx_buffer):
+    def _get_data_from_client(self, rx_buffer):
         """Collect received chunks into data_in and notifies a listener if the transfer is finished"""
         if not self.data_in_ready:
             return APDU.msg_err_not_ready()
