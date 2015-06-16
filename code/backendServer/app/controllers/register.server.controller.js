@@ -50,8 +50,9 @@ function contactTUMonline(res, tum_id) {
  */
 function getUserByTumId(req, res, tum_id, callback) {
 	User.findOne({ tum_id: tum_id }, function(err, user) {
-		if (err) return err;
-		if (!user) return null;
+		if (err) {
+			handleDBsave(err, res);
+		}
 		callback(req, res, tum_id, user);
 	});
 }

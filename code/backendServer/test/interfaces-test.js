@@ -39,6 +39,63 @@ vows.describe('Backend Interface Unit Tests:').addBatch({
             		assert.equal (topic.status, 200);
         	}
 	}
+}).addBatch({
+	'/register post key - missing tum_id': {
+		topic: function() {
+			callback = this.callback;
+			var user = {
+			  token: testUser1.token,
+			  key: testUser1.key
+			};
+			sendPost('/register', user);
+		},
+		'Check response status': function (topic) {
+            		assert.equal (topic.status, 400);
+        	}
+	}
+}).addBatch({
+	'/register post key - missing token': {
+		topic: function() {
+			callback = this.callback;
+			var user = {
+			  tum_id: testUser1.tum_id,
+			  key: testUser1.key
+			};
+			sendPost('/register', user);
+		},
+		'Check response status': function (topic) {
+            		assert.equal (topic.status, 400);
+        	}
+	}
+}).addBatch({
+	'/register post key - missing key': {
+		topic: function() {
+			callback = this.callback;
+			var user = {
+			  tum_id: testUser1.tum_id,
+			  token: testUser1.token
+			};
+			sendPost('/register', user);
+		},
+		'Check response status': function (topic) {
+            		assert.equal (topic.status, 400);
+        	}
+	}
+}).addBatch({
+	'/register post key - sending non-existing tum_id': {
+		topic: function() {
+			callback = this.callback;
+			var user = {
+			  tum_id: 'gg44ggg',
+			  token: testUser1.token,
+			  key: testUser1.key
+			};
+			sendPost('/register', user);
+		},
+		'Check response status': function (topic) {
+            		assert.equal (topic.status, 404);
+        	}
+	}
 }).run();
 
 var req; // request object
