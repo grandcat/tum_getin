@@ -31,3 +31,6 @@ __pycache__/
 
 # IDE project files
 **/.idea/
+
+# VIM swap files
+*.swp

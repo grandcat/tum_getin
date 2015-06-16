@@ -1,11 +1,22 @@
 'use strict';
+var mongoose = require('mongoose'),
+    User = mongoose.model('User');
 
 function contactTUMonline(tum_id) {
-
 }
 
 function reply(res, res_status, res_message) {
 	res.json({ status: res_status, message: res_message });
+}
+
+function getUserByTumId(tum_id) {
+	User.findOne({
+		tum_id: tum_id
+	}).exec(function(err, user) {
+		if (err) return err;
+		if (!user) return null;
+		return user;
+	});
 }
 
 /**
@@ -23,6 +34,8 @@ exports.register_get_token = function(req, res) {
 		reply(res, 400, 'Please set tum_id in the HTTPS request!');
 	} else if (true) { // tum_id has the correct format
 		// Check if we already have a token in the DB
+		var user = getUserByTumId(tum_id);
+		console.log(user);
 		if (true) {
 			// Check if token from DB is still valid
 			if(true) { // if yes, then send the one from the DB
@@ -31,7 +44,7 @@ exports.register_get_token = function(req, res) {
 				contactTUMonline(tum_id);
 			}
 		} else {
-			// Request new token from TUMonline
+			// Request new token from TUMonline and save it in DB
 			contactTUMonline(tum_id);
 		}
 	} else { // Then the tum_id does not adhere to the correct format.

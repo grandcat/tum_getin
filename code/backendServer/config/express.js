@@ -4,7 +4,6 @@
  * Module dependencies.
  */
 var fs = require('fs'),
-	http = require('http'),
 	https = require('https'),
 	express = require('express'),
 	morgan = require('morgan'),
@@ -124,6 +123,26 @@ module.exports = function(db) {
 		});
 	});
 
+	// Fill DB with test data when in test mode
+	if (process.env.NODE_ENV === 'test') {
+		var mongoose = require('mongoose'),
+		    User = mongoose.model('User'),
+		    user_01 = require('../../testResources/user_01.json'),
+		    user_02 = require('../../testResources/user_02.json');
+
+		console.log('---> Test mode: Loading test data into DB...');
+
+		var user = new User(user_01);
+		user.save(function(err) {
+			if (err) { console.log('user save error: ', err); }
+		});
+		user = new User(user_02);
+		user.save(function(err) {
+			if (err) { console.log('user save error: ', err); }
+		});
+
+	}
+
 	// always enforce https!!!
 	if (true) { //process.env.NODE_ENV === 'secure') {
 		// Log SSL usage
@@ -142,6 +161,7 @@ module.exports = function(db) {
 		// Return HTTPS server instance
 		return httpsServer;
 	}
+
 
 	// Return Express server instance
 	return app;

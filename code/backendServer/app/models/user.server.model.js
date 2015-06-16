@@ -14,9 +14,21 @@ var UserSchema = new Schema({
 		type: String,
 		trim: true,
 	},
+	pseudo_id: {
+		type: String,
+		trim: true,
+	},
 	token: {
 		type: String,
 		trim: true,
+	},
+	status: {
+		type: String,
+		trim: true,
+	},
+	revoked: {
+		type: Boolean,
+		default: false
 	},
 	created: {
 		type: Date,
@@ -32,6 +44,7 @@ var UserSchema = new Schema({
  * Build indices in DB
  */
 UserSchema.index({tum_id : 1}, {unique : true});
+UserSchema.index({pseudo_id : 1}, {unique : true});
 UserSchema.index({token : 1}, {unique : true});
 
 
