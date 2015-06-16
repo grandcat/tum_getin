@@ -2,13 +2,32 @@
 var mongoose = require('mongoose'),
     User = mongoose.model('User');
 
-function contactTUMonline(tum_id) {
+/**
+ * Sends a JSON answer message.
+ * Last parameter is optional for additional fields
+ */
+function reply(res, res_status, res_message, json) {
+	var msg = { status: res_status, message: res_message };
+	if(json !== null && json !== undefined) { // if we have json, concat it to msg
+		for (var attrname in json) { msg[attrname] = json[attrname]; }
+	}
+	res.json(msg);
 }
 
-function reply(res, res_status, res_message) {
-	res.json({ status: res_status, message: res_message });
+/**
+ * Requests a token from TUMonline
+ * and saves it in the DB if successful.
+ * Finally sends return message.
+ */
+function contactTUMonline(res, tum_id) {
+	//TODO: contact tumonline
+
+	//TODO: send proper response
+	reply(res, 200, 'Token generation successful. Please send public key.',
+	{ tum_id: 'basfd', pseudo_id: 'afdgtrsyjd', token: 'ewtry' });
 }
 
+// helper function
 function getUserByTumId(tum_id) {
 	User.findOne({
 		tum_id: tum_id
@@ -32,23 +51,34 @@ exports.register_get_token = function(req, res) {
 	if(tum_id === undefined) { // then something is wrong
 		// Send error message back
 		reply(res, 400, 'Please set tum_id in the HTTPS request!');
+	//TODO: regex for tum_id form!
 	} else if (true) { // tum_id has the correct format
 		// Check if we already have a token in the DB
 		var user = getUserByTumId(tum_id);
 		console.log(user);
-		if (true) {
-			// Check if token from DB is still valid
-			if(true) { // if yes, then send the one from the DB
-				var soirj = 435;
-			} else { // otherwise request a new one from TUMonline
-				contactTUMonline(tum_id);
-			}
+		if (user === null || user === undefined) { // new user
+			contactTUMonline(res, tum_id);
 		} else {
-			// Request new token from TUMonline and save it in DB
-			contactTUMonline(tum_id);
+			var token = user.token;
+			if (token !== undefined) {
+				//TODO: validity check!
+				// Check if token from DB is still valid
+				if(true) { // if yes, then send the one from the DB
+					reply(res, 200, 
+					'Token generation successful. Please send public key.',
+					{ tum_id: user.tum_id, 
+					  pseudo_id: user.pseudo_id,
+					  token: user.token });
+				} else { // otherwise request a new one from TUMonline
+					contactTUMonline(res, tum_id);
+				}
+			} else {
+				// Request new token from TUMonline and save it in DB
+				contactTUMonline(res, tum_id);
+			}
 		}
 	} else { // Then the tum_id does not adhere to the correct format.
-		reply(400, 'tum_id does not have the correct form!' );
+		reply(400, 'tum_id does not have the correct form!');
 	}
 };
 

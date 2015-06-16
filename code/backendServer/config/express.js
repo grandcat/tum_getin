@@ -131,6 +131,13 @@ module.exports = function(db) {
 		    user_02 = require('../../testResources/user_02.json');
 
 		console.log('---> Test mode: Loading test data into DB...');
+		
+		User.remove({tum_id: user_01.tum_id}, function(err) {
+			if (err) { console.log('user remove error: ', err); }
+		});
+		User.remove({tum_id: user_02.tum_id}, function(err) {
+			if (err) { console.log('user remove error: ', err); }
+		});
 
 		var user = new User(user_01);
 		user.save(function(err) {
