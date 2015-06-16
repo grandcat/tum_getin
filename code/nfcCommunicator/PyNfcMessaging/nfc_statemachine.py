@@ -1,4 +1,5 @@
 import logging
+import queue
 import struct
 
 class CommStateMachine:
@@ -6,19 +7,24 @@ class CommStateMachine:
     MAX_BYTES = 4096
     MAX_CHUNK_SIZE = 125 # 250 quite stable, too
 
-    data_out = bytearray(b'\xbe\xef\xaf\xfe' * 128)
-    data_out.extend([0x11, 0x22, 0x33])
+    # data_out = bytearray(b'\xbe\xef\xaf\xfe' * 128)
+    # data_out.extend([0x11, 0x22, 0x33])
+    data_out = bytearray()
     data_out_ready = False  # If true, buffer is complete and ready for transmission (NOTE: must be atomic)
     data_out_offset = 0     # For lazy client that doesn't want to index the data, we do it =)
     data_in = bytearray()
     data_in_ready = False
-    data_in_size = 0        # bytearray for input handles the offset itself, but needs a limit
+    data_in_size = 0
+    # bytearray for input handles the offset itself, but needs a limit
 
-    def __init__(self, log=None):
+    def __init__(self, queue_data_in, queue_data_out, log=None):
         self.log = log or logging.getLogger(__name__)
         # Progress states and flags
         self.stop_communication = False
         self.conn_established = False
+        # IO buffer interface
+        self.q_data_in = queue_data_in
+        self.q_data_out = queue_data_out
 
     def should_stop(self):
         """
@@ -49,7 +55,6 @@ class CommStateMachine:
                         self.conn_established = True
                         self.log.info('Valid client connected')
                         # TODO: remove the following test
-                        self.data_out_ready = True
                         self.data_in_ready = True
                         # END Test
                         return APDU.msg_success()
@@ -69,7 +74,8 @@ class CommStateMachine:
 
             elif (APDU.CUSTOM_DATA_SIZE == action) and self.conn_established:
                 if APDU.ISO7816_READ_DATA == rx_buffer[APDU.P1]:
-                    # Client requests length of available data
+                    # Client requests length of available data, check data_out queue before for ready data
+                    self._try_fetch_msg_from_data_out_queue()
                     return self._push_data_out_size(rx_buffer)
 
                 elif APDU.ISO7816_WRITE_DATA == rx_buffer[APDU.P1]:
@@ -78,24 +84,61 @@ class CommStateMachine:
                 else:
                     return APDU.msg_err_param()
 
+            self._try_fetch_msg_from_data_out_queue()
+
         # Default fallback to keep the connection alive
         return APDU.msg_success()
+
+    def _try_fetch_msg_from_data_out_queue(self):
+        """
+        Check for data being ready for transmission to client
+
+        :return: if true, data is available now for outgoing transfer
+                 if false, no data is queued for transmission
+        """
+        # Buffer already filled with data and not fetched yet
+        # We have to wait here, otherwise data is corrupted during an active read by the client
+        if self.data_out_ready:
+            return False
+
+        try:
+            if self.q_data_out.empty():
+                return False
+            # Try to get message
+            # Calling still might raise an exception, because some incomplete data might be in the queue.
+            msg_out = self.q_data_out.get_nowait()
+            # Replace internal buffer
+            self.data_out = msg_out
+            self.data_out_offset = 0
+            # Notify
+            self.data_out_ready = True
+            self.q_data_out.task_done()
+
+            return True
+
+        except queue.Empty:
+            # Nothing to send, ignore this request
+            self.log.debug('Empty queue exception while probing.')
+            pass
+
+        return False
 
     def _push_data_out_size(self, rx_buffer):
         if not self.data_out_ready:
             self.log.info('Memory locked, busy here.')
             return APDU.msg_err_no_data()
 
-        elif 0x02 == rx_buffer[APDU.LC]:
-            self.data_out_offset = 0
-            # Request: size of available data
-            data_size = len(self.data_out)
-            # Answer: P1 * 256 + P2 encodes size
-            response = struct.pack('!H2s', data_size, APDU.SUCCESS)  # Put as unsigned short with 2 bytes
-            return response, 4
+        #elif 0x02 == rx_buffer[APDU.LC]:
+        # Reset push offset to give client a new chance to get the whole msg with fragmentation
+        self.data_out_offset = 0
+        # Request: size of available data
+        data_size = len(self.data_out)
+        # Answer: P1 * 256 + P2 encodes size
+        response = struct.pack('!H2s', data_size, APDU.SUCCESS)  # Put as unsigned short with 2 bytes + success
+        return response, 4
 
-        else:
-            return APDU.msg_err_param()
+        #else:
+        #    return APDU.msg_err_param()
 
     def _push_data_to_client(self, rx_buffer):
         """Read data_out bytearray and transmit fragmented packets to client"""
@@ -141,7 +184,7 @@ class CommStateMachine:
 
         # Prepare buffer for merging data chunks and remove old buffer if not busy
         self.data_in = bytearray()  # BUG: could be misused to trigger a lot of small-sized memory allocations.
-                                    #      Hopefully, GC is fast enough for cleaning up.
+                                    # Assuming, GC is fast enough for cleaning up.
         self.data_in_size = requested_size
         self.log.debug('Allocating %d bytes for data input', requested_size)
         # Response: actually reserved bytes
@@ -177,9 +220,11 @@ class CommStateMachine:
         # Notify about finished data transfer and deny external modification by client
         if len(self.data_in) == self.data_in_size:
             self.data_in_ready = False
-            # TODO: add notification
-            print('Finished data: %s' % self.data_in)
+            # Transfer to other thread
+            self.q_data_in.put(self.data_in)
+            self.data_in = bytearray()
             self.log.debug('data_in buffer (%d bytes) completed', self.data_in_size)
+            self.data_in_ready = True
             # data_in is now complete for local processing. This tells the client that all data was received
             # successfully, but we need some time until we have data to push back to the client.
             return APDU.msg_success_with_data_ready(0x00)

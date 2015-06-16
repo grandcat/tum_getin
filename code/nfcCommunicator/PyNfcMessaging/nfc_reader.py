@@ -1,10 +1,13 @@
 """Simple NFC card emulation"""
 
+import threading
 import logging
 import ctypes
+import queue
 
 import nfc
 from nfc_error import HWError
+from nfcio import NfcIO
 from nfc_statemachine import CommStateMachine
 
 def hex_dump(buffer):
@@ -12,24 +15,27 @@ def hex_dump(buffer):
     return ' '.join(["%0.2X" % x for x in buffer])
 
 # NFC device setup
-class NFCReader(object):
-    """Short APDU max transceive length: ISO7816_SHORT_APDU_MAX_DATA_LEN + APDU_COMMAND_HEADER + APDU_RESPONSE_TRAILER """
+class NFCReader(threading.Thread):
+    """
+    Short APDU max transceive length
+    ISO7816_SHORT_APDU_MAX_DATA_LEN + APDU_COMMAND_HEADER + APDU_RESPONSE_TRAILER
+    """
     ISO7816_SHORT_APDU_MAX_LEN = 256 + 4 + 2
 
-    def __init__(self, log=None):
+    def __init__(self, queue_data_in, queue_data_out, log=None):
+        threading.Thread.__init__(self)
+        self.name = 'nfc.hw'
         self.log = log or logging.getLogger(__name__)
         # NFC hardware fields
         self.__context = None
         self.__device = None
         self.__target = None
-        # Send and receive buffer for exchanging one APDU message over NFC
+        # Raw send buffer and raw receive buffer for exchanging one APDU message over NFC
         self.__tx_msg = (ctypes.c_uint8 * self.ISO7816_SHORT_APDU_MAX_LEN)()
         self.__rx_msg = (ctypes.c_uint8 * self.ISO7816_SHORT_APDU_MAX_LEN)()
-
-        self._card_present = False
-        self._card_last_seen = None
-        self._card_uid = None
-        self._clean_card()
+        # IO buffer interface for inter-thread communication
+        self.q_data_in = queue_data_in
+        self.q_data_out = queue_data_out
 
         # Init
         self.init_card_emulation_target()
@@ -66,7 +72,8 @@ class NFCReader(object):
         # card.abtAtqa[:] = [0x00, 0x04] # also seems to work directly
         print(card.abtAtqa[:])
 
-        uid = "\x08\x00\xb0\xfe"
+        # uid = "\x08\x00\xb0\xfe"
+        uid = "\x08\x00\xb0\x0b"
         for i in range(4):
             card.abtUid[i] = ord(uid[i])
         card.szUidLen = 4
@@ -92,7 +99,6 @@ class NFCReader(object):
         nfc.nfc_init(ctypes.byref(self.__context))
         connection_loop = True
         try:
-            self._clean_card()
             conn_strings = (nfc.nfc_connstring * 1)()
             devices_found = nfc.nfc_list_devices(self.__context, ctypes.byref(conn_strings), 1)
             if devices_found != 1:
@@ -114,8 +120,9 @@ class NFCReader(object):
                                                      self.ISO7816_SHORT_APDU_MAX_LEN, 5000)
                 if connection_res >= 0:
                     self.log.debug(self.__rx_msg[:connection_res])
-                    # Start message exchange state machine
-                    self._message_loop()
+                    # Initialize state machine and start message exchange state machine
+                    stm = CommStateMachine(self.q_data_in, self.q_data_out)
+                    self._message_loop(stm)
 
                 elif connection_res != nfc.NFC_ETIMEOUT:
                     self.log.warning('nfc_target_init: got error %i', connection_res)
@@ -136,10 +143,8 @@ class NFCReader(object):
         return connection_loop
 
 
-    def _message_loop(self):
+    def _message_loop(self, stm):
         """Starts a loop that simulates a smart card"""
-        stm = CommStateMachine()
-
         loop = True
         while loop:
             # Receive APDU message
@@ -174,14 +179,21 @@ class NFCReader(object):
 
             # loop = False
 
-    def _clean_card(self):
-        self._card_uid = None
-
 
 if __name__ == '__main__':
-    logging.basicConfig(format='[%(levelname)s:%(name)s:%(funcName)s] %(message)s', level=logging.DEBUG)
+    logging.basicConfig(format='[%(levelname)s:%(threadName)s:%(name)s:%(funcName)s] %(message)s', level=logging.DEBUG)
+    # Do not pass logger object any more to generate uniqu  e names per module
     logger = logging.getLogger(__name__)
-    # Do not pass logger object to generate unique names per module
-    reader = NFCReader()
-    while reader.run():
-        pass
+
+    # IO queues for asynchronous communication between reader hardware (needs replies in a bounded fashion)
+    # and an IO interface which is blocked until messages are received successfully
+    queue_data_in = queue.Queue(8)
+    queue_data_out = queue.Queue(8)
+    # NFC HW reader
+    reader = NFCReader(queue_data_in, queue_data_out, None)
+    reader.start()
+    # Interfacing main thread
+    nfcIO = NfcIO(queue_data_in, queue_data_out)
+    nfcIO.run_ioloop()
+    reader.join()
+    logger.info('Joining NFC hardware thread.')
