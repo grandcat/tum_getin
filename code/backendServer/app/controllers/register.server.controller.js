@@ -15,6 +15,24 @@ function reply(res, res_status, res_message, json) {
 }
 
 /**
+ * Wrapper for reply(). Is sent on server errors.
+ */
+function send500error(res) {
+	reply(res, 500, 'The server encountered an error. Please try again!');
+}
+
+/**
+ * Is called on DB save operations.
+ * Sends 500 error message if on error
+ */
+function handleDBsave(err, res) {
+	if (err) { 
+		console.err('user save error: ', err); 
+		send500error(res);
+	}
+}
+
+/**
  * Requests a token from TUMonline
  * and saves it in the DB if successful.
  * Finally sends return message.
@@ -27,15 +45,43 @@ function contactTUMonline(res, tum_id) {
 	{ tum_id: 'basfd', pseudo_id: 'afdgtrsyjd', token: 'ewtry' });
 }
 
-// helper function
-function getUserByTumId(tum_id) {
-	User.findOne({
-		tum_id: tum_id
-	}).exec(function(err, user) {
+/**
+ * helper function. Looks up user by tum_id and calls callback
+ */
+function getUserByTumId(req, res, tum_id, callback) {
+	User.findOne({ tum_id: tum_id }, function(err, user) {
 		if (err) return err;
 		if (!user) return null;
-		return user;
+		callback(req, res, tum_id, user);
 	});
+}
+
+/** 
+ * Proceeds with the register_get_token method 
+ * after a user has been searched in DB
+ */
+function registerGetTokenForUser(req, res, tum_id, user) {
+	if (user === null || user === undefined) { // new user
+		contactTUMonline(res, tum_id);
+	} else {
+		var token = user.token;
+		if (token !== undefined) {
+			//TODO: validity check!
+			// Check if token from DB is still valid
+			if(true) { // if yes, then send the one from the DB
+				reply(res, 200, 
+				'Token generation successful. Please send public key.',
+				{ tum_id: user.tum_id, 
+				  pseudo_id: user.pseudo_id,
+				  token: user.token });
+			} else { // otherwise request a new one from TUMonline
+				contactTUMonline(res, tum_id);
+			}
+		} else {
+			// Request new token from TUMonline and save it in DB
+			contactTUMonline(res, tum_id);
+		}
+	}
 }
 
 /**
@@ -54,33 +100,37 @@ exports.register_get_token = function(req, res) {
 	//TODO: regex for tum_id form!
 	} else if (true) { // tum_id has the correct format
 		// Check if we already have a token in the DB
-		var user = getUserByTumId(tum_id);
-		console.log(user);
-		if (user === null || user === undefined) { // new user
-			contactTUMonline(res, tum_id);
-		} else {
-			var token = user.token;
-			if (token !== undefined) {
-				//TODO: validity check!
-				// Check if token from DB is still valid
-				if(true) { // if yes, then send the one from the DB
-					reply(res, 200, 
-					'Token generation successful. Please send public key.',
-					{ tum_id: user.tum_id, 
-					  pseudo_id: user.pseudo_id,
-					  token: user.token });
-				} else { // otherwise request a new one from TUMonline
-					contactTUMonline(res, tum_id);
-				}
-			} else {
-				// Request new token from TUMonline and save it in DB
-				contactTUMonline(res, tum_id);
-			}
-		}
+		// ...and proceed with function registerGetTokenForUser()...
+		getUserByTumId(req, res, tum_id, registerGetTokenForUser);
 	} else { // Then the tum_id does not adhere to the correct format.
 		reply(res, 400, 'tum_id does not have the correct form!');
 	}
 };
+
+/**
+ * Proceeds with the register_store_key method 
+ * after a user has been searched in DB
+ */
+function registerStoreKeyForUser(req, res, tum_id, user) {
+	var token = req.body.token;
+	var key = req.body.key;
+	if(user === undefined || user === null) {
+		// if user is not found in db, send error message
+		reply(res, 404,
+		'tum_id not found in DB. Please start with step 1!');	
+	} else { 
+		if(user.token !== token) {
+			// if token in the request does not equal the DB
+			reply(res, 400, 'token seems to be wrong!');	
+		} else {
+		// actually store key
+		user.key = key;
+		user.save(handleDBsave);
+		reply(res, 200, 
+			'Key stored successfully. User registration complete.');
+		}
+	}
+}
 
 /**
  * Handle step 2 of the smartphone - backend communication.
@@ -92,29 +142,18 @@ exports.register_store_key = function(req, res) {
 	var tum_id = req.body.tum_id;
 	var token = req.body.token;
 	var key = req.body.key;
-	
-	console.log('----> /register store key : tum_id: %s, token: %s ', tum_id, token);
+	//console.log('----> /register store key : tum_id: %s, token: %s ', tum_id, token);
 
 	// check if all parameters are set in the request
 	if(tum_id === undefined || token === undefined || key === undefined) { 
 		// something is missing...
 		reply(res, 400, 'Please set tum_id, token and key in the request!');
 	} else {
-		//TODO: check
+		//TODO: check format
 		// check if all parameters have the correct form
 		if(true) {
 			// Find user and save the new key
-			//TODO: ...
-			// if user is not found in db
-			if(false) {
-				reply(res, 404,
-				'tum_id not found in DB. Please start with step 1!');	
-			} else {
-				// actually store key
-				//TODO:...
-				reply(res, 200, 
-				'Key stored successfully. User registration complete.');
-			}
+			getUserByTumId(req, res, tum_id, registerStoreKeyForUser);
 		} else { // something has a wrong format. Send error message...
 			reply(res, 400, 'tum_id, token or key do not have the correct form!');
 		}

@@ -77,6 +77,9 @@ Ablauf:
   Error possibility:	tum_id, token or key do not have the correct format
   Answer:	{ status: 400,
 		  message: 'tum_id, token or key do not have the correct form!' }
+  Error possibility:	token in the request does not equal the one in the DB
+  Answer:	{ status: 400,
+		  message: 'token seems to be wrong!' }
   Error possibility:	tum_id is not found in the DB
   Answer:	{ status: 404,
 		  message: 'tum_id not found in DB. Please start with step 1!' }
