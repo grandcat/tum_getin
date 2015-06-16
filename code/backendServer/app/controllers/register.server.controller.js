@@ -78,7 +78,7 @@ exports.register_get_token = function(req, res) {
 			}
 		}
 	} else { // Then the tum_id does not adhere to the correct format.
-		reply(400, 'tum_id does not have the correct form!');
+		reply(res, 400, 'tum_id does not have the correct form!');
 	}
 };
 
@@ -89,28 +89,35 @@ exports.register_get_token = function(req, res) {
  */
 exports.register_store_key = function(req, res) {
 
-	var tum_id = req.query.tum_id;
-	var token = req.query.token;
+	var tum_id = req.body.tum_id;
+	var token = req.body.token;
+	var key = req.body.key;
 	
 	console.log('----> /register store key : tum_id: %s, token: %s ', tum_id, token);
-	console.log(req.method);
 
-	console.log(req.body);
-
-	if(token === undefined) { // no token in the request
-		// ...then it is the initial request
-		// and we ask TUMOnline for a new token.
-		console.log('\tNo token sent -> request in TUMOnline');
-		// ...
-		res.json({ status: 200, message: '/register is sending a new token' });
+	// check if all parameters are set in the request
+	if(tum_id === undefined || token === undefined || key === undefined) { 
+		// something is missing...
+		reply(res, 400, 'Please set tum_id, token and key in the request!');
 	} else {
-		// The user already has a token.
-		// Check if he sent a key and store the key.
-		var key = req.query.key;
-		
-
-		// ...
-		res.json({ status: 200, message: '/register successfully stored key' });
+		//TODO: check
+		// check if all parameters have the correct form
+		if(true) {
+			// Find user and save the new key
+			//TODO: ...
+			// if user is not found in db
+			if(false) {
+				reply(res, 404,
+				'tum_id not found in DB. Please start with step 1!');	
+			} else {
+				// actually store key
+				//TODO:...
+				reply(res, 200, 
+				'Key stored successfully. User registration complete.');
+			}
+		} else { // something has a wrong format. Send error message...
+			reply(res, 400, 'tum_id, token or key do not have the correct form!');
+		}
 	}
 };
 

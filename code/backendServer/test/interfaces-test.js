@@ -30,11 +30,12 @@ vows.describe('Backend Interface Unit Tests:').addBatch({
 			callback = this.callback;
 			var user = {
 			  tum_id: testUser1.tum_id,
-			  token: testUser1.token
+			  token: testUser1.token,
+			  key: testUser1.key
 			};
 			sendPost('/register', user);
 		},
-		'Response status is 200': function (topic) {
+		'Check response status': function (topic) {
             		assert.equal (topic.status, 200);
         	}
 	}
