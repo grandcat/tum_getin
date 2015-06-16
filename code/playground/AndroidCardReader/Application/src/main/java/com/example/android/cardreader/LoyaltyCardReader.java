@@ -21,9 +21,12 @@ import android.nfc.tech.IsoDep;
 
 import com.example.android.common.logger.Log;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 
 /**
@@ -42,7 +45,7 @@ public class LoyaltyCardReader implements NfcAdapter.ReaderCallback {
     private static final String APDU_READ_BINARY = "00B0";
     private static final String APDU_READ_BINARY_SIZE = "00CBB0";
     private static final byte[] APDU_WRITE_BINARY = new byte[] {(byte)0x00, (byte)0xd0, (byte)0x00, (byte)0x00, (byte)0x00};
-    private static final byte[] APDU_GET_DATA_SIZE = new byte[] {(byte)0x00, (byte)0xcb, (byte)0xb0, (byte)0x00};
+    private static final byte[] APDU_GET_DATA_SIZE = new byte[] {(byte)0x00, (byte)0xcb, (byte)0xb0, (byte)0x00, (byte)0x00};
     private static final byte[] APDU_SET_DATA_SIZE = new byte[] {(byte)0x00, (byte)0xcb, (byte)0xd0};
     // "OK" status word sent in response to SELECT AID command (0x9000)
     private static final byte[] SELECT_OK_SW = {(byte) 0x90, (byte) 0x00};
@@ -100,45 +103,14 @@ public class LoyaltyCardReader implements NfcAdapter.ReaderCallback {
                 byte[] payload = Arrays.copyOf(result, resultLength-2);
                 Log.i(TAG, "Raw Received: " + ByteArrayToHexString(result));
                 if (Arrays.equals(SELECT_OK_SW, statusWord)) {
-                    // Ask for available data
-                    old_command = HexStringToByteArray(APDU_READ_BINARY_SIZE + "0002");
-                    Log.i(TAG, "Sending LC request: " + ByteArrayToHexString(old_command));
-                    result = isoDep.transceive(old_command);
-                    int data_size = (int)((result[0] & 0xFF) << 8) + (int)(result[1] & 0xff);
-                    Log.i(TAG, "Raw LC Received: " + ByteArrayToHexString(result) + " is " + data_size);
-                    // Retrieve binary data chunck by chunck
-                    int offset = 0;
-                    ByteBuffer data_in = ByteBuffer.allocate(Math.min(data_size, 4096));
                     ByteBuffer command = ByteBuffer.allocate(5);
-                    command.put(1, (byte) 0xB0);
-
-                    while (offset < data_size)
-                    {
-                        int req_size = Math.min((data_size - offset), CHUNK_SIZE);
-
-                        command.putShort(2, (short) (offset & 0xffff)); // interpret as unsigned
-                        command.put(4, (byte) (req_size & 0xff));       // LE: requested size of response
-
-                        Log.i(TAG, "Fetch data at offset " + offset + " Raw: " + ByteArrayToHexString(command.array()));
-                        byte[] response = isoDep.transceive(command.array());
-
-                        Log.i(TAG, "Raw Received: " + ByteArrayToHexString(response));
-                        data_in.put(response, 0, response.length - 2);
-
-                        offset += response.length - 2;
-                    }
-
-                    // Finished joining junks
-                    Log.i(TAG, "Buffered output: " + ByteArrayToHexString(data_in.array()));
-                    Log.i(TAG, "Offset: " + offset);
-
-                    // Try to transmit some chuncked data to reader
-                    short data_out_size = 1033;
-                    ByteBuffer data_out = ByteBuffer.allocate(data_out_size);
-                    // Payload
-                    for (int i = 0; i < data_out.capacity() / 2; ++i) {
-                        data_out.put(new byte[] {(byte)0xaf, (byte)0xfe});
-                    }
+                    // Try to transmit some chunked data to reader
+                    byte[] outText = ("Hallo, hier spricht das Smartphone. Hier ein wenig UTF.8 Text. " +
+                            "Dieser muss jedoch bald durch eine verschluesselte Nachricht ausgetauscht" +
+                            " werden.\nLorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam " +
+                            "nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, " +
+                            "sed diam voluptua").getBytes(Charset.forName("UTF-8"));
+                    short data_out_size = (short)outText.length;
 
                     command.clear();
                     command.put(APDU_SET_DATA_SIZE);
@@ -146,32 +118,60 @@ public class LoyaltyCardReader implements NfcAdapter.ReaderCallback {
                     Log.i(TAG, "Request " + data_out_size + " for writing. Raw: " + ByteArrayToHexString(command.array()));
                     byte[] response = isoDep.transceive(command.array());
                     Log.i(TAG, "Raw Received: " + ByteArrayToHexString(response));
-
                     // Transfer data to Reader
-                    offset = 0;
+                    int offset = 0;
                     while (offset < data_out_size) {
                         int remaining_bytes = data_out_size - offset;
                         int out_len = Math.min(CHUNK_SIZE, remaining_bytes);
 
-                        ByteBuffer buf_out = ByteBuffer.allocate(5 + out_len);
+                        byte[] raw_out = new byte[5 + out_len];
+                        ByteBuffer buf_out = ByteBuffer.wrap(raw_out);
                         buf_out.put(APDU_WRITE_BINARY);
-                        buf_out.put(data_out.array(), offset, out_len);
+                        buf_out.put(outText, offset, out_len);
                         Log.i(TAG, "remaining: " + remaining_bytes + ", offset: " + offset + ", out_len: " + out_len);
 
-                        Log.i(TAG, "Send data Raw: " + ByteArrayToHexString(buf_out.array()));
-                        byte[] response2 = isoDep.transceive(buf_out.array());
+                        Log.i(TAG, "Send data Raw: " + ByteArrayToHexString(raw_out));
+                        byte[] response2 = isoDep.transceive(raw_out);
                         Log.i(TAG, "Raw Received: " + ByteArrayToHexString(response2));
 
                         offset += CHUNK_SIZE;
                     }
 
                     // Try to send some more data, but actually we know that the buffer is full
-                    command.clear();
-                    command.put(APDU_SET_DATA_SIZE);
-                    command.putShort(3, (short) (data_out_size & 0xffff));
-                    Log.i(TAG, "Fake: Request " + data_out_size + " for writing. Raw: " + ByteArrayToHexString(command.array()));
-                    response = isoDep.transceive(command.array());
-                    Log.i(TAG, "Raw Received: " + ByteArrayToHexString(response));
+//                    command.clear();
+//                    command.put(APDU_SET_DATA_SIZE);
+//                    command.putShort(3, (short) (data_out_size & 0xffff));
+//                    Log.i(TAG, "Fake: Request " + data_out_size + " for writing. Raw: " + ByteArrayToHexString(command.array()));
+//                    response = isoDep.transceive(command.array());
+//                    Log.i(TAG, "Raw Received: " + ByteArrayToHexString(response));
+
+                    // Ask for available data
+                    int data_size = waitForReadyInput(isoDep);
+                    // Retrieve binary data chunck by chunck
+                    offset = 0;
+                    ByteBuffer data_in = ByteBuffer.allocate(Math.min(data_size, 4096));
+                    command = ByteBuffer.allocate(5);
+                    command.put(1, (byte) 0xB0);
+                    // ByteStream a:
+                    while (offset < data_size)
+                    {
+                        int req_size = Math.min((data_size - offset), CHUNK_SIZE);
+
+                        // command.putShort(2, (short) (offset & 0xffff)); // interpret as unsigned
+                        command.put(4, (byte) (req_size & 0xff));       // LE: requested size of response
+
+                        Log.i(TAG, "Fetch data at offset " + offset + " Raw: " + ByteArrayToHexString(command.array()));
+                        byte[] res = isoDep.transceive(command.array());
+
+                        Log.i(TAG, "Raw Received: " + ByteArrayToHexString(res));
+                        data_in.put(res, 0, Math.min(req_size, res.length - 2));
+                        offset += res.length - 2;
+                    }
+                    // Finished joining junks
+                    Log.i(TAG, "Buffered output: " + ByteArrayToHexString(data_in.array()));
+                    Log.i(TAG, "Offset: " + offset);
+                    String s = new String(data_in.array(), "UTF-8");
+                    Log.i(TAG, "Got text:\n" + s);
 
                     /*resultLength = result.length;
                     payload = Arrays.copyOf(result, resultLength-2);
@@ -187,6 +187,26 @@ public class LoyaltyCardReader implements NfcAdapter.ReaderCallback {
                 Log.e(TAG, "Error communicating with card: " + e.toString());
             }
         }
+    }
+
+    public static int waitForReadyInput(IsoDep isoDep) throws IOException {
+        Log.i(TAG, "Waiting for data from NFC reader...");
+        for (int i = 0; i < 100; ++i) {
+            byte[] response = isoDep.transceive(APDU_GET_DATA_SIZE);
+            // Ignore error message
+            if (2 == response.length)
+            {
+                continue;
+            } else {
+                // Got a positive answer (4 bytes)
+                ByteBuffer result = ByteBuffer.wrap(response);
+                int data_size = result.getShort() & 0xffff;
+                Log.i(TAG, "Data available of size " + data_size + "bytes.");
+                return data_size;
+            }
+        }
+
+        return -1;
     }
 
     /**
