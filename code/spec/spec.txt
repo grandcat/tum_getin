@@ -113,5 +113,20 @@ Ablauf:
                     3a:b3:bd:85:da:e2:7a:42:3a:85:b1:3f:86:f7:9c:
                     ef:98:6c:62:91:0d:89:61:44:65:3f:10:dc:14:b9:
                     8f:83' }
+  Error possibility:	pseudo_id not found in DB
+  Answer:	{ status: '404',
+		  message: 'This pseudo_id does not exist!' }
+  Error possibility:	The corresponding person is no longer a student
+  Answer:	{ status: '403',
+		  message: 'This person is no longer a student!' }
+  Error possibility:	pseudo_id has the wrong format
+  Answer:	{ status: '400',
+		  message: 'pseudo_id does not have the correct form!' }
 
+
+
+
+>>> General server error message:
+  Could happen if the server runs into an internal error and cannot respond anymore.
+  Answer:	{ status: 500, message: <some message> }
 
