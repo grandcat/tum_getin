@@ -26,9 +26,11 @@ class NfcIO(object):
             # Typically, it is a bytearray containing
             msg_in = self.q_data_in.get()
             self.log.info('NfcIO got something, but I pretend to do some work now :p')
-            time.sleep(1)
+            # time.sleep(1)
             self.log.info('NfcIO received from reader: %s', msg_in.decode('utf-8'))
             self.q_data_in.task_done()
+
+            # TODO: exchange events (e.g., new initiator detected) between nfcio and nfc_reader
 
             # Send something
             text = 'Da stimme ich zu!\n' \
@@ -44,3 +46,4 @@ class NfcIO(object):
             self.q_data_out.put(msg_out)
 
             # break
+        return msg_loop

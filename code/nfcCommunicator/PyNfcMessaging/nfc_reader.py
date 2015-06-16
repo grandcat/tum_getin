@@ -97,50 +97,51 @@ class NFCReader(threading.Thread):
         self.__context = ctypes.pointer(nfc.nfc_context())
         self.log.debug('NFC init')
         nfc.nfc_init(ctypes.byref(self.__context))
+        conn_strings = (nfc.nfc_connstring * 1)()
+
         connection_loop = True
-        try:
-            conn_strings = (nfc.nfc_connstring * 1)()
-            devices_found = nfc.nfc_list_devices(self.__context, ctypes.byref(conn_strings), 1)
-            if devices_found != 1:
-                raise HWError('No NFC device found. Check your libnfc config and hardware.')
+        while connection_loop:
+            try:
+                devices_found = nfc.nfc_list_devices(self.__context, ctypes.byref(conn_strings), 1)
+                if devices_found != 1:
+                    raise HWError('No NFC device found. Check your libnfc config and hardware.')
 
-            self.log.debug('NFC open')
-            # NFC abstraction: open
-            self.__device = nfc.nfc_open(self.__context, conn_strings[0])
-            self.log.debug('NFC_open finished')
-            # self.log.debug(self.__device.last_error)
+                self.log.debug('NFC open')
+                # NFC abstraction: open
+                self.__device = nfc.nfc_open(self.__context, conn_strings[0])
+                self.log.debug('NFC_open finished')
+                # self.log.debug(self.__device.last_error)
 
-            while connection_loop:
-                # Reset all state variables
-                self.log.info('Wait for NFC initiator for 5s')
-                # NFC abstraction: target_init
-                connection_res = nfc.nfc_target_init(self.__device,
-                                                     ctypes.byref(self.__target),
-                                                     ctypes.pointer(self.__rx_msg),
-                                                     self.ISO7816_SHORT_APDU_MAX_LEN, 5000)
-                if connection_res >= 0:
-                    self.log.debug(self.__rx_msg[:connection_res])
-                    # Initialize state machine and start message exchange state machine
-                    stm = CommStateMachine(self.q_data_in, self.q_data_out)
-                    self._message_loop(stm)
+                while connection_loop:
+                    # Reset all state variables
+                    self.log.info('Wait for NFC initiator for 5s')
+                    # NFC abstraction: target_init
+                    connection_res = nfc.nfc_target_init(self.__device,
+                                                         ctypes.byref(self.__target),
+                                                         ctypes.pointer(self.__rx_msg),
+                                                         self.ISO7816_SHORT_APDU_MAX_LEN, 5000)
+                    if connection_res >= 0:
+                        self.log.debug(self.__rx_msg[:connection_res])
+                        # Initialize state machine and start message exchange state machine
+                        stm = CommStateMachine(self.q_data_in, self.q_data_out)
+                        self._message_loop(stm)
 
-                elif connection_res != nfc.NFC_ETIMEOUT:
-                    self.log.warning('nfc_target_init: got error %i', connection_res)
+                    elif connection_res != nfc.NFC_ETIMEOUT:
+                        self.log.warning('nfc_target_init: got error %i', connection_res)
 
-        except (KeyboardInterrupt, SystemExit):
-            connection_loop = False
-        except HWError as e:
-            self.log.error("Hardware exception: " + str(e))
-            connection_loop = False
-        except IOError as e:
-            self.log.error("IOError Exception: " + str(e))
-            connection_loop = True
+            except (KeyboardInterrupt, SystemExit):
+                connection_loop = False
+            except HWError as e:
+                self.log.error("Hardware exception: " + str(e))
+                connection_loop = False
+            except IOError as e:
+                self.log.error("IOError Exception: " + str(e))
+                connection_loop = True
 
-        finally:
-            nfc.nfc_close(self.__device)
-            nfc.nfc_exit(self.__context)
-            self.log.info('NFC clean shutdown')
-        return connection_loop
+            finally:
+                nfc.nfc_close(self.__device)
+                nfc.nfc_exit(self.__context)
+                self.log.info('NFC clean shutdown')
 
 
     def _message_loop(self, stm):
@@ -194,6 +195,7 @@ if __name__ == '__main__':
     reader.start()
     # Interfacing main thread
     nfcIO = NfcIO(queue_data_in, queue_data_out)
-    nfcIO.run_ioloop()
+    while nfcIO.run_ioloop():
+        pass
     reader.join()
     logger.info('Joining NFC hardware thread.')
