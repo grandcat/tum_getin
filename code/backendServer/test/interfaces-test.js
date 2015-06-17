@@ -8,25 +8,25 @@ var testUser1 = require('../../testResources/user_01.json');
 var config = require('./test_config');
 //require('./test_helpers');
 
-vows.describe('Backend Interface /check').addBatch({
-	'/register get token correct': {
+vows.describe('Backend - NFC Reader Interface /check').addBatch({
+	'/check get user public key correct': {
 		topic: function() {
 			callback = this.callback;
-			sendGet('/register?tum_id=' + testUser1.tum_id);
+			sendGet('/check?pseudo_id=' + testUser1.pseudo_id);
 		},
 		'Check response status': function (topic) {
             		assert.equal (topic.status, 200);
         	},
 		'Check response user data': function (topic) {
-            		assert.equal (topic.tum_id, testUser1.tum_id);
 			assert.equal (topic.pseudo_id, testUser1.pseudo_id);
-			assert.equal (topic.token, testUser1.token);
+			assert.equal (topic.student_status, testUser1.status);
+			assert.equal (topic.key, testUser1.key);
         	}
 
 	}
 }).export(module);
 
-vows.describe('Backend Interface /register').addBatch({
+vows.describe('Backend - Smartphone Interface /register').addBatch({
 	'/register get token correct': {
 		topic: function() {
 			callback = this.callback;

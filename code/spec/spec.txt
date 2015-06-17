@@ -92,8 +92,9 @@ Ablauf:
   Request:	GET /check?pseudo_id=sdifuz563
   Answer:	Message with JSON body
 		{ status: '200',
-		  message: 'Valid user. Sending public key.',
-		  status: 'student',
+		  message: ''Valid user. Sending public key.'Valid user. Sending public key.',
+		  pseudo_id: 'sdifuz563',
+		  student_status: 'student',
 		  key: 
 		   '00:c7:58:d0:41:eb:52:14:eb:80:ac:ef:dd:a5:86:
                     b8:cf:33:e9:a6:b6:3d:de:a1:c5:cd:c5:ed:3d:f2:
@@ -116,6 +117,9 @@ Ablauf:
   Error possibility:	pseudo_id not found in DB
   Answer:	{ status: '404',
 		  message: 'This pseudo_id does not exist!' }
+  Error possibility:	Corresponding DB entry has no key -> registration not finished
+  Answer:	{ status: '404',
+		  message: 'No key for this pseudo_id!' }
   Error possibility:	The corresponding person is no longer a student
   Answer:	{ status: '403',
 		  message: 'This person is no longer a student!' }
