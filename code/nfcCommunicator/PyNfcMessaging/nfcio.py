@@ -47,3 +47,9 @@ class NfcIO(object):
 
             # break
         return msg_loop
+
+    def connection_made(self):
+        pass
+
+    def data_received(self, msg):
+        pass

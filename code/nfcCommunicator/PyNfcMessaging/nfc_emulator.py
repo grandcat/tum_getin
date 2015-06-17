@@ -1,4 +1,8 @@
-"""Simple NFC card emulation"""
+"""
+NFC card emulation
+
+This approach is replaced by a NFC reader application due to compatibility reasons with Legic Prime reader.
+"""
 
 import threading
 import logging
@@ -8,14 +12,14 @@ import queue
 import nfc
 from nfc_error import HWError
 from nfcio import NfcIO
-from nfc_statemachine import CommStateMachine
+from nfc_emulation_statemachine import CommStateMachine
 
 def hex_dump(buffer):
     """Dumps the buffer as an hex string"""
     return ' '.join(["%0.2X" % x for x in buffer])
 
 # NFC device setup
-class NFCReader(threading.Thread):
+class NFCEmulation(threading.Thread):
     """
     Short APDU max transceive length
     ISO7816_SHORT_APDU_MAX_DATA_LEN + APDU_COMMAND_HEADER + APDU_RESPONSE_TRAILER
@@ -191,7 +195,7 @@ if __name__ == '__main__':
     queue_data_in = queue.Queue(8)
     queue_data_out = queue.Queue(8)
     # NFC HW reader
-    reader = NFCReader(queue_data_in, queue_data_out, None)
+    reader = NFCEmulation(queue_data_in, queue_data_out, None)
     reader.start()
     # Interfacing main thread
     nfcIO = NfcIO(queue_data_in, queue_data_out)
