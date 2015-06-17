@@ -21,8 +21,7 @@ $ grunt
 Acts as a client (the smartphone or the NFC reader).
 Does black-box testing basically.
 Run tests with:
-$ vows test.js
-(or $ node test.js)
+$ vows test.js --spec
 
 White-box tests of the interal functioning of the backend
 can be found in /app/tests

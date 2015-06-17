@@ -1,2 +1,2 @@
 Run tests with:
-$ mocha test.js
+$ vows interface-test.js --spec

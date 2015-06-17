@@ -6,9 +6,27 @@ var vows = require('vows'),
 // getting test data from central test data folder
 var testUser1 = require('../../testResources/user_01.json');
 var config = require('./test_config');
+//require('./test_helpers');
 
+vows.describe('Backend Interface /check').addBatch({
+	'/register get token correct': {
+		topic: function() {
+			callback = this.callback;
+			sendGet('/register?tum_id=' + testUser1.tum_id);
+		},
+		'Check response status': function (topic) {
+            		assert.equal (topic.status, 200);
+        	},
+		'Check response user data': function (topic) {
+            		assert.equal (topic.tum_id, testUser1.tum_id);
+			assert.equal (topic.pseudo_id, testUser1.pseudo_id);
+			assert.equal (topic.token, testUser1.token);
+        	}
 
-vows.describe('Backend Interface Unit Tests:').addBatch({
+	}
+}).export(module);
+
+vows.describe('Backend Interface /register').addBatch({
 	'/register get token correct': {
 		topic: function() {
 			callback = this.callback;
@@ -96,7 +114,7 @@ vows.describe('Backend Interface Unit Tests:').addBatch({
             		assert.equal (topic.status, 404);
         	}
 	}
-}).run();
+}).export(module);
 
 var req; // request object
 var callback;   // callback function called on server response
