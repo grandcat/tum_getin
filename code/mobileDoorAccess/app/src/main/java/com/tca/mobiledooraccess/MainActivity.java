@@ -1,6 +1,7 @@
 package com.tca.mobiledooraccess;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -13,13 +14,17 @@ import android.util.Log;
 public class MainActivity extends Activity {
 
     public static final String TUM_GETIN_PREFERENCES = "TUM_GETIN_PREFS";
+    public static Context context;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
+        MainActivity.context = getApplicationContext();
 
-        SharedPreferences settings = getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
+        SharedPreferences settings;
+        settings = getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
         boolean registered = settings.getBoolean("registered",false);
 
         if (registered){
