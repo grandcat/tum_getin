@@ -2,7 +2,7 @@ import logging
 import queue
 import struct
 
-class CommStateMachine:
+class CardEmulation:
     IDENTIFICATION = b'tumgetin\x01' # hex: 74 75 6D 67 65 74 69 6E 01
     MAX_BYTES = 4096
     MAX_CHUNK_SIZE = 125 # 250 quite stable, too

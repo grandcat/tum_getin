@@ -10,9 +10,11 @@ import ctypes
 import queue
 
 import nfc
+
 from nfc_error import HWError
 from nfcio import NfcIO
-from nfc_emulation_statemachine import CommStateMachine
+from statemachine.CardEmulation import CardEmulation
+
 
 def hex_dump(buffer):
     """Dumps the buffer as an hex string"""
@@ -127,7 +129,7 @@ class NFCEmulation(threading.Thread):
                     if connection_res >= 0:
                         self.log.debug(self.__rx_msg[:connection_res])
                         # Initialize state machine and start message exchange state machine
-                        stm = CommStateMachine(self.q_data_in, self.q_data_out)
+                        stm = CardEmulation(self.q_data_in, self.q_data_out)
                         self._message_loop(stm)
 
                     elif connection_res != nfc.NFC_ETIMEOUT:

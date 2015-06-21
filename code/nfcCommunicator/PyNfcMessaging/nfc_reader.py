@@ -7,6 +7,7 @@ import logging
 import time
 
 import nfc
+from statemachine import ReaderIO
 from nfc_error import HWError
 
 def hex_dump(buffer):
@@ -52,13 +53,14 @@ class NFCReader(object):
         """
         Connects to the NFC hardware and starts messaging with emulating smart card
         """
-        self.log.debug('NFC init')
-        nfc.nfc_init(ctypes.byref(self.__context))
         conn_strings = (nfc.nfc_connstring * 1)()
 
         connection_loop = True
         while connection_loop:
             try:
+                self.log.debug('NFC init')
+                nfc.nfc_init(ctypes.byref(self.__context))
+                # Select HW reader
                 devices_found = nfc.nfc_list_devices(self.__context, ctypes.byref(conn_strings), 1)
                 if devices_found != 1:
                     raise HWError('No suitable NFC device found. Check your libnfc config and hardware.')
@@ -81,17 +83,17 @@ class NFCReader(object):
                                                                          None,
                                                                          0,
                                                                          ctypes.byref(self.__target))
-                    # NP_INFINITE_SELECT
                     # Wait until target was found
                     if found_card > 0:
                         # Got target
-                        self.log.debug('Target with ISO14443A modulation found sending at baudrate %s.',
+                        self.log.debug('Target with ISO14443A modulation found sending at baudrate type %d.',
                                        self.__target.nm.nbr)
                         # Init new state machine and start message exchange until target leaves
                         self._send_uid()
-                        time.sleep(4)
-                        self._send_uid()
-                        self._message_loop(None)
+                        # time.sleep(4)
+                        # self._send_uid()
+                        stm = ReaderIO()
+                        self._message_loop(stm)
 
                     else:
                         # No target found
@@ -104,17 +106,17 @@ class NFCReader(object):
                 self.log.error("Hardware exception: " + str(e))
                 connection_loop = False
             except IOError as e:
-                self.log.error("IOError Exception: " + str(e))
+                self.log.error("IOError exception: " + str(e))
                 connection_loop = True
 
             finally:
                 nfc.nfc_close(self.__device)
                 nfc.nfc_exit(self.__context)
                 self.log.info('NFC clean shutdown')
+        # Connection loop: repeat
 
     def _send_uid(self):
         """Send UID to allow the Android app to recognize our reader"""
-        # Select AID: 74 75 6D 67 65 74
         tx_buf = self.SELECT_AID
         tx_len = len(tx_buf)
 
@@ -126,16 +128,48 @@ class NFCReader(object):
                                                     ctypes.byref(self.__rx_msg),
                                                     self.ISO7816_SHORT_APDU_MAX_LEN,
                                                     0)
+        if rx_len > 0:
+            # Is client trusting us?
+            rx_buf = bytes((ctypes.c_char * rx_len).from_buffer(self.__rx_msg))
+            self.log.debug('Receive [%d bytes]: %s', rx_len, hex_dump(rx_buf[:rx_len]))
+        elif nfc.NFC_ERFTRANS == rx_len:
+            raise IOError('Lost link to target. Restarting RF field now.')
+        else:
+            # No valid response: link is probably broken
+            raise IOError("Invalid or no reply from target. libnfc type: " + str(rx_len))
 
-        rx_buf = bytes((ctypes.c_char * rx_len).from_buffer(self.__rx_msg))
-        self.log.debug('Receive [%d bytes]: %s', rx_len, hex_dump(rx_buf[:rx_len]))
 
     def _message_loop(self, stm):
         """Starts a loop that simulates an NFC reader to interact with a smart card"""
+
         loop = True
+        rx_buf = []
+        rx_len = 0
         while loop:
-            self.log.debug('In loop')
-            loop = False
+            # State machine for communication with end device
+            tx_buf, tx_len = stm.do_IO(rx_buf, rx_len)
+            if stm.should_stop():
+                return
+
+            # Prepare message for sending
+            assert tx_len > 0
+            self.__tx_msg[:tx_len] = tx_buf
+            self.log.debug('Send [%d bytes]: %s', tx_len, hex_dump(tx_buf[:]))
+            # NFC hardware IO
+            rx_len = nfc.nfc_initiator_transceive_bytes(self.__device,
+                                                        ctypes.byref(self.__tx_msg),
+                                                        tx_len,
+                                                        ctypes.byref(self.__rx_msg),
+                                                        self.ISO7816_SHORT_APDU_MAX_LEN,
+                                                        0)
+            if rx_len < 0:
+                # Error occurred (e.g., target was removed from the carrier field) --> restart
+                self.log.warning('Error %d while transceiving data.', rx_len)
+                return
+            # Receiving message
+            rx_buf = bytes((ctypes.c_char * rx_len).from_buffer(self.__rx_msg))
+            self.log.debug('Receive [%d bytes]: %s', rx_len, hex_dump(rx_buf[:rx_len]))
+
 
     def init_card_reader_mode(self):
         """
