@@ -35,7 +35,6 @@ import org.json.JSONObject;
  *
  */
 public class Backend {
-
     private static final String TAG = "BackendClass";
 
     private String host;

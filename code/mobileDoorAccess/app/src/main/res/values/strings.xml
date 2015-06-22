@@ -1,8 +1,5 @@
 <resources>
     <string name="app_name">mobileDoorAccess</string>
-    <string name="register_button">Register!</string>
     <string name="register_tum_id_input">TUM ID (e.g "aa99zzz")</string>
-    <string name="register_explanation">To register, please enter your TUM-ID</string>
-    <string name="registered">You are already registered with the system.
-    The door access should work by holding your device onto the nfc readers...</string>
+
 </resources>
