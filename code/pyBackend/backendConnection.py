@@ -28,6 +28,7 @@ class Backend(object):
         conn = http.client.HTTPSConnection(self.host, self.port, context = self.context)
         conn.request('GET', '/check?pseudo_id=' + pseudoID)
         response = json.loads(conn.getresponse().read().decode())
+        print(response)
         conn.close()
         if 'student_status' in response:
             if response['student_status'] == 'student':
