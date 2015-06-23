@@ -7,8 +7,7 @@ import logging
 import time
 
 import nfc
-from statemachine import ReaderIO
-from nfc_error import HWError
+from nfc_error import HWError, TargetLost
 
 def hex_dump(buffer):
     """Dumps the buffer as an hex string"""
@@ -20,9 +19,13 @@ class NFCReader(object):
     ISO7816_SHORT_APDU_MAX_DATA_LEN + APDU_COMMAND_HEADER + APDU_RESPONSE_TRAILER
     """
     ISO7816_SHORT_APDU_MAX_LEN = 256 + 4 + 2
+    """
+    Time between two consecutive probes for an NFC emulated card in range
+    """
+    PROBE_INTERVAL = 1.2
 
     # SELECT_AID = b'\x00\xA4\x04\x00\x07\xF0\x74\x75\x6D\x67\x65\x74'
-    SELECT_AID = b'\x00\xA4\x04\x00\x0A\xF0' + b'tumgetin\x01'
+    SELECT_AID = b'\x00\xA4\x04\x00\x0A\xF0' + b'tumgetin\x02'
 
     def __init__(self, log=None):
         self.name = 'nfc.hw'
@@ -37,6 +40,7 @@ class NFCReader(object):
         self.__rx_msg = (ctypes.c_uint8 * self.ISO7816_SHORT_APDU_MAX_LEN)()
 
         self.init_card_reader_mode()
+        self.__conn_strings = (nfc.nfc_connstring * 1)()
 
 
     @staticmethod
@@ -49,95 +53,179 @@ class NFCReader(object):
         """Returns guaranteed hexadecimal digits from the input bytes"""
         return "".join([x if x.lower() in 'abcdef0123456789' else '' for x in bytesin])
 
-    def run(self):
-        """
-        Connects to the NFC hardware and starts messaging with emulating smart card
-        """
-        conn_strings = (nfc.nfc_connstring * 1)()
+    # def run(self):
+    #     """
+    #     Connects to the NFC hardware and starts messaging with emulating smart card
+    #     """
+    #     connection_loop = True
+    #     while connection_loop:
+    #         try:
+    #             self.log.debug('NFC init')
+    #             nfc.nfc_init(ctypes.byref(self.__context))
+    #             # Select HW reader
+    #             devices_found = nfc.nfc_list_devices(self.__context, ctypes.byref(self.__conn_strings), 1)
+    #             if devices_found != 1:
+    #                 raise HWError('No suitable NFC device found. Check your libnfc config and hardware.')
+    #
+    #             # NFC abstraction: open
+    #             self.__device = nfc.nfc_open(self.__context, self.__conn_strings[0])
+    #             self.log.debug('NFC_open finished')
+    #
+    #             # Start reader as initiator with RF field, but without infinite polling to reduce CPU usage
+    #             result = nfc.nfc_initiator_init(self.__device)
+    #             if result < 0:
+    #                 raise HWError('Could not start or configure reader as NFC initiator properly.')
+    #             self.log.debug('Started NFC initiator.')
+    #
+    #             while connection_loop:
+    #                 self.log.info('Polling for NFC target...')
+    #                 result += nfc.nfc_device_set_property_bool(self.__device, nfc.NP_INFINITE_SELECT, False)
+    #                 found_card = nfc.nfc_initiator_select_passive_target(self.__device,
+    #                                                                      self.__modulation,
+    #                                                                      None,
+    #                                                                      0,
+    #                                                                      ctypes.byref(self.__target))
+    #                 # Wait until target was found
+    #                 if found_card > 0:
+    #                     # Got target
+    #                     self.log.debug('Target with ISO14443A modulation found sending at baudrate type %d.',
+    #                                    self.__target.nm.nbr)
+    #                     # Init new state machine and start message exchange until target leaves
+    #                     self.send_uid()
+    #                     # time.sleep(4)
+    #                     # self.send_uid()
+    #                     stm = ReaderIO()
+    #                     self._message_loop(stm)
+    #
+    #                 else:
+    #                     # No target found
+    #                     self.log.debug('No target found. Sleeping for 1 s.')
+    #                     time.sleep(self.PROBE_INTERVAL)
+    #
+    #         except (KeyboardInterrupt, SystemExit):
+    #             connection_loop = False
+    #         except HWError as e:
+    #             self.log.error("Hardware exception: " + str(e))
+    #             connection_loop = False
+    #         except IOError as e:
+    #             self.log.error("IOError exception: " + str(e))
+    #             connection_loop = True
+    #
+    #         finally:
+    #             nfc.nfc_close(self.__device)
+    #             nfc.nfc_exit(self.__context)
+    #             self.log.info('NFC clean shutdown')
+    #     # Connection loop: repeat
 
+    def init_card_reader_mode(self):
+        """
+        Prepares NFC reader hardware for interfacing with smart cards
+        """
+        # Considerable target devices : mobile phone emulating smart card
+        if self.__target is None:
+            self.__target = nfc.nfc_target()
+
+        if self.__context is None:
+            self.__context = ctypes.pointer(nfc.nfc_context())
+
+        # Modulation properties
+        if self.__modulation is None:
+            self.__modulation = nfc.nfc_modulation()
+
+        self.__modulation.nmt = nfc.NMT_ISO14443A
+        self.__modulation.nbr = nfc.NBR_106
+
+    def start_nfc_reader(self):
         connection_loop = True
-        while connection_loop:
-            try:
-                self.log.debug('NFC init')
-                nfc.nfc_init(ctypes.byref(self.__context))
-                # Select HW reader
-                devices_found = nfc.nfc_list_devices(self.__context, ctypes.byref(conn_strings), 1)
-                if devices_found != 1:
-                    raise HWError('No suitable NFC device found. Check your libnfc config and hardware.')
+        try:
+            self.log.debug('NFC init')
+            nfc.nfc_init(ctypes.byref(self.__context))
+            # Select HW reader
+            devices_found = nfc.nfc_list_devices(self.__context, ctypes.byref(self.__conn_strings), 1)
+            if devices_found != 1:
+                raise HWError('No suitable NFC device found. Check your libnfc config and hardware.')
 
-                # NFC abstraction: open
-                self.__device = nfc.nfc_open(self.__context, conn_strings[0])
-                self.log.debug('NFC_open finished')
+            # NFC abstraction: open
+            self.__device = nfc.nfc_open(self.__context, self.__conn_strings[0])
+            self.log.debug('NFC_open finished')
 
-                # Start reader as initiator with RF field, but without infinite polling to reduce CPU usage
-                result = nfc.nfc_initiator_init(self.__device)
-                if result < 0:
-                    raise HWError('Could not start or configure reader as NFC initiator properly.')
-                self.log.debug('Started NFC initiator.')
+            # Start reader as initiator with RF field, but without infinite polling to reduce CPU usage
+            result = nfc.nfc_initiator_init(self.__device)
+            if result < 0:
+                raise HWError('Could not start or configure reader as NFC initiator properly.')
+            self.log.debug('Started NFC initiator.')
 
-                while connection_loop:
-                    self.log.info('Polling for NFC target...')
-                    result += nfc.nfc_device_set_property_bool(self.__device, nfc.NP_INFINITE_SELECT, False)
-                    found_card = nfc.nfc_initiator_select_passive_target(self.__device,
-                                                                         self.__modulation,
-                                                                         None,
-                                                                         0,
-                                                                         ctypes.byref(self.__target))
-                    # Wait until target was found
-                    if found_card > 0:
-                        # Got target
-                        self.log.debug('Target with ISO14443A modulation found sending at baudrate type %d.',
-                                       self.__target.nm.nbr)
-                        # Init new state machine and start message exchange until target leaves
-                        self._send_uid()
-                        # time.sleep(4)
-                        # self._send_uid()
-                        stm = ReaderIO()
-                        self._message_loop(stm)
+            while connection_loop:
+                self.log.info('Polling for NFC target...')
+                result += nfc.nfc_device_set_property_bool(self.__device, nfc.NP_INFINITE_SELECT, False)
+                found_card = nfc.nfc_initiator_select_passive_target(self.__device,
+                                                                     self.__modulation,
+                                                                     None,
+                                                                     0,
+                                                                     ctypes.byref(self.__target))
+                # Wait until target was found
+                if found_card > 0:
+                    # Got target
+                    self.log.debug('Connection established with ISO14443A modulation and baudrate type %d.',
+                                   self.__target.nm.nbr)
+                    # Send UID to authenticate reader against Android device
+                    self.send_uid()
+                    # Finish setup step
+                    connection_loop = False
 
-                    else:
-                        # No target found
-                        self.log.debug('No target found. Sleeping for 1 s.')
-                        time.sleep(1.2)
+                else:
+                    # No target found
+                    self.log.debug('No target found. Sleeping for 1 s.')
+                    time.sleep(1.2)
 
-            except (KeyboardInterrupt, SystemExit):
-                connection_loop = False
-            except HWError as e:
-                self.log.error("Hardware exception: " + str(e))
-                connection_loop = False
-            except IOError as e:
-                self.log.error("IOError exception: " + str(e))
-                connection_loop = True
+        except (KeyboardInterrupt, SystemExit):
+            connection_loop = False
+        except HWError as e:
+            self.log.error("Hardware exception: " + str(e))
+            connection_loop = False
+        except IOError as e:
+            self.log.error("IOError exception: " + str(e))
+            connection_loop = True
 
-            finally:
-                nfc.nfc_close(self.__device)
-                nfc.nfc_exit(self.__context)
-                self.log.info('NFC clean shutdown')
-        # Connection loop: repeat
+        return connection_loop
 
-    def _send_uid(self):
+    def shutdown_nfc_reader(self):
+        try:
+            nfc.nfc_close(self.__device)
+            nfc.nfc_exit(self.__context)
+        finally:
+           self.log.info('NFC clean shutdown')
+
+    def send_uid(self):
         """Send UID to allow the Android app to recognize our reader"""
         tx_buf = self.SELECT_AID
-        tx_len = len(tx_buf)
+        rx_buf, rx_len = self.transceive_message(tx_buf, len(tx_buf))
+        # TODO: validate result
 
+    def transceive_message(self, tx_buf, tx_len, timeout=0):
+        assert self.__device != None
+        # Prepare message for sending
+        assert tx_len > 0
         self.__tx_msg[:tx_len] = tx_buf
         self.log.debug('Send [%d bytes]: %s', tx_len, hex_dump(tx_buf[:]))
+        # NFC hardware IO
         rx_len = nfc.nfc_initiator_transceive_bytes(self.__device,
                                                     ctypes.byref(self.__tx_msg),
                                                     tx_len,
                                                     ctypes.byref(self.__rx_msg),
                                                     self.ISO7816_SHORT_APDU_MAX_LEN,
                                                     0)
+        # Receiving message
         if rx_len > 0:
-            # Is client trusting us?
             rx_buf = bytes((ctypes.c_char * rx_len).from_buffer(self.__rx_msg))
             self.log.debug('Receive [%d bytes]: %s', rx_len, hex_dump(rx_buf[:rx_len]))
         elif nfc.NFC_ERFTRANS == rx_len:
-            raise IOError('Lost link to target. Restarting RF field now.')
+            raise TargetLost('Lost link to target.')
         else:
             # No valid response: link is probably broken
             raise IOError("Invalid or no reply from target. libnfc type: " + str(rx_len))
 
+        return rx_buf, rx_len
 
     def _message_loop(self, stm):
         """Starts a loop that simulates an NFC reader to interact with a smart card"""
@@ -169,31 +257,3 @@ class NFCReader(object):
             # Receiving message
             rx_buf = bytes((ctypes.c_char * rx_len).from_buffer(self.__rx_msg))
             self.log.debug('Receive [%d bytes]: %s', rx_len, hex_dump(rx_buf[:rx_len]))
-
-
-    def init_card_reader_mode(self):
-        """
-        Prepares NFC reader hardware for interfacing with smart cards
-        """
-        # Detected target devices : mobile phone emulating smart card
-        if self.__target is None:
-            self.__target = nfc.nfc_target()
-
-        if self.__context is None:
-            self.__context = ctypes.pointer(nfc.nfc_context())
-
-        # Modulation properties
-        if self.__modulation is None:
-            self.__modulation = nfc.nfc_modulation()
-
-        self.__modulation.nmt = nfc.NMT_ISO14443A
-        self.__modulation.nbr = nfc.NBR_212
-
-
-if __name__ == '__main__':
-    logging.basicConfig(format='[%(levelname)s:%(threadName)s:%(name)s:%(funcName)s] %(message)s', level=logging.DEBUG)
-    # Do not pass logger object any more to generate uniqu  e names per module
-    logger = logging.getLogger(__name__)
-
-    nfc_reader = NFCReader()
-    nfc_reader.run()
