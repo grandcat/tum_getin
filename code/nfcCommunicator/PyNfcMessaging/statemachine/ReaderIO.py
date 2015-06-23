@@ -10,6 +10,7 @@ def hex_dump(buffer):
     """Dumps the buffer as an hex string"""
     return ' '.join(["%0.2X" % x for x in buffer])
 
+
 class ReaderIO(object):
     MAX_BYTES = 4096
     MAX_CHUNK_SIZE = 125  # 250 quite stable, too
@@ -18,9 +19,6 @@ class ReaderIO(object):
         self.log = log or logging.getLogger(__name__)
         # Hardware device
         self.device = device or NFCReader()
-        # Raw byte buffer
-        self.data_out = BytesIO()
-        self.data_in = BytesIO()
         # Communication state
         self.stop_communication = False
         self.conn_established = False
@@ -34,9 +32,8 @@ class ReaderIO(object):
         :param wait_timeout: in milliseconds. If 0, calling this function will block indefinitely.
         :return: received data item
         """
-        # Reset data buffers
-        self.data_in.seek(0)
-        self.data_in.truncate(0)
+        # Initialize data buffers
+        data_in_buf = BytesIO()
 
         # Wait for NFC card to become ready for data transmission
         rx_buf = None
@@ -52,11 +49,11 @@ class ReaderIO(object):
 
         while more_data:
             mv_rx_buf = memoryview(rx_buf)
-            if self.data_in.tell() > self.MAX_BYTES:
+            if data_in_buf.tell() > self.MAX_BYTES:
                 raise BufferError('Too much input data.')
 
             # Collect data input
-            self.data_in.write(mv_rx_buf[:rx_len-2])
+            data_in_buf.write(mv_rx_buf[:rx_len-2])
             # Check status code at the end of the message for available data
             self.log.debug('Status byte: %s, requested: %s', hex_dump(mv_rx_buf[rx_len-2]), hex_dump(APDU.SUCCESS_LC_DATA))
             if APDU.SUCCESS_LC_DATA == mv_rx_buf[rx_len-2]:
@@ -66,13 +63,13 @@ class ReaderIO(object):
                 rx_buf, rx_len = self.device.transceive_message(request_msg, len(request_msg))
             else:
                 more_data = False
-                self.log.debug('Finished data transfer of %d bytes.', self.data_in.tell())
+                self.log.debug('Finished data transfer of %d bytes.', data_in_buf.tell())
 
-        return self.data_in.getvalue()
+        return data_in_buf.getvalue()
 
     def send_data(self, tx_data, wait_timeout=0):
         # Reset read position if buffer is reused
-        self.data_out = BytesIO(tx_data)
+        data_out_buf = BytesIO(tx_data)
         data_len = len(tx_data)
         self.log.debug('Sending data.')
 
@@ -81,10 +78,10 @@ class ReaderIO(object):
         #       This enables the target to know when the transmission is finished.
         more_data = True
         while more_data:
-            tx_payload = self.data_out.read(self.MAX_CHUNK_SIZE)
+            tx_payload = data_out_buf.read(self.MAX_CHUNK_SIZE)
             if len(tx_payload) > 0:
                 # TX data to send
-                remaining_bytes = data_len - self.data_out.tell()  # available bytes in the next iteration
+                remaining_bytes = data_len - data_out_buf.tell()  # available bytes in the next iteration
                 tx_msg = APDU.build_write_message(min(remaining_bytes, self.MAX_CHUNK_SIZE))
                 tx_msg.extend(tx_payload)
                 self.log.debug('Remaining bytes for next round: %d', remaining_bytes)
@@ -95,7 +92,6 @@ class ReaderIO(object):
                     raise IOError('Target did not accept transmitted data.')
             else:
                 more_data = False
-
 
     def run(self):
         self.device.start_nfc_reader()
