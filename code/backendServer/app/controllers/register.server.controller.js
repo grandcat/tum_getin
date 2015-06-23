@@ -1,6 +1,7 @@
 'use strict';
 var mongoose = require('mongoose'),
-    User = mongoose.model('User');
+    User = mongoose.model('User'),
+    XRegExp = require('xregexp').XRegExp;
 
 /**
  * Sends a JSON answer message.
@@ -85,6 +86,12 @@ function registerGetTokenForUser(req, res, tum_id, user) {
 	}
 }
 
+function check_tum_id(tum_id) {
+	var regEx_tum_id = new XRegExp('[a-z]{2}[0-9]{2}[a-z]{3}');
+	if(tum_id.length === 7 && regEx_tum_id.test(tum_id))
+		return true;
+	else	return false;
+}
 /**
  * Handle step 1 of the smartphone - backend communication.
  * Looks for tum_id in the request and returns a token.
@@ -98,8 +105,7 @@ exports.register_get_token = function(req, res) {
 	if(tum_id === undefined) { // then something is wrong
 		// Send error message back
 		reply(res, 400, 'Please set tum_id in the HTTPS request!');
-	//TODO: regex for tum_id form!
-	} else if (true) { // tum_id has the correct format
+	} else if (check_tum_id(tum_id)) { // tum_id has the correct format
 		// Check if we already have a token in the DB
 		// ...and proceed with function registerGetTokenForUser()...
 		getUserByTumId(req, res, tum_id, registerGetTokenForUser);
@@ -152,7 +158,7 @@ exports.register_store_key = function(req, res) {
 	} else {
 		//TODO: check format
 		// check if all parameters have the correct form
-		if(true) {
+		if(check_tum_id(tum_id) && true) {
 			// Find user and save the new key
 			getUserByTumId(req, res, tum_id, registerStoreKeyForUser);
 		} else { // something has a wrong format. Send error message...
