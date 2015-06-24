@@ -3,6 +3,7 @@ Quick guide to start the tum_getin backend server:
 
 >>> Install necessary stuff (needed only once): <<<
 - Install Node.js
+- Install NPM
 - Download MongoDB
 $ npm install -g bower
 $ npm install -g grunt-cli

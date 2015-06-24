@@ -49,7 +49,7 @@ var UserSchema = new Schema({
  */
 UserSchema.index({tum_id : 1}, {unique : true});
 UserSchema.index({pseudo_id : 1}, {unique : true});
-UserSchema.index({token : 1}, {unique : true});
+//UserSchema.index({token : 1}, {unique : true});
 
 
 mongoose.model('User', UserSchema);

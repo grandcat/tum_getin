@@ -16,6 +16,60 @@ function reply(res, res_status, res_message, json) {
 }
 
 /**
+ * Example: ga99aaa
+ */
+function check_tum_id(arg) {
+	var regEx = new XRegExp('[a-z]{2}[0-9]{2}[a-z]{3}');
+	if(arg.length === 7 && regEx.test(arg)) {
+		return true;
+	} else {
+		console.log('tum_id format error: ' + arg);
+		return false;
+	}
+}
+
+/**
+ * Example: 2440A20D6BD49B63
+ */
+function check_pseudo_id(arg) {
+	var regEx = new XRegExp('[A-Z0-9]{16}');
+	if(arg.length === 16 && regEx.test(arg)) {
+		return true;
+	} else {
+		console.log('pseudo_id format error: ' + arg);
+		return false;
+	}
+}
+
+/**
+ * Example: 491652672440A20D6BD49B63E60DADB9
+ */
+function check_token(arg) {
+	var regEx = new XRegExp('[A-Z0-9]{32}');
+	if(arg.length === 32 && regEx.test(arg)) {
+		return true;
+	} else {
+		console.log('Token format error: ' + arg);
+		return false;
+	}
+}
+
+
+/**
+ * Example: 2048 bit = 256 bytes = 512 hex numbers
+ * Plus first Byte 00 (signed), so 514 in total.
+ */
+function check_key(arg) {
+	var regEx = new XRegExp('[a-f0-9]{514}');
+	if(arg.length === 514 && regEx.test(arg)) {
+		return true;
+	} else {
+		console.log('Key format error: ' + arg);
+		return false;
+	}
+}
+
+/**
  * Wrapper for reply(). Is sent on server errors.
  */
 function send500error(res) {
@@ -86,12 +140,6 @@ function registerGetTokenForUser(req, res, tum_id, user) {
 	}
 }
 
-function check_tum_id(tum_id) {
-	var regEx_tum_id = new XRegExp('[a-z]{2}[0-9]{2}[a-z]{3}');
-	if(tum_id.length === 7 && regEx_tum_id.test(tum_id))
-		return true;
-	else	return false;
-}
 /**
  * Handle step 1 of the smartphone - backend communication.
  * Looks for tum_id in the request and returns a token.
@@ -156,9 +204,8 @@ exports.register_store_key = function(req, res) {
 		// something is missing...
 		reply(res, 400, 'Please set tum_id, token and key in the request!');
 	} else {
-		//TODO: check format
 		// check if all parameters have the correct form
-		if(check_tum_id(tum_id) && true) {
+		if(check_tum_id(tum_id) && check_token(token) && check_key(key)) {
 			// Find user and save the new key
 			getUserByTumId(req, res, tum_id, registerStoreKeyForUser);
 		} else { // something has a wrong format. Send error message...

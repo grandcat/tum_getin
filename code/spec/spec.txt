@@ -3,8 +3,8 @@ Python:
 - Python-Backend
 
 Backend:
-TODO: das Format von pseudo_id definieren und wie diese generiert wird!!!
-
+Definition pseudo_id:
+Random String (Numbers and Letters); 16 Characters long.
 
 
 Smartphone:
@@ -42,8 +42,12 @@ Ablauf:
 			but TUMonline does not respond token
   Answer:	{ status: 404,
 		  message: 'TUMonline did not answer with a token for this tum_id!' }
+  Error possibility:	zu dieser tumid gibt es schon ein token
+		echter User würde dieses token dann in tumonline löschen
 
-- Step 2: Hand over public key for storage on the backend.
+- Step 2:
+
+- Step 3: Hand over public key for storage on the backend.
   Request: 	POST /register
 		Content-Type: 'application/json'
 		Message body:
