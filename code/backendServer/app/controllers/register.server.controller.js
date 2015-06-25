@@ -95,9 +95,11 @@ function handleDBsave(err, res) {
 function contactTUMonline(res, tum_id) {
 	//TODO: contact tumonline
 
+	//TODO: generate pseudo_id
+
 	//TODO: send proper response
 	reply(res, 200, 'Token generation successful. Please send public key.',
-	{ tum_id: 'basfd', pseudo_id: 'afdgtrsyjd', token: 'ewtry' });
+	{ tum_id: tum_id, pseudo_id: 'afdgtrsyjd', token: 'ewtry' });
 }
 
 /**

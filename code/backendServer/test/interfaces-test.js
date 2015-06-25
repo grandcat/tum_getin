@@ -5,6 +5,7 @@ var vows = require('vows'),
     fs = require('fs');
 // getting test data from central test data folder
 var testUser1 = require('../../testResources/user_01.json');
+var realUser = require('../../testResources/real_user.json');
 var config = require('./test_config');
 //require('./test_helpers');
 
@@ -25,6 +26,7 @@ vows.describe('Backend - NFC Reader Interface /check').addBatch({
 
 	}
 }).export(module);
+
 
 vows.describe('Backend - Smartphone Interface /register').addBatch({
 	'/register get token correct': {
@@ -113,6 +115,30 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
 		'Check response status': function (topic) {
             		assert.equal (topic.status, 404);
         	}
+	}
+}).export(module);
+
+vows.describe('Backend - Smartphone Interface /register for real user!').addBatch({
+	'/register get token correct': {
+		topic: function() {
+			callback = this.callback;
+			sendGet('/register?tum_id=' + realUser.tum_id);
+		},
+		'Check response status': function (topic) {
+            		assert.equal (topic.status, 200);
+        	},
+		'Check response tum_id is correct': function (topic) {
+            		assert.equal (topic.tum_id, realUser.tum_id);
+        	},
+		'Check response has pseudo_id': function (topic) {
+			assert.isNotNull (topic.pseudo_id); 
+			assert.isFalse (topic.pseudo_id === undefined); 
+        	},
+		'Check response has token': function (topic) {
+			assert.isNotNull (topic.token);
+			assert.isFalse (topic.token === undefined);
+        	}
+
 	}
 }).export(module);
 
