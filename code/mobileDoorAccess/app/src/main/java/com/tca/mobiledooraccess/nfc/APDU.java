@@ -1,5 +1,7 @@
 package com.tca.mobiledooraccess.nfc;
 
+import java.nio.ByteBuffer;
+
 /**
  * Created by Stefan on 24.06.2015.
  */
@@ -41,7 +43,7 @@ public final class APDU {
         public static final byte[] ERR_PARAMS       = new byte[] {(byte)0x6a, (byte)0x00};
         public static final byte[] ERR_NO_DATA      = new byte[] {(byte)0x6a, (byte)0x82};
         // Custom status messages
-
+        public static final byte[] ERR_NOT_READY    = new byte[] {(byte)0x6a, (byte)0x90};
     }
 
     public static final void insertStatusMessage(byte[] buffer, final byte[] statusMessage) {
@@ -51,6 +53,10 @@ public final class APDU {
     public static int getHeaderValue(final byte[] input, int headerField) {
         assert (headerField < (Header.DATA + 1));
         return (byte)(input[headerField] & 0xff);
+    }
+
+    public static int getHeaderValue(final ByteBuffer input, int headerField) {
+        return getHeaderValue(input.array(), headerField);
     }
 
     /**

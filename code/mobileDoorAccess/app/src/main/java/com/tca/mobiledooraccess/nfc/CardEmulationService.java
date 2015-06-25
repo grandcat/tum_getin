@@ -7,8 +7,10 @@ import android.util.Log;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by Stefan on 23.06.2015.
@@ -26,12 +28,15 @@ public class CardEmulationService extends HostApduService {
      */
     // Config
     public final static int MAX_CHUNK_SIZE = 125;   // size in bytes
+    public final static int MAX_BYTES = 4096;       // size in bytes
     // States and progress
     private boolean connectionEstablished = false;
-    private int txCount = 0;
+    private int txCount = 0, rxCount = 0;
     // Data buffers
     ByteArrayInputStream dataOut;
-    ByteArrayOutputStream dataIn;
+    AtomicBoolean dataOutReady = new AtomicBoolean(true);   // TODO: change to false after test
+    ByteArrayOutputStream dataIn = new ByteArrayOutputStream();
+    AtomicBoolean dataInReady = new AtomicBoolean(true);
 
     public CardEmulationService() {
         super();
@@ -41,7 +46,7 @@ public class CardEmulationService extends HostApduService {
                 "tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At " +
                 "vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren," +
                 " no sea takimata sanctus est Lorem ipsum dolor sit amet. Heheheehhehehehehehehehe" +
-                "ehu und es geht weiter!!!||||~~~++#+²²²²üöä. <-- Sonderzeichen.")
+                "ehu und es geht weiter!!!||||--. <-- Sonderzeichen.")
                 .getBytes(Charset.forName("UTF-8"));
         dataOut = new ByteArrayInputStream(data);
     }
@@ -100,13 +105,14 @@ public class CardEmulationService extends HostApduService {
             switch (commandApdu[APDU.Header.INS]) {
                 case APDU.Instruction.ISO7816_READ_DATA:
                     txCount++;
-                    Log.d(TAG, "Sent fragments: " + txCount);
+                    Log.d(TAG, "Sent fragment " + txCount);
                     resultMsg = pushDataChunk(commandApdu);
-
                     break;
 
                 case APDU.Instruction.ISO7816_WRITE_DATA:
-
+                    rxCount++;
+                    Log.d(TAG, "Receiving fragment " + rxCount);
+                    resultMsg = receiveDataChunk(commandApdu);
                     break;
 
                 default:
@@ -126,12 +132,18 @@ public class CardEmulationService extends HostApduService {
      * @return message consisting of one fragment.
      */
     private byte[] pushDataChunk(final byte[] commandApdu) {
+        // Only start transmission if tx buffer is ready
+        if (!dataOutReady.get()) {
+            return APDU.StatusMessage.ERR_NO_DATA;
+        }
+
         int requestedSize = APDU.getHeaderValue(commandApdu, APDU.Header.LC);
         requestedSize = Math.min(requestedSize, MAX_CHUNK_SIZE);
+        int msgLength = Math.min(requestedSize, dataOut.available());
         // Construct payload + status code
-        byte[] rawOutMsg = new byte[requestedSize + 2];
+        byte[] rawOutMsg = new byte[msgLength + 2];
 
-        int writtenBytes = dataOut.read(rawOutMsg, 0, requestedSize);
+        int writtenBytes = dataOut.read(rawOutMsg, 0, msgLength);
         int nextBytes = Math.min(dataOut.available(), MAX_CHUNK_SIZE);
         Log.d(TAG, "Sending chunk of " + writtenBytes + " bytes, next will be " + nextBytes + " bytes.");
 
@@ -142,9 +154,45 @@ public class CardEmulationService extends HostApduService {
         } else {
             // Stop communication
             APDU.insertStatusMessage(rawOutMsg, APDU.StatusMessage.SUCCESS);
+            dataOutReady.set(false);
         }
 
         return rawOutMsg;
+    }
+
+    private byte[] receiveDataChunk(final byte[] commandApdu) {
+        if (!dataInReady.get()) {
+            // Previously received data was not fetched yet
+            return APDU.StatusMessage.ERR_NOT_READY;
+        }
+
+        int dataLen = commandApdu.length - APDU.Header.LEN;
+        if (dataLen > MAX_CHUNK_SIZE)
+            // Invalid size of input message
+            return APDU.StatusMessage.ERR_PARAMS;
+        else if ((dataIn.size() + dataLen) > MAX_BYTES) {
+            // Received data is not complete; give client a new try
+            dataIn.reset();
+            return APDU.StatusMessage.ERR_PARAMS;
+        }
+
+        // Assembling fragmented data messages in local buffer
+        dataIn.write(commandApdu, APDU.Header.DATA, dataLen);
+        // Check if all data chunks are complete
+        int nextBytes = APDU.getHeaderValue(commandApdu, APDU.Header.LC);
+        if (0 == nextBytes) {
+            // Finish up
+            dataInReady.set(false);
+            Log.i(TAG, "Received data with " + dataIn.size() + " bytes complete.");
+            try {
+                String s = new String(dataIn.toByteArray(), "UTF-8");
+                Log.i(TAG, s);
+            } catch (Exception e) {
+                Log.i(TAG, "Could not convert input data to UTF-8");
+            }
+        }
+
+        return APDU.StatusMessage.SUCCESS;
     }
 
     /**
