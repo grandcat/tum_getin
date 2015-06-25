@@ -1,7 +1,8 @@
 'use strict';
 var mongoose = require('mongoose'),
     User = mongoose.model('User'),
-    XRegExp = require('xregexp').XRegExp;
+    XRegExp = require('xregexp').XRegExp,
+    crypto = require('crypto');
 
 /**
  * Sends a JSON answer message.
@@ -12,6 +13,7 @@ function reply(res, res_status, res_message, json) {
 	if(json !== null && json !== undefined) { // if we have json, concat it to msg
 		for (var attrname in json) { msg[attrname] = json[attrname]; }
 	}
+	console.log('Sending reply: ' + JSON.stringify(msg));
 	res.json(msg);
 }
 
@@ -88,18 +90,44 @@ function handleDBsave(err, res) {
 }
 
 /**
+ * Returns 16 random Bytes as hex number.
+ */
+function random () {
+	try {
+		return crypto.randomBytes(16).toString('hex');
+	} catch (ex) {
+		console.error('Error creating random string in crypto lib! ' + ex);
+		return null;
+	}
+}
+
+/**
  * Requests a token from TUMonline
  * and saves it in the DB if successful.
  * Finally sends return message.
  */
 function contactTUMonline(res, tum_id) {
+	console.log('Contacting TUMonline...');
 	//TODO: contact tumonline
 
-	//TODO: generate pseudo_id
+	var token = 'blablabla';
+	var status = 'student';
 
-	//TODO: send proper response
+	console.log('TUMonline response OK.');
+	// generating pseudo ID
+	var pid = random();
+	console.log(pid);	
+	// saving the user
+	var user = new User({
+		tum_id: tum_id,
+		pseudo_id: pid,
+		token: token,
+		status: status
+	});
+	user.save(handleDBsave);
+	// responding...
 	reply(res, 200, 'Token generation successful. Please send public key.',
-	{ tum_id: tum_id, pseudo_id: 'afdgtrsyjd', token: 'ewtry' });
+	{ tum_id: tum_id, pseudo_id: pid, token: token });
 }
 
 /**
@@ -124,6 +152,8 @@ function registerGetTokenForUser(req, res, tum_id, user) {
 	} else {
 		var token = user.token;
 		if (token !== undefined) {
+			console.log('Register returning saved token; id: ' + 
+					tum_id + ', tok: ' + token);
 			//TODO: validity check!
 			// Check if token from DB is still valid
 			if(true) { // if yes, then send the one from the DB
