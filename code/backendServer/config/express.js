@@ -132,21 +132,18 @@ module.exports = function(db) {
 
 		console.log('---> Test mode: Loading test data into DB...');
 		
-		User.remove({tum_id: user_01.tum_id}, function(err) {
+		User.remove({}, function(err) {
 			if (err) { console.log('user remove error: ', err); }
-		});
-		User.remove({tum_id: user_02.tum_id}, function(err) {
-			if (err) { console.log('user remove error: ', err); }
+			var user = new User(user_01);
+			user.save(function(err) {
+				if (err) { console.log('user save error: ', err); }
+			});
+			user = new User(user_02);
+			user.save(function(err) {
+				if (err) { console.log('user save error: ', err); }
+			});
 		});
 
-		var user = new User(user_01);
-		user.save(function(err) {
-			if (err) { console.log('user save error: ', err); }
-		});
-		user = new User(user_02);
-		user.save(function(err) {
-			if (err) { console.log('user save error: ', err); }
-		});
 
 	}
 

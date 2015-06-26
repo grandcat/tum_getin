@@ -17,6 +17,10 @@ $ <path-to-mongodb>/bin/mongod
 $ grunt
 	(for testing better: $ NODE_ENV=test grunt)
 
+For restarting the server just type rs into the running
+grunt application. When running in test mode, this will
+reconstruct the defined initial state, also in the DB.
+
 >>>------------ Testing: -----------------------<<<
 /test contains a test suite for all backend interfaces.
 Acts as a client (the smartphone or the NFC reader).

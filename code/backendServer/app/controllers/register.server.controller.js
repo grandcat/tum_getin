@@ -4,6 +4,8 @@ var mongoose = require('mongoose'),
     XRegExp = require('xregexp').XRegExp,
     crypto = require('crypto');
 
+//TODO: do proper logging! Into a file and not the console...
+
 /**
  * Sends a JSON answer message.
  * Last parameter is optional for additional fields
@@ -31,11 +33,11 @@ function check_tum_id(arg) {
 }
 
 /**
- * Example: 2440A20D6BD49B63
+ * Example: 5f494dab23950a6b81c0621b9dc9a876 
  */
 function check_pseudo_id(arg) {
-	var regEx = new XRegExp('[A-Z0-9]{16}');
-	if(arg.length === 16 && regEx.test(arg)) {
+	var regEx = new XRegExp('[a-f0-9]{32}');
+	if(arg.length === 32 && regEx.test(arg)) {
 		return true;
 	} else {
 		console.log('pseudo_id format error: ' + arg);
@@ -107,7 +109,7 @@ function random () {
  * Finally sends return message.
  */
 function contactTUMonline(res, tum_id) {
-	console.log('Contacting TUMonline...');
+	console.log('------> Contacting TUMonline...');
 	//TODO: contact tumonline
 
 	var token = 'blablabla';
