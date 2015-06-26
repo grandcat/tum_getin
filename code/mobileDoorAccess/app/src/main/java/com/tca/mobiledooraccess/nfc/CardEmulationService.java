@@ -2,11 +2,17 @@ package com.tca.mobiledooraccess.nfc;
 
 import android.nfc.cardemulation.HostApduService;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
+
+import com.tca.mobiledooraccess.MessageExchangeThread;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -37,9 +43,28 @@ public class CardEmulationService extends HostApduService {
     AtomicBoolean dataOutReady = new AtomicBoolean(true);   // TODO: change to false after test
     ByteArrayOutputStream dataIn = new ByteArrayOutputStream();
     AtomicBoolean dataInReady = new AtomicBoolean(true);
+    // Communication
+    private MessageExchangeThread msgExThread;
 
     public CardEmulationService() {
         super();
+        // Create separate thread for doing the protocol logic
+        Log.d(TAG, "NFCCardEmulation is: " + Thread.currentThread().getName());
+//        msgExThread = new MessageExchangeThread();
+//        msgExThread.start();
+        // Simple test with direct handler
+//        Handler mHandler = msgExThread.getHandler();
+//        Message msg = mHandler.obtainMessage(2);
+//        msg.arg1 = 123;
+//        mHandler.sendMessage(msg);
+//        // Suggested way
+//        Messenger mMessenger = new Messenger(msgExThread.getHandler());
+//        Message msg2 = Message.obtain(msgExThread.getHandler(), 1);
+//        msg2.arg1 = 456;
+//        try {
+//            mMessenger.send(msg2);
+//        } catch (RemoteException e) {e.printStackTrace();}
+
         // TEST: add some test data for transmission to terminal
         byte[] data = ("Hallo, hier spricht das Smartphone. Und es spricht sogar noch mehr!!! " +
                 "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod " +
@@ -60,6 +85,7 @@ public class CardEmulationService extends HostApduService {
      */
     @Override
     public void onDeactivated(int reason) {
+        // msgExThread.getLooper().quit();
         Log.i(TAG, "Lost connection to NFC reader.");
     }
 
@@ -96,7 +122,6 @@ public class CardEmulationService extends HostApduService {
             connectionEstablished = true;
             Log.i(TAG, "NFC terminal authenticated successfully.");
             byte[] accountBytes = new byte[] {(byte)0x11, (byte)0x22, (byte)0x33};
-            Log.i(TAG, "Sending account number: " + accountBytes.toString());
             return concatByteArrays(accountBytes, APDU.StatusMessage.SUCCESS);
 
         } else if (connectionEstablished) {
@@ -129,7 +154,7 @@ public class CardEmulationService extends HostApduService {
 
     /**
      * Push data fragments to the terminal if available
-     * @return message consisting of one fragment.
+     * @return Status response
      */
     private byte[] pushDataChunk(final byte[] commandApdu) {
         // Only start transmission if tx buffer is ready
@@ -160,6 +185,10 @@ public class CardEmulationService extends HostApduService {
         return rawOutMsg;
     }
 
+    /**
+     * Receive fragment from the terminal and assemble the bytes in an internal buffer
+     * @return Status response
+     */
     private byte[] receiveDataChunk(final byte[] commandApdu) {
         if (!dataInReady.get()) {
             // Previously received data was not fetched yet

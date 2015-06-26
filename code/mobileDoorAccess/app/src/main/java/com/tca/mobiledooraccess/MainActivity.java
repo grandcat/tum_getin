@@ -1,12 +1,20 @@
 package com.tca.mobiledooraccess;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.View;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
+
+import com.tca.mobiledooraccess.service.MessageExchangeService;
 
 /**
  * Available Preferences:
@@ -27,6 +35,53 @@ public class MainActivity extends Activity {
     public static Context context;
     private static final String TAG = "MainActivity";
 
+    MyServiceConnection mConnection;
+    Messenger mService;
+
+    /**
+     * Class for interacting with the main interface of the service.
+     */
+    final class MyServiceConnection implements ServiceConnection {
+        private boolean connectionEstablished = false;
+        private Object lockBind = new Object();
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mService = new Messenger(service);
+            Log.i(TAG, "onServiceConnected in Mainactivity with mService: " + mService.toString());
+            synchronized (lockBind) {
+                lockBind.notifyAll();
+            }
+
+            Message msg = Message.obtain(null, 1);
+            msg.arg1 = 123456;
+            msg.replyTo = null;
+            try {
+                mService.send(msg);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+
+        /**
+         * Wait for connection to be established. Only works if executed in separate thread.
+         * @throws InterruptedException
+         */
+        public void waitUntilConnected() throws InterruptedException {
+            if (!connectionEstablished) {
+                synchronized (lockBind) {
+                    lockBind.wait();
+                }
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mService = null;
+            Log.i(TAG, "onServiceDisconnected in Mainactivity");
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,6 +94,27 @@ public class MainActivity extends Activity {
         boolean registered = settings.getBoolean("registered",false);
         boolean token_received = settings.getBoolean("token_received", false);
         boolean token_activated = settings.getBoolean("token_activated", false);
+
+        // TEST: to be removed
+        /**
+         * Handler of incoming messages from service.
+         */
+        class IncomingHandler extends Handler {
+            @Override
+            public void handleMessage(Message msg) {
+                Log.d(TAG, "Mainactivity handler: message " + msg.arg1);
+            }
+        }
+        mConnection = new MyServiceConnection();
+
+        final Messenger mMessenger = new Messenger(new IncomingHandler());
+        // Try binding and send a message to worker thread
+        Intent bindIntent = new Intent(this, MessageExchangeService.class);
+        // Service should now be resistance to unbinding
+        bindService(bindIntent, mConnection, Context.BIND_AUTO_CREATE);
+        startService(bindIntent);
+        // TODO: action has to be done within bindConnection
+        // unbindService(mConnection);
 
         //Check status of the App...
         if (registered){
@@ -63,6 +139,18 @@ public class MainActivity extends Activity {
                 Intent intent = new Intent(this, NotRegisteredActivity.class);
                 startActivity(intent);
             }
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        if (mConnection != null) {
+            // Destroy NFC service to reduce energy consumption
+            // stopService(new Intent(this, MessageExchangeService.class));
+            unbindService(mConnection);
+            Log.d(TAG, "Shutting down NFC MessageExchange service.");
         }
     }
 }
