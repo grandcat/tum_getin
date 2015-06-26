@@ -2,7 +2,12 @@
 var mongoose = require('mongoose'),
     User = mongoose.model('User'),
     XRegExp = require('xregexp').XRegExp,
-    crypto = require('crypto');
+    crypto = require('crypto'),
+    https = require('https');
+// 'https://campus.tum.de/tumonline/wbservicesbasic.';
+var host_tumOnl = 'campus.tum.de';
+var path_tumOnl = '/tumonline/wbservicesbasic.';
+var url_reqToken = 'requestToken?';
 
 //TODO: do proper logging! Into a file and not the console...
 
@@ -103,6 +108,21 @@ function random () {
 	}
 }
 
+function handleTumHttpsReq(res) {
+	res.setEncoding('utf-8');
+	var responseString = '';
+	res.on('data', function(data) {
+		responseString += data;
+	});
+	res.on('end', function() {
+		//TODO: answer is XML not JSON!
+		//var resultObject = JSON.parse(responseString);
+		console.log('-----> Response from TUMonline: ' + responseString);
+		//callback(null, resultObject);
+		//TODO: fire callback!
+	});
+}
+
 /**
  * Requests a token from TUMonline
  * and saves it in the DB if successful.
@@ -111,6 +131,19 @@ function random () {
 function contactTUMonline(res, tum_id) {
 	console.log('------> Contacting TUMonline...');
 	//TODO: contact tumonline
+
+	var path = path_tumOnl + url_reqToken + 'pUsername=' + tum_id;
+	var options = {
+		host: host_tumOnl,
+		port: 443,
+		path: path,
+		method: 'GET'
+	};
+
+	// Do HTTPS request to TUMonline
+	var req = https.request(options, handleTumHttpsReq);
+	req.on('error', function(e) { console.error(e); });
+	req.end();
 
 	var token = 'blablabla';
 	var status = 'student';
