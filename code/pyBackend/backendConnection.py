@@ -8,19 +8,17 @@ class Backend(object):
         self.host = host
         self.port = port
         self.context = ssl.SSLContext(ssl.PROTOCOL_SSLv3)
-        self.context.set_default_verify_paths()
+        self.context.verify_mode = ssl.CERT_REQUIRED
+        self.context.load_verify_locations('cert.pem')
+        #self.context.set_default_verify_paths()
 
 
     def isConnected(self):
         conn = http.client.HTTPSConnection(self.host, self.port, context = self.context)
         conn.request('GET', '/')
-        response = json.loads(conn.getresponse().read().decode())
-        conn.close()
-        if 'message' in response:
-            if response['message'] == 'Backend running! Welcome!':
-                return True
-            else:
-                return False
+        resp = conn.getresponse()
+        if resp.status == 200:
+            return True
         else:
             return False
 
@@ -28,7 +26,6 @@ class Backend(object):
         conn = http.client.HTTPSConnection(self.host, self.port, context = self.context)
         conn.request('GET', '/check?pseudo_id=' + pseudoID)
         response = json.loads(conn.getresponse().read().decode())
-        print(response)
         conn.close()
         if 'student_status' in response:
             if response['student_status'] == 'student':

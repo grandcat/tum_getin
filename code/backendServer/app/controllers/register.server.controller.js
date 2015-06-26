@@ -1,7 +1,15 @@
 'use strict';
 var mongoose = require('mongoose'),
     User = mongoose.model('User'),
-    XRegExp = require('xregexp').XRegExp;
+    XRegExp = require('xregexp').XRegExp,
+    crypto = require('crypto'),
+    https = require('https');
+// 'https://campus.tum.de/tumonline/wbservicesbasic.';
+var host_tumOnl = 'campus.tum.de';
+var path_tumOnl = '/tumonline/wbservicesbasic.';
+var url_reqToken = 'requestToken?';
+
+//TODO: do proper logging! Into a file and not the console...
 
 /**
  * Sends a JSON answer message.
@@ -12,6 +20,7 @@ function reply(res, res_status, res_message, json) {
 	if(json !== null && json !== undefined) { // if we have json, concat it to msg
 		for (var attrname in json) { msg[attrname] = json[attrname]; }
 	}
+	console.log('Sending reply: ' + JSON.stringify(msg));
 	res.json(msg);
 }
 
@@ -29,11 +38,11 @@ function check_tum_id(arg) {
 }
 
 /**
- * Example: 2440A20D6BD49B63
+ * Example: 5f494dab23950a6b81c0621b9dc9a876 
  */
 function check_pseudo_id(arg) {
-	var regEx = new XRegExp('[A-Z0-9]{16}');
-	if(arg.length === 16 && regEx.test(arg)) {
+	var regEx = new XRegExp('[a-f0-9]{32}');
+	if(arg.length === 32 && regEx.test(arg)) {
 		return true;
 	} else {
 		console.log('pseudo_id format error: ' + arg);
@@ -88,16 +97,72 @@ function handleDBsave(err, res) {
 }
 
 /**
+ * Returns 16 random Bytes as hex number.
+ */
+function random () {
+	try {
+		return crypto.randomBytes(16).toString('hex');
+	} catch (ex) {
+		console.error('Error creating random string in crypto lib! ' + ex);
+		return null;
+	}
+}
+
+function handleTumHttpsReq(res) {
+	res.setEncoding('utf-8');
+	var responseString = '';
+	res.on('data', function(data) {
+		responseString += data;
+	});
+	res.on('end', function() {
+		//TODO: answer is XML not JSON!
+		//var resultObject = JSON.parse(responseString);
+		console.log('-----> Response from TUMonline: ' + responseString);
+		//callback(null, resultObject);
+		//TODO: fire callback!
+	});
+}
+
+/**
  * Requests a token from TUMonline
  * and saves it in the DB if successful.
  * Finally sends return message.
  */
 function contactTUMonline(res, tum_id) {
+	console.log('------> Contacting TUMonline...');
 	//TODO: contact tumonline
 
-	//TODO: send proper response
+	var path = path_tumOnl + url_reqToken + 'pUsername=' + tum_id;
+	var options = {
+		host: host_tumOnl,
+		port: 443,
+		path: path,
+		method: 'GET'
+	};
+
+	// Do HTTPS request to TUMonline
+	var req = https.request(options, handleTumHttpsReq);
+	req.on('error', function(e) { console.error(e); });
+	req.end();
+
+	var token = 'blablabla';
+	var status = 'student';
+
+	console.log('TUMonline response OK.');
+	// generating pseudo ID
+	var pid = random();
+	console.log(pid);	
+	// saving the user
+	var user = new User({
+		tum_id: tum_id,
+		pseudo_id: pid,
+		token: token,
+		status: status
+	});
+	user.save(handleDBsave);
+	// responding...
 	reply(res, 200, 'Token generation successful. Please send public key.',
-	{ tum_id: 'basfd', pseudo_id: 'afdgtrsyjd', token: 'ewtry' });
+	{ tum_id: tum_id, pseudo_id: pid, token: token });
 }
 
 /**
@@ -122,6 +187,8 @@ function registerGetTokenForUser(req, res, tum_id, user) {
 	} else {
 		var token = user.token;
 		if (token !== undefined) {
+			console.log('Register returning saved token; id: ' + 
+					tum_id + ', tok: ' + token);
 			//TODO: validity check!
 			// Check if token from DB is still valid
 			if(true) { // if yes, then send the one from the DB

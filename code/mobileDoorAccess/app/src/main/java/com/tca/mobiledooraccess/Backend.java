@@ -56,6 +56,8 @@ public class Backend {
         }
     };
 
+
+    //Backend Contructor
     public Backend(String host, String port){
         Log.d(TAG, "Initalizing Backend-Class");
         this.host = host;
