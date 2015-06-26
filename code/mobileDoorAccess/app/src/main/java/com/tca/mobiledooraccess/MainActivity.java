@@ -114,14 +114,14 @@ public class MainActivity extends Activity {
                 Log.d(TAG, "Mainactivity handler: message " + msg.arg1);
             }
         }
-        mConnection = new MyServiceConnection();
+//        mConnection = new MyServiceConnection();
 
         final Messenger mMessenger = new Messenger(new IncomingHandler());
         // Try binding and send a message to worker thread
-        Intent bindIntent = new Intent(this, MessageExchangeService.class);
-        // Service should now be resistance to unbinding
-        bindService(bindIntent, mConnection, Context.BIND_AUTO_CREATE);
-        startService(bindIntent);
+//        Intent bindIntent = new Intent(this, MessageExchangeService.class);
+//        // Service should now be resistance to unbinding
+//        bindService(bindIntent, mConnection, Context.BIND_AUTO_CREATE);
+//        startService(bindIntent);
         // TODO: action has to be done within bindConnection
         // unbindService(mConnection);
 
