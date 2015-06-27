@@ -3,7 +3,8 @@ var mongoose = require('mongoose'),
     User = mongoose.model('User'),
     XRegExp = require('xregexp').XRegExp,
     crypto = require('crypto'),
-    https = require('https');
+    https = require('https'),
+    parseString = require('xml2js').parseString;
 // 'https://campus.tum.de/tumonline/wbservicesbasic.';
 var host_tumOnl = 'campus.tum.de';
 var path_tumOnl = '/tumonline/wbservicesbasic.';
@@ -108,47 +109,18 @@ function random () {
 	}
 }
 
-function handleTumHttpsReq(res) {
-	res.setEncoding('utf-8');
-	var responseString = '';
-	res.on('data', function(data) {
-		responseString += data;
-	});
-	res.on('end', function() {
-		//TODO: answer is XML not JSON!
-		//var resultObject = JSON.parse(responseString);
-		console.log('-----> Response from TUMonline: ' + responseString);
-		//callback(null, resultObject);
-		//TODO: fire callback!
-	});
-}
-
 /**
- * Requests a token from TUMonline
- * and saves it in the DB if successful.
- * Finally sends return message.
- */
-function contactTUMonline(res, tum_id) {
-	console.log('------> Contacting TUMonline...');
-	//TODO: contact tumonline
+ * The callback fired if everything with the token request to 
+ * TumOnline went fine.
+ */ 
+function onTumTokenResponse(res, tum_id, tumAnswerJson) {
+	console.log('handleTumReq; id: ' + tum_id + '; jsonAns: ' + tumAnswerJson);
 
-	var path = path_tumOnl + url_reqToken + 'pUsername=' + tum_id;
-	var options = {
-		host: host_tumOnl,
-		port: 443,
-		path: path,
-		method: 'GET'
-	};
+	var token = tumAnswerJson.token;
+	console.log('Extracting token from TUM response: ' + token);
 
-	// Do HTTPS request to TUMonline
-	var req = https.request(options, handleTumHttpsReq);
-	req.on('error', function(e) { console.error(e); });
-	req.end();
+	var status = 'student'; //TODO: check that!
 
-	var token = 'blablabla';
-	var status = 'student';
-
-	console.log('TUMonline response OK.');
 	// generating pseudo ID
 	var pid = random();
 	console.log(pid);	
@@ -162,7 +134,60 @@ function contactTUMonline(res, tum_id) {
 	user.save(handleDBsave);
 	// responding...
 	reply(res, 200, 'Token generation successful. Please send public key.',
-	{ tum_id: tum_id, pseudo_id: pid, token: token });
+		{ tum_id: tum_id, pseudo_id: pid, token: token });
+}
+
+/**
+ * The callback fired if the HTTPS to TumOnline makes problems
+ */
+function handleTumHttpsError(err, res) {
+	console.error('Error at contacting TumOnline' + err);
+	send500error(res);
+}
+
+/**
+ * The callback fired by the HTTPS request to TumOnline
+ */
+function handleTumHttpsReq(httpResp, res, tum_id) {
+	httpResp.setEncoding('utf-8');
+	var responseString = '';
+	httpResp.on('data', function(data) {
+		responseString += data;
+	});
+	httpResp.on('end', function() {
+		console.log('-----> Response from TUMonline: ' + responseString);
+		parseString(responseString, function (err, result) {
+			if(err) {
+				handleTumHttpsError(err, res);
+			}
+			onTumTokenResponse(res, tum_id, result);
+		});		
+	});
+}
+
+/**
+ * Requests a token from TUMonline
+ * and saves it in the DB if successful.
+ * Finally sends return message.
+ */
+function contactTUMonline(res, tum_id) {
+	console.log('------> Contacting TUMonline...');
+	//TODO: add token name parameter
+	var path = path_tumOnl + url_reqToken + 'pUsername=' + tum_id;
+	var options = {
+		host: host_tumOnl,
+		port: 443,
+		path: path,
+		method: 'GET'
+	};
+	// Do HTTPS request to TUMonline
+	var req = https.request(options, function(httpRes) {
+		handleTumHttpsReq(httpRes, res, tum_id);
+		});
+	req.on('error', function(err) {
+		handleTumHttpsError(err, res);
+	});
+	req.end();
 }
 
 /**
