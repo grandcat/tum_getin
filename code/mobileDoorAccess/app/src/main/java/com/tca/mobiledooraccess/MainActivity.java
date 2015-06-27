@@ -49,18 +49,6 @@ public class MainActivity extends Activity {
         public void onServiceConnected(ComponentName name, IBinder service) {
             mService = new Messenger(service);
             Log.i(TAG, "onServiceConnected in Mainactivity with mService: " + mService.toString());
-            synchronized (lockBind) {
-                lockBind.notifyAll();
-            }
-
-            Message msg = Message.obtain(null, 1);
-            msg.arg1 = 123456;
-            msg.replyTo = null;
-            try {
-                mService.send(msg);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
         }
 
         /**
@@ -114,13 +102,13 @@ public class MainActivity extends Activity {
                 Log.d(TAG, "Mainactivity handler: message " + msg.arg1);
             }
         }
-//        mConnection = new MyServiceConnection();
+        mConnection = new MyServiceConnection();
 
         final Messenger mMessenger = new Messenger(new IncomingHandler());
         // Try binding and send a message to worker thread
-//        Intent bindIntent = new Intent(this, MessageExchangeService.class);
+        Intent bindIntent = new Intent(this, MessageExchangeService.class);
 //        // Service should now be resistance to unbinding
-//        bindService(bindIntent, mConnection, Context.BIND_AUTO_CREATE);
+        bindService(bindIntent, mConnection, Context.BIND_AUTO_CREATE);
 //        startService(bindIntent);
         // TODO: action has to be done within bindConnection
         // unbindService(mConnection);

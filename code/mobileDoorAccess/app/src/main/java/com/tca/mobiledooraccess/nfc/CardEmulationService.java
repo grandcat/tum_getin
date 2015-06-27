@@ -1,19 +1,23 @@
 package com.tca.mobiledooraccess.nfc;
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.nfc.cardemulation.HostApduService;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
+import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.tca.mobiledooraccess.MessageExchangeThread;
+import com.tca.mobiledooraccess.service.MessageExchangeService;
+import com.tca.mobiledooraccess.service.StmProtocolHandler;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -35,36 +39,62 @@ public class CardEmulationService extends HostApduService {
     // Config
     public final static int MAX_CHUNK_SIZE = 125;   // size in bytes
     public final static int MAX_BYTES = 4096;       // size in bytes
+
     // States and progress
     private boolean connectionEstablished = false;
     private int txCount = 0, rxCount = 0;
+
     // Data buffers
     ByteArrayInputStream dataOut;
-    AtomicBoolean dataOutReady = new AtomicBoolean(true);   // TODO: change to false after test
+    AtomicBoolean dataOutReady = new AtomicBoolean(false);
     ByteArrayOutputStream dataIn = new ByteArrayOutputStream();
     AtomicBoolean dataInReady = new AtomicBoolean(true);
-    // Communication
-    private MessageExchangeThread msgExThread;
+
+    /**
+     * NFC service messenger
+     *
+     * - mNfcMessagingService:
+     *   Incoming packets (dataIn) are sent to the NFC state machine for the application logic.
+     * - mResponseMessenger:
+     *   Response channel for the NFC state machine to generate packets to be transmitted to the
+     *   client (dataOut).
+     */
+    private Messenger mNfcMessagingService;
+    final Messenger mResponseMessenger = new Messenger(new MsgHandler());
+
+    final class MsgHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case StmProtocolHandler.MSG_NFC_SEND_PACKET:
+                    /**
+                     * Prepare outgoing message to be sent to the NFC terminal.
+                     */
+                    byte[] data = (byte[])msg.obj;
+                    if (!dataOutReady.get()) {
+                        // DataOut was sent already.
+                        // We can safely replace the buffer now
+                        if (data != null) {
+                            dataOut = new ByteArrayInputStream(data);
+                            dataOutReady.set(true);
+                            Log.d(TAG, "dataOut message queued for transmission to client.");
+                        } else {
+                            Log.e(TAG, "NULL message received on ResponseMessenger handler.");
+                        }
+
+                    } else {
+                        // DataOut buffer still occupied
+
+                    }
+                    break;
+            }
+        }
+    }
 
     public CardEmulationService() {
         super();
         // Create separate thread for doing the protocol logic
         Log.d(TAG, "NFCCardEmulation is: " + Thread.currentThread().getName());
-//        msgExThread = new MessageExchangeThread();
-//        msgExThread.start();
-        // Simple test with direct handler
-//        Handler mHandler = msgExThread.getHandler();
-//        Message msg = mHandler.obtainMessage(2);
-//        msg.arg1 = 123;
-//        mHandler.sendMessage(msg);
-//        // Suggested way
-//        Messenger mMessenger = new Messenger(msgExThread.getHandler());
-//        Message msg2 = Message.obtain(msgExThread.getHandler(), 1);
-//        msg2.arg1 = 456;
-//        try {
-//            mMessenger.send(msg2);
-//        } catch (RemoteException e) {e.printStackTrace();}
-
         // TEST: add some test data for transmission to terminal
         byte[] data = ("Hallo, hier spricht das Smartphone. Und es spricht sogar noch mehr!!! " +
                 "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod " +
@@ -73,8 +103,44 @@ public class CardEmulationService extends HostApduService {
                 " no sea takimata sanctus est Lorem ipsum dolor sit amet. Heheheehhehehehehehehehe" +
                 "ehu und es geht weiter!!!||||--. <-- Sonderzeichen.")
                 .getBytes(Charset.forName("UTF-8"));
-        dataOut = new ByteArrayInputStream(data);
+        // dataOut = new ByteArrayInputStream(data);
     }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Log.i(TAG, "Super Service onCreate called.");
+        // Bind to NFC Messaging service
+        Intent nfcService = new Intent(getApplicationContext(), MessageExchangeService.class);
+        getApplicationContext().bindService(nfcService, mConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onCreate();
+        if (mNfcMessagingService != null) {
+            getApplicationContext().unbindService(mConnection);
+        }
+        Log.i(TAG, "Super Service onDestroy called.");
+    }
+
+    /**
+     * Class for interacting with the main interface of the service.
+     */
+    private ServiceConnection mConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mNfcMessagingService = new Messenger(service);
+            Log.i(TAG, "onServiceConnected in CardEmulation with mNfcMessagingService: " + mNfcMessagingService.toString());
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mNfcMessagingService = null;
+            Log.i(TAG, "onServiceDisconnected in CardEmulation");
+        }
+    };
 
     /**
      * Called if the connection to the NFC card is lost, in order to let the application know the
@@ -85,7 +151,6 @@ public class CardEmulationService extends HostApduService {
      */
     @Override
     public void onDeactivated(int reason) {
-        // msgExThread.getLooper().quit();
         Log.i(TAG, "Lost connection to NFC reader.");
     }
 
@@ -121,6 +186,17 @@ public class CardEmulationService extends HostApduService {
              */
             connectionEstablished = true;
             Log.i(TAG, "NFC terminal authenticated successfully.");
+            // Inform NFC state machine about new terminal
+            Message msg = Message.obtain(null, StmProtocolHandler.MSG_NFC_NEW_TERMINAL);
+            msg.arg1 = 123; // TODO: ID of terminal
+            msg.replyTo = mResponseMessenger;
+            try {
+                mNfcMessagingService.send(msg);
+            } catch (RemoteException e) {
+                Log.e(TAG, "Could not send data input to NFC state machine.");
+                e.printStackTrace(); // TODO: remove stacktrace
+            }
+            // Send APDU response
             byte[] accountBytes = new byte[] {(byte)0x11, (byte)0x22, (byte)0x33};
             return concatByteArrays(accountBytes, APDU.StatusMessage.SUCCESS);
 
@@ -209,16 +285,25 @@ public class CardEmulationService extends HostApduService {
         dataIn.write(commandApdu, APDU.Header.DATA, dataLen);
         // Check if all data chunks are complete
         int nextBytes = APDU.getHeaderValue(commandApdu, APDU.Header.LC);
+        // If incoming data message complete
+        // - transfer data to NFC state machine to do the high-level logic
+        // - Clean up internal buffer after that
         if (0 == nextBytes) {
-            // Finish up
             dataInReady.set(false);
             Log.i(TAG, "Received data with " + dataIn.size() + " bytes complete.");
+            // Push to NFC service thread
+            Message msg = Message.obtain(null, StmProtocolHandler.MSG_NFC_RECEIVED_PACKET);
+            msg.obj = dataIn.toByteArray();
+            msg.replyTo = mResponseMessenger;
             try {
-                String s = new String(dataIn.toByteArray(), "UTF-8");
-                Log.i(TAG, s);
-            } catch (Exception e) {
-                Log.i(TAG, "Could not convert input data to UTF-8");
+                mNfcMessagingService.send(msg);
+            } catch (RemoteException e) {
+                Log.e(TAG, "Could not send data input to NFC statemachine.");
+                e.printStackTrace(); // TODO: remove stacktrace
             }
+            // Cleanup for new input data
+            dataIn.reset();
+            dataInReady.set(true);
         }
 
         return APDU.StatusMessage.SUCCESS;

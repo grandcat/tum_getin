@@ -9,19 +9,15 @@ import android.os.Message;
 import android.os.Messenger;
 import android.util.Log;
 
-import junit.framework.Test;
-
-import java.lang.reflect.Constructor;
-
 /**
  * Created by Stefan on 26.06.2015.
  */
-public class MessageLooperService extends Service {
+public class BaseMessageLooperService extends Service {
     private static final String TAG = "LooperServiceThread";
     /**
      * Custom message handler for processing incoming messages
      */
-    private Class<MsgHandler> msgHandlerClass;
+    private Class<BaseMsgHandler> msgHandlerClass;
     private boolean shutdownInvoked = false;
 
     protected LooperThread mLooperThread;
@@ -30,7 +26,7 @@ public class MessageLooperService extends Service {
     // Target we publish for clients to send messages to IncomingMsgHandler.
     protected Messenger mMessenger;
 
-    public MessageLooperService(Class msgHandlerClass) {
+    public BaseMessageLooperService(Class msgHandlerClass) {
         this.msgHandlerClass = msgHandlerClass;
     }
 
@@ -51,7 +47,7 @@ public class MessageLooperService extends Service {
     public void onDestroy() {
         if (!shutdownInvoked) {
             // Stop looper thread
-            mServiceLooper.quit();
+            //mServiceLooper.quit();
             shutdownInvoked = true;
         }
     }
@@ -111,7 +107,7 @@ public class MessageLooperService extends Service {
 
                 }
                 else {
-                    mHandler = new MsgHandler();
+                    mHandler = new BaseMsgHandler();
                 }
                 notifyAll();
             }
@@ -125,23 +121,18 @@ public class MessageLooperService extends Service {
 /**
  * State machine
  */
-class MsgHandler extends Handler {
-    //        public IncomingMsgHandler(Looper looper) {
-//            super(looper);
-//        }
-    public MsgHandler() {
-        super();
-    }
+class BaseMsgHandler extends Handler {
+    private static final String TAG = "LooperServiceThread";
 
-    public MsgHandler newInstance() {
-        return new MsgHandler();
+    public BaseMsgHandler() {
+        super();
     }
 
     @Override
     public void handleMessage(Message msg) {
         // process incoming messages here
-        Log.d("msghandler", "LooperThread is: " + Thread.currentThread().getName());
-        Log.d("msghandler", "Got a message in handleMessage(). For more functionality, " +
+        Log.d(TAG, "LooperThread is: " + Thread.currentThread().getName());
+        Log.d(TAG, "Got a message in handleMessage(). For more functionality, " +
                 "this class should be derived.");
     }
 }
