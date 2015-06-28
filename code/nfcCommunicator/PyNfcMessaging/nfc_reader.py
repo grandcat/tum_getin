@@ -35,6 +35,7 @@ class NFCReader(object):
         self.__device = None
         self.__target = None
         self.__modulation = None
+        self.running = False
          # Raw send buffer and raw receive buffer for exchanging one APDU message over NFC
         self.__tx_msg = (ctypes.c_uint8 * self.ISO7816_SHORT_APDU_MAX_LEN)()
         self.__rx_msg = (ctypes.c_uint8 * self.ISO7816_SHORT_APDU_MAX_LEN)()
@@ -171,6 +172,7 @@ class NFCReader(object):
                     # Send UID to authenticate reader against Android device
                     self.send_uid()
                     # Finish setup step
+                    self.running = True
                     connection_loop = False
 
                 else:
@@ -190,11 +192,13 @@ class NFCReader(object):
         return connection_loop
 
     def shutdown_nfc_reader(self):
-        try:
-            nfc.nfc_close(self.__device)
-            nfc.nfc_exit(self.__context)
-        finally:
-           self.log.info('NFC clean shutdown')
+        if self.running:
+            self.running = False
+            try:
+                nfc.nfc_close(self.__device)
+                nfc.nfc_exit(self.__context)
+            finally:
+               self.log.info('NFC clean shutdown')
 
     def send_uid(self):
         """Send UID to allow the Android app to recognize our reader"""

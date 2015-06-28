@@ -1,6 +1,7 @@
 from io import BytesIO
 import logging
 import struct
+import time
 
 from protocol import APDU
 from nfc_reader import NFCReader
@@ -25,12 +26,12 @@ class ReaderIO(object):
         # Activity
         self.current_activity = 0  # No activity by default
 
-    def receive_data(self, wait_timeout=0):
+    def     receive_data(self, wait_timeout=0):
         """
         Receives fragmented data messages and aggregates them to a complete data block.
 
         :param wait_timeout: in milliseconds. If 0, calling this function will block indefinitely.
-        :return: received data item
+        :return: assembled data as bytes
         """
         # Initialize data buffers
         data_in_buf = BytesIO()
@@ -68,7 +69,13 @@ class ReaderIO(object):
         return data_in_buf.getvalue()
 
     def send_data(self, tx_data, wait_timeout=0):
-        # Reset read position if buffer is reused
+        """
+
+        :param tx_data:
+        :param wait_timeout:
+        :return:
+        """
+        # Initialize buffers
         data_out_buf = BytesIO(tx_data)
         data_len = len(tx_data)
         self.log.debug('Sending data.')
@@ -94,24 +101,43 @@ class ReaderIO(object):
                 more_data = False
 
     def run(self):
-        self.device.start_nfc_reader()
+        hw_activated = True
 
-        msg_in = self.receive_data()
-        self.log.info('Received data from client: %s', msg_in)
+        while hw_activated:
+            try:
+                self.device.start_nfc_reader()
 
-        text = 'Da stimme ich zu!\n' \
-               'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ' \
-               'ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo ' \
-               'dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor ' \
-               'sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor ' \
-               'invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et ' \
-               'justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum ' \
-               'dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod ' \
-               'tempor invidunt ut labore et dolore magna aliquyam'
-        msg_out = bytes(text.encode('utf-8'))
-        self.send_data(msg_out)
+                msg_in = self.receive_data()
+                self.log.info('Received data from client: %s', msg_in)
 
-        self.device.shutdown_nfc_reader()
+                text = 'Da stimme ich zu!\n' \
+                       'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ' \
+                       'ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo ' \
+                       'dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor ' \
+                       'sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor ' \
+                       'invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et ' \
+                       'justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum ' \
+                       'dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod ' \
+                       'tempor invidunt ut labore et dolore magna aliquyam'
+                msg_out = bytes(text.encode('utf-8'))
+                self.send_data(msg_out)
+
+                # Second receive
+                msg_in = self.receive_data()
+                self.log.info('2. Received data from client: %s', msg_in)
+
+                self.device.shutdown_nfc_reader()
+
+                # Wait some time before permit a client to connect
+                time.sleep(2)
+
+            except (KeyboardInterrupt, SystemExit):
+                hw_activated = False
+            except IOError as e:
+                self.log.error("IOError Exception: " + str(e))
+                hw_activated = True
+            finally:
+                self.device.shutdown_nfc_reader()
 
     def should_stop(self):
         """
