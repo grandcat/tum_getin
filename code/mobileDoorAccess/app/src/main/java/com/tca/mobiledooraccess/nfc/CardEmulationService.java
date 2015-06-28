@@ -62,6 +62,9 @@ public class CardEmulationService extends HostApduService {
     private Messenger mNfcMessagingService;
     final Messenger mResponseMessenger = new Messenger(new MsgHandler());
 
+    /**
+     * Outgoing messages
+     */
     final class MsgHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
@@ -86,29 +89,11 @@ public class CardEmulationService extends HostApduService {
 
                     } else {
                         // DataOut buffer still occupied
-
+                        Log.e(TAG, "DataOut buffer still occupied. Data will be lost.");
                     }
                     break;
             }
         }
-    }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        Log.i(TAG, "CardEmulation onCreate called.");
-        // Bind to NFC Messaging service
-        Intent nfcService = new Intent(getApplicationContext(), MessageExchangeService.class);
-        getApplicationContext().bindService(nfcService, mConnection, Context.BIND_AUTO_CREATE);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (mNfcMessagingService != null) {
-            getApplicationContext().unbindService(mConnection);
-        }
-        Log.i(TAG, "CardEmulation service destroyed (state machine can still be online).");
     }
 
     /**
@@ -131,6 +116,24 @@ public class CardEmulationService extends HostApduService {
         }
     };
 
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Log.i(TAG, "CardEmulation onCreate called.");
+        // Bind to NFC Messaging service
+        Intent nfcService = new Intent(getApplicationContext(), MessageExchangeService.class);
+        getApplicationContext().bindService(nfcService, mConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mNfcMessagingService != null) {
+            getApplicationContext().unbindService(mConnection);
+        }
+        Log.i(TAG, "CardEmulation service destroyed (state machine can still be online).");
+    }
+
     /**
      * Called if the connection to the NFC card is lost, in order to let the application know the
      * cause for the disconnection (either a lost link, or another AID being selected by the
@@ -140,6 +143,15 @@ public class CardEmulationService extends HostApduService {
      */
     @Override
     public void onDeactivated(int reason) {
+        if (connectionEstablished) {
+            Message msg = Message.obtain(null, StmProtocolHandler.MSG_NFC_CONNECTION_LOST);
+            msg.arg1 = reason;
+            try {
+                mNfcMessagingService.send(msg);
+            } catch (RemoteException e) {
+                Log.e(TAG, "Could not send status to NFC message exchange service.");
+            }
+        }
         Log.i(TAG, "Lost connection to NFC reader.");
     }
 
@@ -171,26 +183,41 @@ public class CardEmulationService extends HostApduService {
         if (Arrays.equals(SELECT_APDU, commandApdu)) {
             /**
              * Authentication of NFC terminal
+             *
              * Only if the correct AID is sent, we will process any further requests.
+             * We also check whether binding to the NFC Message Exchange service is ready.
+             * If not, the terminal will give us some time until the binding succeeds.
              */
-            connectionEstablished = true;
-            Log.i(TAG, "NFC terminal authenticated successfully.");
-            // Inform NFC state machine about new terminal
-            Message msg = Message.obtain(null, StmProtocolHandler.MSG_NFC_NEW_TERMINAL);
-            msg.arg1 = 123; // TODO: ID of terminal
-            msg.replyTo = mResponseMessenger;
-            try {
-                mNfcMessagingService.send(msg);
-            } catch (RemoteException e) {
-                Log.e(TAG, "Could not send data input to NFC state machine.");
-                e.printStackTrace(); // TODO: remove stacktrace
+            Log.i(TAG, "NFC terminal is authentic.");
+
+            if (mNfcMessagingService != null) {
+                // Successfully connected to the NFC Message exchange service.
+                // Activate the communication channel.
+                connectionEstablished = true;
+                // Inform NFC state machine about new terminal
+                Message msg = Message.obtain(null, StmProtocolHandler.MSG_NFC_NEW_TERMINAL);
+                msg.replyTo = mResponseMessenger;
+                try {
+                    mNfcMessagingService.send(msg);
+                    return APDU.StatusMessage.SUCCESS;
+                } catch (RemoteException e) {
+                    Log.e(TAG, "Could not send data input to NFC state machine.");
+                    e.printStackTrace(); // TODO: remove stacktrace
+                }
+                Log.d(TAG, "NFC communication channel established.");
+
+            } else {
+                // Binding to the NFC message exchange service not ready yet
+                // Inform terminal about this to provide some free time.
+                Log.e(TAG, "NFC MessageExchange service not bounded. Trying again.");
+                return APDU.StatusMessage.ERR_NOT_READY;
             }
-            // Send APDU response
-            byte[] accountBytes = new byte[] {(byte)0x11, (byte)0x22, (byte)0x33};
-            return concatByteArrays(accountBytes, APDU.StatusMessage.SUCCESS);
+
+            // Something went wrong
+            return APDU.StatusMessage.ERR_PARAMS;
 
         } else if (connectionEstablished) {
-            byte[] resultMsg = APDU.StatusMessage.ERR_PARAMS;
+            byte[] resultMsg;
             // Simple state machine
             switch (commandApdu[APDU.Header.INS]) {
                 case APDU.Instruction.ISO7816_READ_DATA:
@@ -206,7 +233,7 @@ public class CardEmulationService extends HostApduService {
                     break;
 
                 default:
-                    return APDU.StatusMessage.ERR_PARAMS;
+                    resultMsg = APDU.StatusMessage.ERR_PARAMS;
             }
 
             return resultMsg;
