@@ -108,8 +108,8 @@ public class MainActivity extends Activity {
         // Try binding and send a message to worker thread
         Intent bindIntent = new Intent(this, MessageExchangeService.class);
 //        // Service should now be resistance to unbinding
-        bindService(bindIntent, mConnection, Context.BIND_AUTO_CREATE);
-//        startService(bindIntent);
+//        bindService(bindIntent, mConnection, Context.BIND_AUTO_CREATE);
+        startService(bindIntent);
         // TODO: action has to be done within bindConnection
         // unbindService(mConnection);
 
@@ -146,8 +146,8 @@ public class MainActivity extends Activity {
         if (mConnection != null) {
             // Destroy NFC service to reduce energy consumption
             // stopService(new Intent(this, MessageExchangeService.class));
-            unbindService(mConnection);
-            Log.d(TAG, "Shutting down NFC MessageExchange service.");
+            //unbindService(mConnection);
+            // Log.d(TAG, "Shutting down NFC MessageExchange service.");
         }
     }
 }

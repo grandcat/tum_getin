@@ -45,7 +45,7 @@ public class CardEmulationService extends HostApduService {
     private int txCount = 0, rxCount = 0;
 
     // Data buffers
-    ByteArrayInputStream dataOut;
+    ByteArrayInputStream dataOut;   // is ByteArrayInputStream
     AtomicBoolean dataOutReady = new AtomicBoolean(false);
     ByteArrayOutputStream dataIn = new ByteArrayOutputStream();
     AtomicBoolean dataInReady = new AtomicBoolean(true);
@@ -76,8 +76,10 @@ public class CardEmulationService extends HostApduService {
                         // We can safely replace the buffer now
                         if (data != null) {
                             dataOut = new ByteArrayInputStream(data);
+                            dataOut.reset();
                             dataOutReady.set(true);
-                            Log.d(TAG, "dataOut message queued for transmission to client.");
+                            Log.d(TAG, "dataOut message with " + dataOut.available() + " bytes " +
+                                    "queued for transmission to client.");
                         } else {
                             Log.e(TAG, "NULL message received on ResponseMessenger handler.");
                         }
@@ -91,25 +93,10 @@ public class CardEmulationService extends HostApduService {
         }
     }
 
-    public CardEmulationService() {
-        super();
-        // Create separate thread for doing the protocol logic
-        Log.d(TAG, "NFCCardEmulation is: " + Thread.currentThread().getName());
-        // TEST: add some test data for transmission to terminal
-        byte[] data = ("Hallo, hier spricht das Smartphone. Und es spricht sogar noch mehr!!! " +
-                "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod " +
-                "tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At " +
-                "vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren," +
-                " no sea takimata sanctus est Lorem ipsum dolor sit amet. Heheheehhehehehehehehehe" +
-                "ehu und es geht weiter!!!||||--. <-- Sonderzeichen.")
-                .getBytes(Charset.forName("UTF-8"));
-        // dataOut = new ByteArrayInputStream(data);
-    }
-
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.i(TAG, "Super Service onCreate called.");
+        Log.i(TAG, "CardEmulation onCreate called.");
         // Bind to NFC Messaging service
         Intent nfcService = new Intent(getApplicationContext(), MessageExchangeService.class);
         getApplicationContext().bindService(nfcService, mConnection, Context.BIND_AUTO_CREATE);
@@ -117,11 +104,11 @@ public class CardEmulationService extends HostApduService {
 
     @Override
     public void onDestroy() {
-        super.onCreate();
+        super.onDestroy();
         if (mNfcMessagingService != null) {
             getApplicationContext().unbindService(mConnection);
         }
-        Log.i(TAG, "Super Service onDestroy called.");
+        Log.i(TAG, "CardEmulation service destroyed (state machine can still be online).");
     }
 
     /**
@@ -137,7 +124,9 @@ public class CardEmulationService extends HostApduService {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            mNfcMessagingService = null;
+            // FIX: won't remove it currently as it might be useful for a second try to connect
+            // to an NFC terminal
+            // mNfcMessagingService = null;
             Log.i(TAG, "onServiceDisconnected in CardEmulation");
         }
     };

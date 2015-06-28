@@ -19,22 +19,24 @@ public final class StmProtocolHandler extends BaseMsgHandler {
     public final static int MSG_NFC_RECEIVED_PACKET = 2;
     public final static int MSG_NFC_SEND_PACKET = 3;
 
-    private Messenger mNfcEmulationService;
+    private Messenger mNfcCardEmulationService;
 
     public StmProtocolHandler() { super(); }
 
     @Override
     public void handleMessage(Message msg) {
         // process incoming messages here
-        Log.d(MessageExchangeService.TAG, "B LooperThread is: " + Thread.currentThread().getName());
-        Log.d(MessageExchangeService.TAG, "Got message with arg1 " + msg.arg1);
+        Log.d(MessageExchangeService.TAG, "State machine handler is " + Thread.currentThread().getName());
+        Log.d(MessageExchangeService.TAG, "Got message with what " + msg.what);
 
         switch(msg.what) {
             case MSG_NFC_NEW_TERMINAL: {
                 /**
                  * Initial message on first contact
                  */
-                if (mNfcEmulationService == null) mNfcEmulationService = msg.replyTo;
+                // Always take new messenger because CardEmulation's manager is recreated each time
+                // it binds to a new terminal
+                mNfcCardEmulationService = msg.replyTo;
                 // Test: send reply that should be sent to the client
                 byte[] data = ("First: Hallo, hier spricht das Smartphone. Und es spricht sogar noch mehr!!! " +
                         "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod " +
@@ -46,7 +48,7 @@ public final class StmProtocolHandler extends BaseMsgHandler {
                 Message responseMsg = Message.obtain(null, MSG_NFC_SEND_PACKET);
                 responseMsg.obj = data;
                 try {
-                    mNfcEmulationService.send(responseMsg);
+                    mNfcCardEmulationService.send(responseMsg);
                 } catch (RemoteException e) {
                     Log.e("TAG", "Response not sent; RemoteException calling into " +
                             "CardEmulationService.");
@@ -58,9 +60,9 @@ public final class StmProtocolHandler extends BaseMsgHandler {
                 /**
                  * Processing incoming packet sent by NFC terminal.
                  */
-                if (mNfcEmulationService == null) mNfcEmulationService = msg.replyTo;
+                if (mNfcCardEmulationService == null) mNfcCardEmulationService = msg.replyTo;
 
-                byte[] dataIn = (byte[]) msg.obj;
+                byte[] dataIn = (byte[])msg.obj;
                 String s = "";
                 try {
                     s = new String(dataIn, "UTF-8");
@@ -81,7 +83,7 @@ public final class StmProtocolHandler extends BaseMsgHandler {
                 Message responseMsg = Message.obtain(null, MSG_NFC_SEND_PACKET);
                 responseMsg.obj = data;
                 try {
-                    mNfcEmulationService.send(responseMsg);
+                    mNfcCardEmulationService.send(responseMsg);
                 } catch (RemoteException e) {
                     Log.e("TAG", "Response not sent; RemoteException calling into " +
                             "CardEmulationService.");
