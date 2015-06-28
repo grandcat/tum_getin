@@ -114,7 +114,7 @@ function random () {
  * TumOnline went fine.
  */ 
 function onTumTokenResponse(res, tum_id, tumAnswerJson) {
-	console.log('handleTumReq; id: ' + tum_id + '; jsonAns: ' + tumAnswerJson);
+	console.log('onTumTokenRes; id: ' + tum_id + '; jsonAns: ' + tumAnswerJson);
 
 	var token = tumAnswerJson.token;
 	console.log('Extracting token from TUM response: ' + token);

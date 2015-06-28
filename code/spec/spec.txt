@@ -45,7 +45,14 @@ Ablauf:
   Error possibility:	zu dieser tumid gibt es schon ein token
 		echter User würde dieses token dann in tumonline löschen
 
-- Step 2:
+- Step 2: Check if the user has activated his token in TumOnline
+  Request:	GET /tokenactive?tum_id=ga00aaa
+  Answer:	Message with JSON body
+		{ status: '200',
+		  message: 'Token is activated.' }
+  Answer possibility 2: 
+		{ status: //TODO,
+		  message: 'Token is not activated.' }
 
 - Step 3: Hand over public key for storage on the backend.
   Request: 	POST /register
