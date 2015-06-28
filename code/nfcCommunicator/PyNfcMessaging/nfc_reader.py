@@ -6,6 +6,7 @@ import ctypes
 import logging
 import time
 
+from protocol import APDU
 import nfc
 from nfc_error import HWError, TargetLost
 
@@ -22,7 +23,7 @@ class NFCReader(object):
     """
     Time between two consecutive probes for an NFC emulated card in range
     """
-    PROBE_INTERVAL = 1.2
+    PROBE_DEVICE_INTERVAL = 1.2
 
     # SELECT_AID = b'\x00\xA4\x04\x00\x07\xF0\x74\x75\x6D\x67\x65\x74'
     SELECT_AID = b'\x00\xA4\x04\x00\x0A\xF0' + b'tumgetin\x02'
@@ -170,6 +171,7 @@ class NFCReader(object):
                     self.log.debug('Connection established with ISO14443A modulation and baudrate type %d.',
                                    self.__target.nm.nbr)
                     # Send UID to authenticate reader against Android device
+                    # -> it will wait until Android's NFC service is ready
                     self.send_uid()
                     # Finish setup step
                     self.running = True
@@ -203,8 +205,20 @@ class NFCReader(object):
     def send_uid(self):
         """Send UID to allow the Android app to recognize our reader"""
         tx_buf = self.SELECT_AID
-        rx_buf, rx_len = self.transceive_message(tx_buf, len(tx_buf))
-        # TODO: validate result
+        connected = False
+        while not connected:
+            rx_buf, rx_len = self.transceive_message(tx_buf, len(tx_buf))
+            if APDU.SUCCESS == rx_buf:
+                # Android device should be ready now for further communication
+                connected = True
+            elif APDU.ERR_NOT_READY == rx_buf:
+                # Wait some time until Android NFC service is ready
+                time.sleep(0.5)
+                connected = False
+                self.log.debug('Android NFC service not ready, waiting...')
+            else:
+                raise IOError('Unknown device.')
+
 
     def transceive_message(self, tx_buf, tx_len, timeout=0):
         assert self.__device != None
@@ -225,6 +239,9 @@ class NFCReader(object):
             self.log.debug('Receive [%d bytes]: %s', rx_len, hex_dump(rx_buf[:rx_len]))
         elif nfc.NFC_ERFTRANS == rx_len:
             raise TargetLost('Lost link to target.')
+        elif nfc.NFC_EINVARG == rx_len:
+            # Invalid argument seems to be a keyboard interrupt
+            raise KeyboardInterrupt()
         else:
             # No valid response: link is probably broken
             raise IOError("Invalid or no reply from target. libnfc type: " + str(rx_len))
