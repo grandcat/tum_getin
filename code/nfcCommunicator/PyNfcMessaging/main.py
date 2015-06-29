@@ -1,6 +1,7 @@
 import logging
-from statemachine import ReaderIO
-from nfc_reader import NFCReader
+
+from nfcio import ReaderIO
+from protocol import NFCReader
 
 if __name__ == '__main__':
     logging.basicConfig(format='[%(levelname)s:%(threadName)s:%(name)s:%(funcName)s] %(message)s', level=logging.DEBUG)

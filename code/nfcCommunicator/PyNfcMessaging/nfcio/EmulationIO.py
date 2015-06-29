@@ -1,9 +1,8 @@
 import logging
 import queue
-import time
 
 
-class NfcIO(object):
+class EmulationIO(object):
     """
     :type q_data_in: queue
     :type q_data_out: queue

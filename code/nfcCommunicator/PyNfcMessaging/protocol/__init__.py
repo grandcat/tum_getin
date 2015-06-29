@@ -4,8 +4,14 @@ __all__ = [
     # Functions
 
     # Classes
-    'APDU'
+    'APDU',
+    'NFCReader',
+
+    # Exceptions
+    'HWError',
+    'TargetLost'
     ]
 
 from protocol.APDU import APDU
-from statemachine.ReaderIO import *
+from protocol.NfcReader import NFCReader
+from protocol.NfcError import *

@@ -6,9 +6,11 @@ import ctypes
 import logging
 import time
 
-from protocol import APDU
 import nfc
-from nfc_error import HWError, TargetLost
+
+from protocol import APDU
+from protocol.NfcError import HWError, TargetLost
+
 
 def hex_dump(buffer):
     """Dumps the buffer as an hex string"""
