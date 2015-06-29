@@ -31,7 +31,7 @@ import org.json.JSONObject;
  * The Class com.tca.mobiledooraccess.Backend is used to create
  * an URL Connection via SSL to our Server
  * Since the certificate is self signed,
- * additional are needed to create a secured https connection
+ * additional functions are needed to create a secured https connection
  *
  */
 public class Backend {
@@ -52,7 +52,7 @@ public class Backend {
         @Override
         public boolean verify(String hostname, SSLSession session) {
             HostnameVerifier hv = HttpsURLConnection.getDefaultHostnameVerifier();
-            return hv.verify("localhost", session);
+            return hv.verify("tum-getin", session);
         }
     };
 
@@ -199,4 +199,37 @@ public class Backend {
         }
         return -1;
     }
+
+    public boolean tokenActivated(String token){
+        Log.d(TAG, "Token Active GET-Request-Method");
+        boolean result = false;
+        try{
+            URL url = new URL("https://" + host + ":" + port + "/tokenactive?token=" + token);
+            HttpsURLConnection urlConnection = (HttpsURLConnection)url.openConnection();
+            urlConnection.setHostnameVerifier(hostnameVerifier);
+            urlConnection.setSSLSocketFactory(context.getSocketFactory());
+            InputStream in = urlConnection.getInputStream();
+            BufferedReader br = new BufferedReader(new InputStreamReader(in));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while((line = br.readLine()) != null){
+                sb.append(line + "\n");
+            }
+            JSONObject jsonObj = new JSONObject(sb.toString());
+            result = jsonObj.getBoolean("activated");
+
+        } catch (MalformedURLException e){
+            Log.e(TAG, "MalformedURLException: " + e.getMessage());
+        } catch (IOException e){
+            Log.e(TAG, "IOException: " + e.getMessage());
+        } catch (JSONException e){
+
+        } catch (Exception e){
+            String msg = e.getMessage();
+            String asdf = msg;
+        }
+        return result;
+    }
+
+
 }

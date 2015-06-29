@@ -114,7 +114,8 @@
             android:text="Send"
             android:id="@+id/buttonSendTUMID"
             android:gravity="center"
-            android:background="#ffe6e6e6" />
+            android:background="#ffe6e6e6"
+            android:onClick="sendTumIDClick"/>
     </LinearLayout>
 
 </LinearLayout>
