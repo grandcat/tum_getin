@@ -4,11 +4,9 @@ var mongoose = require('mongoose'),
     User = mongoose.model('User'),
     XRegExp = require('xregexp').XRegExp,
     https = require('https'),
+    val = require('./validity.js'),
+    config = require('../../config/config.js'),
     parseString = require('xml2js').parseString;
-// 'https://campus.tum.de/tumonline/wbservicesbasic.';
-var host_tumOnl = 'campus.tum.de';
-var path_tumOnl = '/tumonline/wbservicesbasic.';
-var url_reqToken = 'requestToken?';
 
 //TODO: do proper logging! Into a file and not the console...
 
@@ -23,45 +21,6 @@ function reply(res, res_status, res_message, json) {
 	}
 	console.log('Sending reply: ' + JSON.stringify(msg));
 	res.json(msg);
-}
-
-/**
- * Example: ga99aaa
- */
-function check_tum_id(arg) {
-	var regEx = new XRegExp('[a-z]{2}[0-9]{2}[a-z]{3}');
-	if(arg.length === 7 && regEx.test(arg)) {
-		return true;
-	} else {
-		console.log('tum_id format error: ' + arg);
-		return false;
-	}
-}
-
-/**
- * Example: 5f494dab23950a6b81c0621b9dc9a876 
- */
-function check_pseudo_id(arg) {
-	var regEx = new XRegExp('[a-f0-9]{32}');
-	if(arg.length === 32 && regEx.test(arg)) {
-		return true;
-	} else {
-		console.log('pseudo_id format error: ' + arg);
-		return false;
-	}
-}
-
-/**
- * Example: 491652672440A20D6BD49B63E60DADB9
- */
-function check_token(arg) {
-	var regEx = new XRegExp('[A-Z0-9]{32}');
-	if(arg.length === 32 && regEx.test(arg)) {
-		return true;
-	} else {
-		console.log('Token format error: ' + arg);
-		return false;
-	}
 }
 
 /**
@@ -94,20 +53,21 @@ function getUserByTumId(req, res, tum_id, callback) {
 	});
 }
 
-
 /**
  * The callback fired if everything with the request to 
  * TumOnline went fine.
  */ 
-function onTumActiveResponse(res, tum_id, tumAnswerJson) {
-	console.log('tumActResp; id: ' + tum_id + '; jsonAns: ' + tumAnswerJson);
+function onTumActiveResponse(res, token, tumAnswerJson) {
+	console.log('tumActResp; id: ' + token + '; jsonAns: ' + tumAnswerJson);
 
-	//TODO: change from here on
-	var token = tumAnswerJson.token;
+	var active = tumAnswerJson.confirmed;
 	console.log('Extracting token from TUM response: ' + token);
-
-	var status = 'student'; //TODO: check that!
-
+	
+	if(active === null || active === undefined || active === false) {
+		reply(res, 200, 'Token is not activated.', {active: active});
+	} else { // token is active
+		reply(res, 200, 'Token is activated.', {active: active});
+	}
 }
 
 /**
@@ -139,29 +99,27 @@ function handleTumHttpsReq(httpResp, res, tum_id) {
 }
 
 /**
- *
+ * Sends a request to TUMonline to ask if the token is activated.
+ * Possible TUMonline responses: true or false (in XML syntax)
  */
 exports.tokenactive = function(req, res) {
-	//TODO: ....
-
-	var tum_id = req.query.tum_id;
-
-	if(tum_id === undefined) { // then something is wrong
+	var token = req.query.token;
+	if(token === undefined) { // then something is wrong
 		// Send error message back
-		reply(res, 400, 'Please set tum_id in the HTTPS request!');
-	} else if (check_tum_id(tum_id)) { // tum_id has the correct format
-		//TODO: contact TumOnline here...
+		reply(res, 400, 'Please set token in the HTTPS request!');
+	} else if (val.check_token(token)) { // tum_id has the correct format
 		console.log('------> Contacting TUMonline...');
-		var path = path_tumOnl + url_reqToken + 'pUsername=' + tum_id; //TODO: path
+		var path = config.tumOnl_url_path + config.tumOnl_isTokenConf + 
+			'pToken=' + token;
 		var options = {
-			host: host_tumOnl,
+			host: config.tumOnl_url_host,
 			port: 443,
 			path: path,
 			method: 'GET'
 		};
 		// Do HTTPS request to TUMonline
 		var httpsReq = https.request(options, function(httpRes) {
-			handleTumHttpsReq(httpRes, res, tum_id);
+			handleTumHttpsReq(httpRes, res, token);
 			});
 		httpsReq.on('error', function(err) {
 			handleTumHttpsError(err, httpsReq );
@@ -169,6 +127,6 @@ exports.tokenactive = function(req, res) {
 		httpsReq.end();
 
 	} else { // Then the tum_id does not adhere to the correct format.
-		reply(res, 400, 'tum_id does not have the correct form!');
+		reply(res, 400, 'token does not have the correct form!');
 	}
 };

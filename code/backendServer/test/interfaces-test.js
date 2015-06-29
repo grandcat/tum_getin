@@ -142,6 +142,34 @@ vows.describe('Backend - Smartphone Interface /register for real user!').addBatc
 	}
 }).export(module);
 
+vows.describe('Backend - Smartphone Interface /tokenActive for real user!').addBatch({
+	'/tokenActive for active token correct': {
+		topic: function() {
+			callback = this.callback;
+			sendGet('/tokenActive?token=' + realUser.token);
+		},
+		'Check response status': function (topic) {
+            		assert.equal (topic.status, 200);
+        	},
+		'Check response active field': function (topic) {
+			assert.equal (topic.active, 'true');
+        	}
+	}
+}).addBatch({
+	'/tokenActive for inactive token correct': {
+		topic: function() {
+			callback = this.callback;
+			sendGet('/tokenActive?token=491652672440A20D6BD49B5566778899');
+		},
+		'Check response status': function (topic) {
+            		assert.equal (topic.status, 200);
+        	},
+		'Check response active field': function (topic) {
+			assert.equal (topic.active, 'false');
+        	}
+	}
+}).export(module);
+
 var req; // request object
 var callback;   // callback function called on server response
 		// use via callback(null, params..)
