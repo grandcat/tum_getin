@@ -4,7 +4,7 @@ import struct
 import time
 
 from protocol import APDU
-from nfc_reader import NFCReader
+from protocol.NfcReader import NFCReader
 
 
 def hex_dump(buffer):
@@ -18,15 +18,10 @@ class ReaderIO(object):
 
     def __init__(self, device, log=None):
         self.log = log or logging.getLogger(__name__)
-        # Hardware device
+        # Connection to hardware device
         self.device = device or NFCReader()
-        # Communication state
-        self.stop_communication = False
-        self.conn_established = False
-        # Activity
-        self.current_activity = 0  # No activity by default
 
-    def     receive_data(self, wait_timeout=0):
+    def receive_data(self, wait_timeout=0):
         """
         Receives fragmented data messages and aggregates them to a complete data block.
 
@@ -70,10 +65,13 @@ class ReaderIO(object):
 
     def send_data(self, tx_data, wait_timeout=0):
         """
+        Send tx_data as fragmented NFC messages to the target.
 
-        :param tx_data:
-        :param wait_timeout:
-        :return:
+        This function will block as long as the whole data entity is transmitted.
+        If an error occurs during transmission, an IOError will be raised.
+
+        :param tx_data: sets the data byte array to be transmitted.
+        :param wait_timeout: currently unused
         """
         # Initialize buffers
         data_out_buf = BytesIO(tx_data)
@@ -101,6 +99,12 @@ class ReaderIO(object):
                 more_data = False
 
     def run(self):
+        """
+        Defines the logic for the communication with the target.
+
+        IOErrors have to be handled carefully. Otherwise, the terminal application is stopped.
+        :return:
+        """
         hw_activated = True
 
         while hw_activated:
@@ -128,24 +132,17 @@ class ReaderIO(object):
 
                 self.device.shutdown_nfc_reader()
 
-                # Wait some time before permit a client to connect
-                time.sleep(2)
+                # Wait some time before permitting a client to connect again
+                # Otherwise Android tries to reconnect, but actually, it should be not necessary
+                time.sleep(3)
 
             except (KeyboardInterrupt, SystemExit):
                 hw_activated = False
             except IOError as e:
                 self.log.error("IOError Exception: " + str(e))
                 hw_activated = True
+            except BufferError as e:
+                self.log.error("Assuming misbehaving target. BufferError: " + str(e))
+                hw_activated = True
             finally:
                 self.device.shutdown_nfc_reader()
-
-    def should_stop(self):
-        """
-        Tells whether the communication with the current device should be stopped.
-        This can have different reasons like
-        - an invalid message was received which can not be handled
-        - the communication is finished
-
-        :return: if true, stop the current communication. Otherwise, continue.
-        """
-        return self.stop_communication

@@ -11,9 +11,9 @@ import queue
 
 import nfc
 
-from nfc_error import HWError
-from nfcio import NfcIO
-from statemachine.CardEmulation import CardEmulation
+from protocol.NfcError import HWError
+from nfcio import EmulationIO
+from protocol import CardEmulation
 
 
 def hex_dump(buffer):
@@ -200,7 +200,7 @@ if __name__ == '__main__':
     reader = NFCEmulation(queue_data_in, queue_data_out, None)
     reader.start()
     # Interfacing main thread
-    nfcIO = NfcIO(queue_data_in, queue_data_out)
+    nfcIO = EmulationIO(queue_data_in, queue_data_out)
     while nfcIO.run_ioloop():
         pass
     reader.join()
