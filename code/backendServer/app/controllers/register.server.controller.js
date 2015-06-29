@@ -5,11 +5,8 @@ var mongoose = require('mongoose'),
     XRegExp = require('xregexp').XRegExp,
     crypto = require('crypto'),
     https = require('https'),
+    config = require('../../config/config.js'),
     parseString = require('xml2js').parseString;
-// 'https://campus.tum.de/tumonline/wbservicesbasic.';
-var host_tumOnl = 'campus.tum.de';
-var path_tumOnl = '/tumonline/wbservicesbasic.';
-var url_reqToken = 'requestToken?';
 
 //TODO: do proper logging! Into a file and not the console...
 
@@ -120,10 +117,10 @@ function handleTumHttpsReq(httpResp, res, tum_id) {
  */
 function contactTUMonline(res, tum_id) {
 	console.log('------> Contacting TUMonline...');
-	//TODO: add token name parameter
-	var path = path_tumOnl + url_reqToken + 'pUsername=' + tum_id;
+	var path = config.tumOnl_url_path + config.tumOnl_reqToken + 'pUsername=' + 
+		tum_id + config.tumOnl_tokenName;
 	var options = {
-		host: host_tumOnl,
+		host: config.tumOnl_url_host,
 		port: 443,
 		path: path,
 		method: 'GET'

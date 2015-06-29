@@ -11,5 +11,12 @@ module.exports = {
 	sessionSecret: 'MEAN',
 	sessionCollection: 'sessions',
 	assets: {
-	}
+	},
+	// Path to TUMonline:
+	// 'https://campus.tum.de/tumonline/wbservicesbasic.';
+	tumOnl_url_host: 'campus.tum.de',
+	tumOnl_url_path: '/tumonline/wbservicesbasic.',
+	tumOnl_reqToken: 'requestToken?',
+	tumOnl_tokenName: '&pTokenName=TUM+GetIn+Door+Access+App',
+	tumOnl_isTokenConf: 'isTokenConfirmed?'
 };
