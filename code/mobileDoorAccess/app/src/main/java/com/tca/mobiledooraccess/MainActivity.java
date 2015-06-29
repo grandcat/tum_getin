@@ -89,7 +89,7 @@ public class MainActivity extends Activity {
         settings = getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
         //get Settings - init with false in case of missing
         boolean registered = settings.getBoolean("registered",false);
-        boolean token_received = settings.getBoolean("token_received", true);
+        boolean token_received = settings.getBoolean("token_received", false);
         boolean token_activated = settings.getBoolean("token_activated", false);
 
         // TEST: to be removed
