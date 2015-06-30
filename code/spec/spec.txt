@@ -3,9 +3,8 @@ Python:
 - Python-Backend
 
 Backend:
-Definition pseudo_id:
-Random String (Numbers and Letters); 16 Characters long.
-
+- Definition pseudo_id: Random hex number; 16 bytes long.
+- Definition of message status codes: in /backendServer/config/message_codes.js
 
 Smartphone:
 -Schlüsselgenerierung RSA - 2048
@@ -27,32 +26,40 @@ Ablauf:
 - Step 1: Register tum_id. Ask for token.
   Request: 	GET /register?tum_id=ga00aaa
   Answer:	Message with JSON body
-		{ status: '200',
+		{ status: 200,
+		  code: 0, //OK
 		  message: 'Token generation successful. Please send public key.',
 		  tum_id: 'ga00aaa',
 		  pseudo_id: 'sdifuz563',
 		  token: '491652672440A20D6BD49B63E60DADB9' }
   Error possibility: 	No key 'tum_id' in request
   Answer:	{ status: 400,
+		  code: 20, //ARG_MISS
 		  message: 'Please set tum_id in the HTTPS request!' }
   Error possibility: 	'tum_id' in request does not have the correct form
   Answer:	{ status: 400,
+		  code: 21, //ARG_FORM
 		  message: 'tum_id does not have the correct form!' }
   Error possibility: 	'tum_id' in request formally correct, 
 			but TUMonline does not respond token
   Answer:	{ status: 404,
+		  code: 30, //TUM_NO_TOK
 		  message: 'TUMonline did not answer with a token for this tum_id!' }
-  Error possibility:	zu dieser tumid gibt es schon ein token
-		echter User würde dieses token dann in tumonline löschen
+  Error possibility:	There is already a token for this tum_id
+		{ status: 400,
+		  code: 31, //TUM_DUP_TOK
+		  message: 'There is already a token for this user.' }	
 
 - Step 2: Check if the user has activated his token in TumOnline
   Request:	GET /tokenactive?token=491652672440A20D6BD49B63E60DADB9
   Answer:	Message with JSON body
 		{ status: 200,
+		  code: 0, //OK
 		  activated: true,
 		  message: 'Token is activated.' }
   Answer possibility 2: 
 		{ status: 200,
+		  code: 0, //OK
 		  activated: false,
 		  message: 'Token is not activated.' }
 
@@ -82,19 +89,24 @@ Ablauf:
                     ef:98:6c:62:91:0d:89:61:44:65:3f:10:dc:14:b9:
                     8f:83' }
   Answer:	Message with JSON body
-		{ status: '200',
+		{ status: 200,
+		  code: 0, //OK
 		  message: 'Key stored successfully. User registration complete.' }
   Error possibility:	tum_id, token or key missing in the request
   Answer:	{ status: 400,
+		  code: 20, //ARG_MISS
 		  message: 'Please set tum_id, token and key in the request!' }
   Error possibility:	tum_id, token or key do not have the correct format
   Answer:	{ status: 400,
+		  code: 21, //ARG_FORM
 		  message: 'tum_id, token or key do not have the correct form!' }
   Error possibility:	token in the request does not equal the one in the DB
   Answer:	{ status: 400,
+		  code: 11, //WRONG_TOK
 		  message: 'token seems to be wrong!' }
   Error possibility:	tum_id is not found in the DB
   Answer:	{ status: 404,
+		  code: 10, //NO_USR
 		  message: 'tum_id not found in DB. Please start with step 1!' }
 
 
@@ -104,7 +116,8 @@ Ablauf:
 - Smartphone sent its pseudo ID. Now ask backend for the corresponding public key.
   Request:	GET /check?pseudo_id=sdifuz563
   Answer:	Message with JSON body
-		{ status: '200',
+		{ status: 200,
+		  code: 0, //OK
 		  message: ''Valid user. Sending public key.'Valid user. Sending public key.',
 		  pseudo_id: 'sdifuz563',
 		  student_status: 'student',
@@ -129,15 +142,19 @@ Ablauf:
                     8f:83' }
   Error possibility:	pseudo_id not found in DB
   Answer:	{ status: '404',
+		  code: 10, //NO_USR
 		  message: 'This pseudo_id does not exist!' }
   Error possibility:	Corresponding DB entry has no key -> registration not finished
   Answer:	{ status: '404',
+		  code: 12, //NO_KEY
 		  message: 'No key for this pseudo_id!' }
   Error possibility:	The corresponding person is no longer a student
   Answer:	{ status: '403',
+		  code: 5, //FORBIDDEN
 		  message: 'This person is no longer a student!' }
   Error possibility:	pseudo_id has the wrong format
   Answer:	{ status: '400',
+		  code: 21, //ARG_FORM
 		  message: 'pseudo_id does not have the correct form!' }
 
 
@@ -145,5 +162,5 @@ Ablauf:
 
 >>> General server error message:
   Could happen if the server runs into an internal error and cannot respond anymore.
-  Answer:	{ status: 500, message: <some message> }
+  Answer:	{ status: 500, code: 9 //ERR, message: <some message> }
 
