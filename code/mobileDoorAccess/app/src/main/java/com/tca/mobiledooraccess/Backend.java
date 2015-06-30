@@ -41,22 +41,6 @@ public class Backend {
     private String port;
     private static SSLContext context;
 
-    //We will need this function as long as we are hosting via localhost
-    //because in Android we cant use the host "localhost" which would
-    //mean the host runs on Android, which is not the case
-    //So the cert wont match to the other Hostname with the local IP on the PC
-    //This method overrides the hostname Verifier, so that it will check
-    //the cert with the hostname "localhost" instead of the later defined
-    //hostname (the IP of the server running)
-    private HostnameVerifier hostnameVerifier = new HostnameVerifier() {
-        @Override
-        public boolean verify(String hostname, SSLSession session) {
-            HostnameVerifier hv = HttpsURLConnection.getDefaultHostnameVerifier();
-            return hv.verify("tum-getin", session);
-        }
-    };
-
-
     //Backend Contructor
     public Backend(String host, String port){
         Log.d(TAG, "Initalizing Backend-Class");
@@ -111,7 +95,6 @@ public class Backend {
         try {
             URL url = new URL("https://" + host + ":" + port + "/register?tum_id=" + tumID );
             HttpsURLConnection urlConnection = (HttpsURLConnection)url.openConnection();
-            urlConnection.setHostnameVerifier(hostnameVerifier);
             urlConnection.setSSLSocketFactory(context.getSocketFactory());
             InputStream in = urlConnection.getInputStream();
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
@@ -152,7 +135,6 @@ public class Backend {
         try{
             URL url = new URL("https://" + host + ":" + port + "/register");
             HttpsURLConnection urlConnection = (HttpsURLConnection)url.openConnection();
-            urlConnection.setHostnameVerifier(hostnameVerifier);
             urlConnection.setSSLSocketFactory(context.getSocketFactory());
             urlConnection.setRequestMethod("POST");
             urlConnection.setRequestProperty("Content-Type", "application/json");
@@ -206,7 +188,6 @@ public class Backend {
         try{
             URL url = new URL("https://" + host + ":" + port + "/tokenactive?token=" + token);
             HttpsURLConnection urlConnection = (HttpsURLConnection)url.openConnection();
-            urlConnection.setHostnameVerifier(hostnameVerifier);
             urlConnection.setSSLSocketFactory(context.getSocketFactory());
             InputStream in = urlConnection.getInputStream();
             BufferedReader br = new BufferedReader(new InputStreamReader(in));

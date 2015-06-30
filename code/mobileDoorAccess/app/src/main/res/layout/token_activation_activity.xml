@@ -104,7 +104,6 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
-            android:clickable="false"
             android:background="#ffbcbcbc"
             android:text="Check token status"
             android:onClick="checkTokenStatusClick"/>
