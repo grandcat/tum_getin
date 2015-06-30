@@ -24,7 +24,7 @@ msg = bytes('Very secret messages with a lot of fun'.encode('utf-8'))
 h = SHA256.new(msg)
 print('Msg hash: %s' % hex_dump(h.digest()))
 print('Msg hash size: %d' % len(h.digest()))
-#cipher = PKCS1_v1_5.new(key)
+# cipher = PKCS1_v1_5.new(key)   # should not be used anymore
 cipher = PKCS1_OAEP.new(key, hashAlgo=SHA256)
 ciphertext =  cipher.encrypt(msg + h.digest())
 print('Encrypted msg: %s' % hex_dump(ciphertext))
