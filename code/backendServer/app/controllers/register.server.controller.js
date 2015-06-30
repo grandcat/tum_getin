@@ -2,6 +2,9 @@
 var mongoose = require('mongoose'),
     User = mongoose.model('User'),
     val = require('./validity.js'),
+    out = require('./reply.js'),
+    utils = require('./utils.js'),
+    db = require('./db-utils.js'),
     XRegExp = require('xregexp').XRegExp,
     crypto = require('crypto'),
     https = require('https'),
@@ -9,50 +12,6 @@ var mongoose = require('mongoose'),
     parseString = require('xml2js').parseString;
 
 //TODO: do proper logging! Into a file and not the console...
-
-/**
- * Sends a JSON answer message.
- * Last parameter is optional for additional fields
- */
-function reply(res, res_status, res_message, json) {
-	var msg = { status: res_status, message: res_message };
-	if(json !== null && json !== undefined) { // if we have json, concat it to msg
-		for (var attrname in json) { msg[attrname] = json[attrname]; }
-	}
-	console.log('Sending reply: ' + JSON.stringify(msg));
-	res.json(msg);
-}
-
-
-/**
- * Wrapper for reply(). Is sent on server errors.
- */
-function send500error(res) {
-	reply(res, 500, 'The server encountered an error. Please try again!');
-}
-
-/**
- * Is called on DB save operations.
- * Sends 500 error message if on error
- */
-function handleDBsave(err, res) {
-	if (err) { 
-		console.err('user save error: ', err); 
-		send500error(res);
-	}
-}
-
-/**
- * Returns 16 random Bytes as hex number.
- */
-function random () {
-	try {
-		return crypto.randomBytes(16).toString('hex');
-	} catch (ex) {
-		console.error('Error creating random string in crypto lib! ' + ex);
-		return null;
-	}
-}
 
 /**
  * The callback fired if everything with the token request to 
@@ -67,7 +26,7 @@ function onTumTokenResponse(res, tum_id, tumAnswerJson) {
 	var status = 'student'; //TODO: check that!
 
 	// generating pseudo ID
-	var pid = random();
+	var pid = utils.random();
 	console.log(pid);	
 	// saving the user
 	var user = new User({
@@ -76,9 +35,9 @@ function onTumTokenResponse(res, tum_id, tumAnswerJson) {
 		token: token,
 		status: status
 	});
-	user.save(handleDBsave);
+	user.save(db.handleDBsave);
 	// responding...
-	reply(res, 200, 'Token generation successful. Please send public key.',
+	out.reply(res, 200, 'Token generation successful. Please send public key.',
 		{ tum_id: tum_id, pseudo_id: pid, token: token });
 }
 
@@ -87,7 +46,7 @@ function onTumTokenResponse(res, tum_id, tumAnswerJson) {
  */
 function handleTumHttpsError(err, res) {
 	console.error('Error at contacting TumOnline' + err);
-	send500error(res);
+	out.send500error(res);
 }
 
 /**
@@ -135,18 +94,6 @@ function contactTUMonline(res, tum_id) {
 	req.end();
 }
 
-/**
- * helper function. Looks up user by tum_id and calls callback
- */
-function getUserByTumId(req, res, tum_id, callback) {
-	User.findOne({ tum_id: tum_id }, function(err, user) {
-		if (err) {
-			handleDBsave(err, res);
-		}
-		callback(req, res, tum_id, user);
-	});
-}
-
 /** 
  * Proceeds with the register_get_token method 
  * after a user has been searched in DB
@@ -162,7 +109,7 @@ function registerGetTokenForUser(req, res, tum_id, user) {
 			//TODO: validity check!
 			// Check if token from DB is still valid
 			if(true) { // if yes, then send the one from the DB
-				reply(res, 200, 
+				out.reply(res, 200, 
 				'Token generation successful. Please send public key.',
 				{ tum_id: user.tum_id, 
 				  pseudo_id: user.pseudo_id,
@@ -189,13 +136,13 @@ exports.register_get_token = function(req, res) {
 
 	if(tum_id === undefined) { // then something is wrong
 		// Send error message back
-		reply(res, 400, 'Please set tum_id in the HTTPS request!');
+		out.reply(res, 400, 'Please set tum_id in the HTTPS request!');
 	} else if (val.check_tum_id(tum_id)) { // tum_id has the correct format
 		// Check if we already have a token in the DB
 		// ...and proceed with function registerGetTokenForUser()...
-		getUserByTumId(req, res, tum_id, registerGetTokenForUser);
+		db.getUserByTumId(req, res, tum_id, registerGetTokenForUser);
 	} else { // Then the tum_id does not adhere to the correct format.
-		reply(res, 400, 'tum_id does not have the correct form!');
+		out.reply(res, 400, 'tum_id does not have the correct form!');
 	}
 };
 
@@ -208,17 +155,17 @@ function registerStoreKeyForUser(req, res, tum_id, user) {
 	var key = req.body.key;
 	if(user === undefined || user === null) {
 		// if user is not found in db, send error message
-		reply(res, 404,
+		out.reply(res, 404,
 		'tum_id not found in DB. Please start with step 1!');	
 	} else { 
 		if(user.token !== token) {
 			// if token in the request does not equal the DB
-			reply(res, 400, 'token seems to be wrong!');	
+			out.reply(res, 400, 'token seems to be wrong!');	
 		} else {
 		// actually store key
 		user.key = key;
-		user.save(handleDBsave);
-		reply(res, 200, 
+		user.save(db.handleDBsave);
+		out.reply(res, 200, 
 			'Key stored successfully. User registration complete.');
 		}
 	}
@@ -239,14 +186,14 @@ exports.register_store_key = function(req, res) {
 	// check if all parameters are set in the request
 	if(tum_id === undefined || token === undefined || key === undefined) { 
 		// something is missing...
-		reply(res, 400, 'Please set tum_id, token and key in the request!');
+		out.reply(res, 400, 'Please set tum_id, token and key in the request!');
 	} else {
 		// check if all parameters have the correct form
 		if(val.check_tum_id(tum_id) && val.check_token(token) && val.check_key(key)) {
 			// Find user and save the new key
-			getUserByTumId(req, res, tum_id, registerStoreKeyForUser);
+			db.getUserByTumId(req, res, tum_id, registerStoreKeyForUser);
 		} else { // something has a wrong format. Send error message...
-			reply(res, 400, 'tum_id, token or key do not have the correct form!');
+			out.reply(res, 400, 'tum_id, token or key do not have the correct form!');
 		}
 	}
 };
