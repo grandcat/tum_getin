@@ -19,6 +19,7 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.MGF1ParameterSpec;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -37,6 +38,8 @@ public class RSACrypto {
     public static final String MODE = "NONE";
     public static final String PADDING = "OAEPWithSHA256AndMGF1Padding";
     public static final String CIPHER_ID = ALGORITHM + "/" + MODE + "/" + PADDING;
+    public static final String SEC_PROVIDER = "BC"; // Bouncy Castle by Android, might replace it
+                                                    // by Spongy Castle for more functionality
 
     protected Context context;  //< Required for access to Android resource files.
 
@@ -61,9 +64,12 @@ public class RSACrypto {
 
     /**
      * Loads a PKCS#8 encoded private key file from a local raw resource.
-     * Note: Android only accepts DER formatted files.
+     * Note: Android only supports DER formatted files.
+     *
+     * openssl pkcs8 -topk8 -inform PEM -outform DER -in private_key.pem \ -out private_key.der -nocrypt
      *
      * @param resID Resource ID to fetch the key from.
+     * @throws InvalidKeyException
      */
     public void loadPrivateKeyFromResource(int resID) throws InvalidKeyException {
         InputStream inputKey = context.getResources().openRawResource(resID);
@@ -84,6 +90,35 @@ public class RSACrypto {
         }
     }
 
+    /**
+     * Loads a X509 public key file from a local raw resource.
+     * Note: Android only supports DER formatted files.
+     *
+     * openssl rsa -in private_key.pem -pubout -outform DER -out public_key.der
+     *
+     * @param resID Resource ID to fetch the key from.
+     * @throws InvalidKeyException
+     */
+    public void loadPublicKeyFromResource(int resID) throws InvalidKeyException {
+        InputStream inputKey = context.getResources().openRawResource(resID);
+
+        try {
+            byte[] key = ByteStreams.toByteArray(inputKey);
+            KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM);
+            // Android requires PKCS8 encoding (DER format)
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(key);
+            targetPubKey = keyFactory.generatePublic(keySpec);
+
+        } catch (IOException|NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (InvalidKeySpecException e) {
+            Log.e(TAG, "Provided key by resource ID not supported.");
+            e.printStackTrace();
+            throw new InvalidKeyException(e);
+        }
+        Log.d(TAG, "Loaded public key with bytes: " + targetPubKey.getEncoded().length);
+    }
+
     public void initDecryption() {
         initDecryption(null);
     }
@@ -95,7 +130,7 @@ public class RSACrypto {
 
         // Init structures for RSA decryption based on our own private key
         try {
-            decryptionCipher = Cipher.getInstance(CIPHER_ID, "BC");
+            decryptionCipher = Cipher.getInstance(CIPHER_ID, SEC_PROVIDER);
             decryptionCipher.init(Cipher.DECRYPT_MODE, ownPrivKey, new OAEPParameterSpec("SHA-256",
                     "MGF1", MGF1ParameterSpec.SHA256, PSource.PSpecified.DEFAULT));
         } catch (NoSuchAlgorithmException|NoSuchProviderException|NoSuchPaddingException e) {
@@ -117,7 +152,7 @@ public class RSACrypto {
 
     public byte[] decryptCiphertext(byte[] ciphertext) {
         if (decryptionCipher == null) {
-            // Asymmetric encryption decryptionCipher could not be created correctly
+            // Asymmetric decryption cipher was not created correctly
             Log.e(TAG, "Decryption cipher was not initialized correctly before.");
             return null;
         }
@@ -134,9 +169,53 @@ public class RSACrypto {
         return plaintext;
     }
 
+    public void initEncryption() {
+        initEncryption(null);
+    }
+
     public void initEncryption(PublicKey pubKey) {
-        if (targetPubKey != null) {
+        if (pubKey != null) {
             this.targetPubKey = pubKey;
         }
+
+        // Init cipher generator for RSA encryption
+        try {
+            encryptionCipher = Cipher.getInstance(CIPHER_ID, SEC_PROVIDER);
+            encryptionCipher.init(Cipher.ENCRYPT_MODE, targetPubKey, new OAEPParameterSpec("SHA-256",
+                    "MGF1", MGF1ParameterSpec.SHA256, PSource.PSpecified.DEFAULT));
+        } catch (NoSuchAlgorithmException|NoSuchProviderException|NoSuchPaddingException e) {
+            // Should not be fired, because only depends on CIPHER_ID
+            e.printStackTrace();
+        } catch (InvalidAlgorithmParameterException e) {
+            // Should not be fired, because only depends on static values
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            Log.e(TAG, "No valid public key was specified.");
+            encryptionCipher = null;
+            e.printStackTrace();
+        }
+    }
+
+    public String encryptPlaintextB64(byte[] plaintext) {
+        return Base64.encodeToString(encryptPlaintext(plaintext), Base64.DEFAULT);
+    }
+
+    public byte[] encryptPlaintext(byte[] plaintext) {
+        if (encryptionCipher == null) {
+            // Asymmetric encryption cipher was not created correctly
+            Log.e(TAG, "Encryption cipher was not initialized correctly before.");
+            return null;
+        }
+
+        byte[] ciphertext = new byte[0];
+        try {
+            ciphertext = encryptionCipher.doFinal(plaintext);
+        } catch (IllegalBlockSizeException|BadPaddingException e) {
+            // Probably plaintext input is too long
+            e.printStackTrace();
+            Log.w(TAG, "Malformed plaintext (" + ciphertext.length + " bytes) received.");
+        }
+
+        return ciphertext;
     }
 }

@@ -20,6 +20,7 @@ import com.tca.mobiledooraccess.utils.RSACrypto;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 
 /**
@@ -105,23 +106,29 @@ public class MainActivity extends Activity {
         RSACrypto c = new RSACrypto(this);
         try {
             c.loadPrivateKeyFromResource(R.raw.private_key_android);
+            c.loadPublicKeyFromResource(R.raw.public_key_android);
         } catch (InvalidKeyException e) {
             e.printStackTrace();
         }
         c.initDecryption();
-        String cipherText = "QtcZ7ogKibkzDZavTkZjD4p6+2Io2Fv6LdIQog7q9FHFuJJ3Cd/8WJ8I2bMZ9P2HsjGzmg9s45PmTXZjitjzF1KS4tSv6Iukk417P3wKX3WJ1Y9apsjVu563vjixCt4coX5f/D8mREGqCYg0Cc2iz+8bN8m1uprBQKR8uLs4njnyJ3UrMZt+MntdM4mQfSanKlfoLFmLtaig0Zm4zA5q/eZWWcsjReyKGUp4USQlUTEsrPCaR4k3CXKDA7BxJ6qkCmALuIyt0tHornxo1EO1iwe9FiULx1u4aCTClQuWCk6WW+gs+jYWGtzvqFvzmM3bHR+TXPIHanFdHG3W1PBuaQ==";
+        c.initEncryption();
+        String plaintext = "Hallo, hier spricht ist 123 und vieles mehr! blabla Hallo, hier spricht ist 123 und vieles mehr! huhu";
+        byte[] plainBytes = plaintext.getBytes(Charset.forName("UTF-8"));
+        String cipherText = c.encryptPlaintextB64(plainBytes);
+        Log.i(TAG, "cipher: " + cipherText);
+        //String cipherText = "QtcZ7ogKibkzDZavTkZjD4p6+2Io2Fv6LdIQog7q9FHFuJJ3Cd/8WJ8I2bMZ9P2HsjGzmg9s45PmTXZjitjzF1KS4tSv6Iukk417P3wKX3WJ1Y9apsjVu563vjixCt4coX5f/D8mREGqCYg0Cc2iz+8bN8m1uprBQKR8uLs4njnyJ3UrMZt+MntdM4mQfSanKlfoLFmLtaig0Zm4zA5q/eZWWcsjReyKGUp4USQlUTEsrPCaR4k3CXKDA7BxJ6qkCmALuIyt0tHornxo1EO1iwe9FiULx1u4aCTClQuWCk6WW+gs+jYWGtzvqFvzmM3bHR+TXPIHanFdHG3W1PBuaQ==";
         byte[] plainTextBytes = c.decryptCiphertext(cipherText);
         // Interpret JSON data
         String jsonText = new String(plainTextBytes);
         Log.i(TAG, "JSON Plaintext: " + jsonText);
-        try {
-            JSONObject jObj = new JSONObject(jsonText);
-            String msgType = jObj.getString("type");
-            int msgNonce = jObj.getInt("nonce");
-            Log.i(TAG, "type: " + msgType + ", nonce: " + msgNonce);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            JSONObject jObj = new JSONObject(jsonText);
+//            String msgType = jObj.getString("type");
+//            int msgNonce = jObj.getInt("nonce");
+//            Log.i(TAG, "type: " + msgType + ", nonce: " + msgNonce);
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
 
         class IncomingHandler extends Handler {
             @Override
