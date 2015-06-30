@@ -2,7 +2,8 @@
 var vows = require('vows'),
     assert = require('assert'),
     https = require('https'),
-    fs = require('fs');
+    fs = require('fs'),
+    cd = require('../config/message_codes.js');
 // getting test data from central test data folder
 var testUser1 = require('../../testResources/user_01.json');
 var realUser = require('../../testResources/real_user.json');
@@ -17,6 +18,7 @@ vows.describe('Backend - NFC Reader Interface /check').addBatch({
 		},
 		'Check response status': function (topic) {
             		assert.equal (topic.status, 200);
+            		assert.equal (topic.code, 0);
         	},
 		'Check response user data': function (topic) {
 			assert.equal (topic.pseudo_id, testUser1.pseudo_id);
@@ -36,6 +38,7 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
 		},
 		'Check response status': function (topic) {
             		assert.equal (topic.status, 200);
+            		assert.equal (topic.code, 0);
         	},
 		'Check response user data': function (topic) {
             		assert.equal (topic.tum_id, testUser1.tum_id);
@@ -57,6 +60,7 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
 		},
 		'Check response status': function (topic) {
             		assert.equal (topic.status, 200);
+            		assert.equal (topic.code, 0);
         	}
 	}
 }).addBatch({
@@ -71,6 +75,7 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
 		},
 		'Check response status': function (topic) {
             		assert.equal (topic.status, 400);
+            		assert.equal (topic.code, cd.ARG_MISS);
         	}
 	}
 }).addBatch({
@@ -85,6 +90,7 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
 		},
 		'Check response status': function (topic) {
             		assert.equal (topic.status, 400);
+            		assert.equal (topic.code, cd.ARG_MISS);
         	}
 	}
 }).addBatch({
@@ -99,6 +105,7 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
 		},
 		'Check response status': function (topic) {
             		assert.equal (topic.status, 400);
+            		assert.equal (topic.code, cd.ARG_MISS);
         	}
 	}
 }).addBatch({
@@ -114,6 +121,7 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
 		},
 		'Check response status': function (topic) {
             		assert.equal (topic.status, 404);
+            		assert.equal (topic.code, cd.NO_USR);
         	}
 	}
 }).export(module);
@@ -126,6 +134,7 @@ vows.describe('Backend - Smartphone Interface /register for real user!').addBatc
 		},
 		'Check response status': function (topic) {
             		assert.equal (topic.status, 200);
+            		assert.equal (topic.code, 0);
         	},
 		'Check response tum_id is correct': function (topic) {
             		assert.equal (topic.tum_id, realUser.tum_id);
@@ -150,6 +159,7 @@ vows.describe('Backend - Smartphone Interface /tokenActive for real user!').addB
 		},
 		'Check response status': function (topic) {
             		assert.equal (topic.status, 200);
+            		assert.equal (topic.code, 0);
         	},
 		'Check response active field': function (topic) {
 			assert.equal (topic.active, 'true');
@@ -163,6 +173,7 @@ vows.describe('Backend - Smartphone Interface /tokenActive for real user!').addB
 		},
 		'Check response status': function (topic) {
             		assert.equal (topic.status, 200);
+            		assert.equal (topic.code, 0);
         	},
 		'Check response active field': function (topic) {
 			assert.equal (topic.active, 'false');

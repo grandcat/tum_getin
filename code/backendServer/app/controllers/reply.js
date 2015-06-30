@@ -1,15 +1,20 @@
 'use strict';
+//var util = require('util'); // for deep inspection of objects
 
 /**
  * Sends a JSON answer message.
  * Last parameter is optional for additional fields
  */
-exports.reply = function(res, res_status, res_message, json) {
-	var msg = { status: res_status, message: res_message };
+exports.reply = function(res, http_status, msg_code, res_message, json) {
+	var msg = { status: http_status, code: msg_code, message: res_message };
 	if(json !== null && json !== undefined) { // if we have json, concat it to msg
 		for (var attrname in json) { msg[attrname] = json[attrname]; }
 	}
-	console.log('Sending reply: ' + JSON.stringify(msg));
+	// very verbose form:
+	//console.log('-> Sending reply: \n\tRequest was: %s \n\tResponding: %s', 
+	//		util.inspect(res, false, 1), JSON.stringify(msg));
+	console.log('-> Sending reply: \n\tRequest was: %s %s \n\tResponding: %s', 
+			res.req.method, res.req.url, JSON.stringify(msg));
 	res.json(msg);
 };
 

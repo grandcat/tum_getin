@@ -16,6 +16,18 @@ exports.getUserByTumId = function(req, res, tum_id, callback) {
 };
 
 /**
+ * helper function. Looks up user by tum_id and calls callback
+ */
+exports.getUserByPseudoId = function(req, res, pid, callback) {
+        User.findOne({ pseudo_id: pid }, function(err, user) {
+                if (err) {
+                        this.handleDBsave(err, res);
+                }       
+                callback(req, res, pid, user);
+        });     
+}; 
+
+/**
  * Is called on DB save operations.
  * Sends 500 error message if on error
  */

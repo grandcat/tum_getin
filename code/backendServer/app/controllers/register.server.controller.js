@@ -9,6 +9,7 @@ var mongoose = require('mongoose'),
     crypto = require('crypto'),
     https = require('https'),
     config = require('../../config/config.js'),
+    cd = require('../../config/message_codes.js'),
     parseString = require('xml2js').parseString;
 
 //TODO: do proper logging! Into a file and not the console...
@@ -37,7 +38,8 @@ function onTumTokenResponse(res, tum_id, tumAnswerJson) {
 	});
 	user.save(db.handleDBsave);
 	// responding...
-	out.reply(res, 200, 'Token generation successful. Please send public key.',
+	out.reply(res, 200, cd.OK, 
+		'Token generation successful. Please send public key.',
 		{ tum_id: tum_id, pseudo_id: pid, token: token });
 }
 
@@ -109,7 +111,7 @@ function registerGetTokenForUser(req, res, tum_id, user) {
 			//TODO: validity check!
 			// Check if token from DB is still valid
 			if(true) { // if yes, then send the one from the DB
-				out.reply(res, 200, 
+				out.reply(res, 200, cd.OK, 
 				'Token generation successful. Please send public key.',
 				{ tum_id: user.tum_id, 
 				  pseudo_id: user.pseudo_id,
@@ -136,13 +138,15 @@ exports.register_get_token = function(req, res) {
 
 	if(tum_id === undefined) { // then something is wrong
 		// Send error message back
-		out.reply(res, 400, 'Please set tum_id in the HTTPS request!');
+		out.reply(res, 400, cd.ARG_MISS, 
+			'Please set tum_id in the HTTPS request!');
 	} else if (val.check_tum_id(tum_id)) { // tum_id has the correct format
 		// Check if we already have a token in the DB
 		// ...and proceed with function registerGetTokenForUser()...
 		db.getUserByTumId(req, res, tum_id, registerGetTokenForUser);
 	} else { // Then the tum_id does not adhere to the correct format.
-		out.reply(res, 400, 'tum_id does not have the correct form!');
+		out.reply(res, 400, cd.ARG_FORM, 
+			'tum_id does not have the correct form!');
 	}
 };
 
@@ -155,17 +159,18 @@ function registerStoreKeyForUser(req, res, tum_id, user) {
 	var key = req.body.key;
 	if(user === undefined || user === null) {
 		// if user is not found in db, send error message
-		out.reply(res, 404,
+		out.reply(res, 404, cd.NO_USR,
 		'tum_id not found in DB. Please start with step 1!');	
 	} else { 
 		if(user.token !== token) {
 			// if token in the request does not equal the DB
-			out.reply(res, 400, 'token seems to be wrong!');	
+			out.reply(res, 400, cd.WRONG_TOK, 
+				'token seems to be wrong!');	
 		} else {
 		// actually store key
 		user.key = key;
 		user.save(db.handleDBsave);
-		out.reply(res, 200, 
+		out.reply(res, 200, cd.OK,
 			'Key stored successfully. User registration complete.');
 		}
 	}
@@ -186,14 +191,16 @@ exports.register_store_key = function(req, res) {
 	// check if all parameters are set in the request
 	if(tum_id === undefined || token === undefined || key === undefined) { 
 		// something is missing...
-		out.reply(res, 400, 'Please set tum_id, token and key in the request!');
+		out.reply(res, 400, cd.ARG_MISS, 
+			'Please set tum_id, token and key in the request!');
 	} else {
 		// check if all parameters have the correct form
 		if(val.check_tum_id(tum_id) && val.check_token(token) && val.check_key(key)) {
 			// Find user and save the new key
 			db.getUserByTumId(req, res, tum_id, registerStoreKeyForUser);
 		} else { // something has a wrong format. Send error message...
-			out.reply(res, 400, 'tum_id, token or key do not have the correct form!');
+			out.reply(res, 400, cd.ARG_FORM, 
+				'tum_id, token or key do not have the correct form!');
 		}
 	}
 };
