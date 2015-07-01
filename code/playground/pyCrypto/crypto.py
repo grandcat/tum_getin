@@ -40,14 +40,23 @@ print('Msg hash: %s' % hex_dump(h.digest()))
 print('Msg hash size: %d' % len(h.digest()))
 # cipher = PKCS1_v1_5.new(key)   # should not be used anymore
 cipher = PKCS1_OAEP.new(pub_key, hashAlgo=SHA256)
-ciphertext =  cipher.encrypt(msg) # Add h.digest here
+ciphertext =  bytearray(cipher.encrypt(msg)) # Add h.digest here
 print('Encrypted msg: %s' % hex_dump(ciphertext))
 print('Len: %d' % len(ciphertext))
 print('As base64: %s' % base64.b64encode(ciphertext))
 
+# ciphertext[1] ^= 0x11  # Add error for try/catch
+
 # Decryption
 cipher_decrypt = PKCS1_OAEP.new(priv_key, hashAlgo=SHA256)
-plaintext = cipher_decrypt.decrypt(ciphertext)
+plaintext = bytes()
+try:
+    plaintext = cipher_decrypt.decrypt(bytes(ciphertext))
+except ValueError as e:
+    print("Got value error: " + str(e))
+except Exception as e:
+    print("Fallback to exception: " + str(e))
+
 print('Decrypted msg: %s' % plaintext)
 
 # Test base64 compatibility to Android => works =)
@@ -55,7 +64,9 @@ print('Decrypted msg: %s' % plaintext)
 # print('Base64 Test: %s' % base64.b64encode(bytetext))
 # assert b'SGVsbG8gd29ybGQuMTIz' == base64.b64encode(bytetext)
 
-# Test more recent cryptography library
+# Test more recent cryptography.io library
+# This might be a great alternative if Raspberry Pi is upgraded to Jessie
+
 # public_key_pem_export = open('keys/public_key.pem').read()
 # print('Read pubkey: %s' % public_key_pem_export)    # Down from here: does NOT work with RPi Wheezy!!
 # public_key_pem_export = (bytes(public_key_pem_export, encoding='utf8') if not isinstance(public_key_pem_export, bytes) else public_key_pem_export)

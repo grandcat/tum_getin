@@ -2,6 +2,7 @@ from io import BytesIO
 import logging
 import struct
 import time
+from RSACrypto import RSACrypto
 
 from protocol import APDU
 from protocol.NfcReader import NFCReader
@@ -105,26 +106,31 @@ class ReaderIO(object):
         IOErrors have to be handled carefully. Otherwise, the terminal application is stopped.
         :return:
         """
-        hw_activated = True
+        crypto = RSACrypto()
+        crypto.import_private_key_from_pem_file('../testResources/terminal_certs/private_key.pem')
+        crypto.import_public_key_from_pem_file('../testResources/terminal_certs/public_key.pem')
 
+        hw_activated = True
         while hw_activated:
             try:
                 self.device.start_nfc_reader()
 
+                """
+                Step 1
+                """
                 msg_in = self.receive_data()
-                self.log.info('Received data from client: %s', msg_in)
+                self.log.info('Received raw data from client: %s', msg_in)
+                # Decrypt message
+                raw_msg = crypto.decrypt(msg_in)
+                self.log.info("Decrypted msg: %s", raw_msg)
 
                 text = 'Da stimme ich zu!\n' \
                        'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ' \
-                       'ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo ' \
-                       'dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor ' \
-                       'sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor ' \
-                       'invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et ' \
-                       'justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum ' \
-                       'dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod ' \
-                       'tempor invidunt ut labore et dolore magna aliquyam'
+                       'ut labore et dolore magna aliquyam erat, sed diam voluptua. At stop'
                 msg_out = bytes(text.encode('utf-8'))
-                self.send_data(msg_out)
+                # Encrypt with public key of mobile phone
+                encrypted_msg_out = crypto.encrypt(msg_out)
+                self.send_data(encrypted_msg_out)
 
                 # Second receive
                 msg_in = self.receive_data()
