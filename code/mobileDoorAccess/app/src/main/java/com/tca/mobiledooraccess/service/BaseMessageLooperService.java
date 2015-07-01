@@ -1,6 +1,7 @@
 package com.tca.mobiledooraccess.service;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
@@ -32,8 +33,13 @@ public class BaseMessageLooperService extends Service {
 
     @Override
     public void onCreate() {
+        // Assign the application context of this service
+        // Lifetime should be as long as the service is active, so passing to
+        // the protocol handler should be ok.
+        Log.i(TAG, "Service Application context is " + getApplicationContext().toString());
+
         // Create looping thread for asynchronously dispatching messages
-        mLooperThread = new LooperThread();
+        mLooperThread = new LooperThread(getApplicationContext());
         mLooperThread.start();
         Log.i(TAG, "Looper service thread started.");
 
@@ -64,8 +70,14 @@ public class BaseMessageLooperService extends Service {
      * Looper thread for asynchronously processing messages
      */
     final class LooperThread extends Thread {
+        Context applicationContext;
+
         private Looper mLooper;
         private Handler mHandler;
+
+        public LooperThread(Context context) {
+            this.applicationContext = context;
+        }
 
         /**
          * Returns looper reference. Used to shutdown endless loop.
@@ -96,6 +108,10 @@ public class BaseMessageLooperService extends Service {
                     try {
                         mHandler = msgHandlerClass.newInstance();
                         Log.d(TAG, "Using custom message handler " + msgHandlerClass.getName());
+                        // Set application context for preferences and raw resource access
+                        // within the protocol handler
+                        ((BaseMsgHandler)mHandler).setAppContext(applicationContext);
+
                     } catch (InstantiationException e) {
                         Log.e(TAG, "Could not instantiate passed MsgHandler class.");
                         e.printStackTrace();
@@ -124,8 +140,16 @@ public class BaseMessageLooperService extends Service {
 class BaseMsgHandler extends Handler {
     private static final String TAG = "LooperServiceThread";
 
+    // Context for raw resource access and preferences
+    protected Context appContext = null;
+
     public BaseMsgHandler() {
         super();
+    }
+
+    public void setAppContext(Context context) {
+        this.appContext = context;
+        Log.d(TAG, "Set app context: " + appContext.toString());
     }
 
     @Override

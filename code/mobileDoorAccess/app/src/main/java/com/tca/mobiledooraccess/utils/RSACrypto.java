@@ -46,8 +46,8 @@ public class RSACrypto {
     protected PrivateKey ownPrivKey;    //< Our private key to decryptCiphertext received messages.
     protected PublicKey targetPubKey;   //< Public key for target of the encrypted message.
 
-    Cipher decryptionCipher;
-    Cipher encryptionCipher;
+    private Cipher decryptionCipher;
+    private Cipher encryptionCipher;
 
     public RSACrypto(Context context) {
         this.context = context;
@@ -58,6 +58,7 @@ public class RSACrypto {
      * Returns public key encoded as byte array.
      * @return privateKey.getEncoded()
      */
+
     public byte[] getPublicKey() {
         return targetPubKey.getEncoded();
     }
