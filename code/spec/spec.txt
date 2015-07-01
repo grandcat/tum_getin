@@ -113,6 +113,20 @@ Ablauf:
 		  code: 10, //NO_USR
 		  message: 'tum_id not found in DB. Please start with step 1!' }
 
+- Step 99: 	If the user wants to delete his account.
+	There might be several reasons for this:
+		- he really wants it
+		- he unintentionally deleted his token in TUMonline
+		- nice for testing
+	To make sure that some evil user cannot delete arbitrary accounts, we
+	distinguish two cases: 
+		1.) token is not active in TUMonline or has been deleted
+			-> everybody can delete the account
+		2.) token is still active in TUMonline and the server knows 
+		    the user's public key
+			-> the user additionally has to send the token encrypted with
+			   his private key. Thus we make sure only the real user can
+			   delete his account.
 
 
 >>> Interface Reader-Backend:

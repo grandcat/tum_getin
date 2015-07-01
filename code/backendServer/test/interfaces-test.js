@@ -8,6 +8,7 @@ var vows = require('vows'),
 var testUser1 = require('../../testResources/user_01.json');
 var testUser3 = require('../../testResources/user_03.json');
 var realUser = require('../../testResources/real_user.json');
+var realUserNewToken = '';
 var config = require('./test_config');
 //require('./test_helpers');
 
@@ -53,7 +54,7 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
 	'/register get token, correct, new user': {
 		topic: function() {
 			callback = this.callback;
-			sendGet('/register?tum_id=' + testUser3.tum_id);
+			sendGet('/register?tum_id=' + realUser.tum_id);
 		},
 		'Check response status': function (topic) {
             		assert.equal (topic.status, 200);
@@ -64,7 +65,7 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
 			assert.isFalse (topic.token === undefined);
 			// save token in temp object
 			// later we can check if the server has saved it, too
-			testUser3.token = topic.token;
+			realUserNewToken = topic.token;
         	}
 
 	}
@@ -72,7 +73,7 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
 	'/register get token, correct, known user, see if we get the same token': {
 		topic: function() {
 			callback = this.callback;
-			sendGet('/register?tum_id=' + testUser3.tum_id);
+			sendGet('/register?tum_id=' + realUser.tum_id);
 		},
 		'Check response status': function (topic) {
             		assert.equal (topic.status, 200);
@@ -82,7 +83,7 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
 			assert.isNotNull (topic.token);
 			assert.isFalse (topic.token === undefined);
 			// check if the server has saved the right token
-			assert.equal(topic.token, testUser3.token);
+			assert.equal(topic.token, realUserNewToken);
         	}
 
 	}
