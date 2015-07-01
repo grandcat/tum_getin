@@ -1,4 +1,5 @@
 from io import BytesIO
+import json
 import logging
 import struct
 import time
@@ -115,26 +116,59 @@ class ReaderIO(object):
             try:
                 self.device.start_nfc_reader()
 
-                """
-                Step 1
-                """
-                msg_in = self.receive_data()
-                self.log.info('Received raw data from client: %s', msg_in)
-                # Decrypt message
-                raw_msg = crypto.decrypt(msg_in)
-                self.log.info("Decrypted msg: %s", raw_msg)
+                nonce_r_S = None
+                nonce_r_T = None
 
-                text = 'Da stimme ich zu!\n' \
-                       'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ' \
-                       'ut labore et dolore magna aliquyam erat, sed diam voluptua. At stop'
-                msg_out = bytes(text.encode('utf-8'))
+                """
+                Protocol step 1: receive {nonce r_s, pseudo_student_id} encrypted with our T_pub key
+                """
+                cipher_msg_in = self.receive_data()
+                self.log.info('Received raw data from client: %s', cipher_msg_in)
+                # Decrypt message
+                raw_msg_in = crypto.decrypt(cipher_msg_in)
+                self.log.info("Decrypted msg: %s", raw_msg_in)
+                # Todo: check for errors
+                msg_in = json.loads(raw_msg_in.decode('utf-8'))
+                nonce_r_S = msg_in['rs']
+
+                """
+                Protocol step 2: send {r_s, r_t, T} encrypted with S_pub key
+
+                r_s: the nonce the target sent us
+                r_t: a new nonce
+                T: hash of our public key (does this help anything? better sign the message in addition to that)
+                """
+                nonce_r_T = "mysecretnoncefromTerminalrT"
+                msg_out = json.dumps({
+			        "type": 2,
+                    "rs": nonce_r_S,
+                    "rt": nonce_r_T
+		        }).encode('utf-8')
+                self.log.debug('Preparing for sending message: %s', msg_out)
+                #msg_out = bytes(text.encode('utf-8'))
                 # Encrypt with public key of mobile phone
                 encrypted_msg_out = crypto.encrypt(msg_out)
                 self.send_data(encrypted_msg_out)
 
-                # Second receive
-                msg_in = self.receive_data()
-                self.log.info('2. Received data from client: %s', msg_in)
+                """
+                Protocol step 3: receive {r_t, commands} encrypted with our T_pub key
+
+                At this step, the properties freshness and confidentiality should be fulfilled.
+                It should be ok to trust the target.
+                """
+                cipher_msg_in = self.receive_data()
+                self.log.info('2. Received data from client: %s', cipher_msg_in)
+                # Decrypt message
+                raw_msg_in = crypto.decrypt(cipher_msg_in)
+                self.log.info("Decrypted msg: %s", raw_msg_in)
+                # Todo: check for errors
+                msg_in = json.loads(raw_msg_in.decode('utf-8'))
+                msg_r_T = msg_in['rt']
+                if nonce_r_T == msg_r_T:
+                    # Identical nonces: message should be fresh
+                    self.log.info('Nonces identical. r_T="%s"', nonce_r_T)
+                else:
+                    self.log.error('Nonces r_T do not match. Replay attack?')
 
                 self.device.shutdown_nfc_reader()
 
@@ -144,6 +178,9 @@ class ReaderIO(object):
 
             except (KeyboardInterrupt, SystemExit):
                 hw_activated = False
+            except AttributeError as e:
+                self.log.error("AttributeError due to mismatch in protocol: " + str(e))
+                hw_activated = True
             except IOError as e:
                 self.log.error("IOError Exception: " + str(e))
                 hw_activated = True
