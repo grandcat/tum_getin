@@ -9,6 +9,9 @@ import android.util.Log;
 import com.tca.mobiledooraccess.R;
 import com.tca.mobiledooraccess.utils.RSACrypto;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
@@ -28,6 +31,15 @@ public final class StmProtocolHandler extends BaseMsgHandler {
 
     // Public / Private Key Cryptography
     private RSACrypto crypto;
+
+    /**
+     * Protocol state machine
+     * Includes type of all possible states and the next state.
+     */
+    public final static int PROTO_MSG1_TUM_ID_AND_NONCE = 1;
+    public final static int PROTO_MSG2_RECEIVE_NONCE = 2;
+    public final static int PROTO_MSG3_SEND_TOKEN_AND_NONCE = 3;
+    private int stmNextState = 0;
 
     public StmProtocolHandler() {
         super();
@@ -49,10 +61,9 @@ public final class StmProtocolHandler extends BaseMsgHandler {
                 // Always take new messenger because CardEmulation's manager is recreated each time
                 // it binds to a new terminal
                 mNfcCardEmulationService = msg.replyTo;
-                // Test: send reply that should be sent to the client
-                byte[] raw_msg = ("Encrypted: Hallo, hier spricht das Smartphone. Und es spricht sogar noch mehr!!! " +
-                        "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod. Stop")
-                        .getBytes(Charset.forName("UTF-8"));
+
+                // Protocol step 1
+                byte[] raw_msg = sendTokenAndNonce();
                 // Encrypt message with terminal's public key
                 byte[] encrypted_msg = crypto.encryptPlaintext(raw_msg);
                 // Submit encrypted message to NFC card emulation service
@@ -121,5 +132,22 @@ public final class StmProtocolHandler extends BaseMsgHandler {
             }
         }
 
+    }
+
+    private byte[] sendTokenAndNonce() {
+        byte[] output = null;
+
+        JSONObject jsonMsg = new JSONObject();
+        try {
+            jsonMsg.put("type", PROTO_MSG1_TUM_ID_AND_NONCE);
+            jsonMsg.put("tok", "mysecrettokenfromtumonline");
+            jsonMsg.put("rs", "randombytes______________32bytes");
+
+            output = jsonMsg.toString().getBytes(Charset.forName("UTF-8"));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return output;
     }
 }
