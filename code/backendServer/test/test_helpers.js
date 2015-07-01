@@ -79,3 +79,32 @@ global.sendPost = function(path, jsonString) {
 	global.sendData(path, 'POST', jsonString);
 }
 
+/* Same functionality with request.js instead of https.js */
+//var message = {
+//  tum_id: testUser1.tum_id,
+//  token: testUser1.token
+//};
+//
+//var headers = {
+//  'Content-Type': 'application/json',
+//  'Content-Length': message.length
+//};
+//
+//var options = {
+//  uri: 'https://localhost:3000/register',
+//  ca: [ fs.readFileSync('./cert.pem') ],
+//  'content-type': 'application/json',
+//  headers: headers,
+//  form: message
+//};
+//
+//var fkt = function() {
+//	request.post(options, function (err, res, body) {
+//	  if (err) {
+//	    console.error('Error: ', err);
+//	  }
+//	  console.log('Server response: ', body);
+//	});
+//};
+////fkt();
+

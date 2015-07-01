@@ -1,6 +1,7 @@
 'use strict';
 var parseString = require('xml2js').parseString,
     https = require('https'),
+    cd = require('../../config/message_codes.js'),
     config = require('../../config/config.js');
 //var util = require('util'); // for deep inspection of objects
 
@@ -25,7 +26,7 @@ exports.reply = function(res, http_status, msg_code, res_message, json) {
  * Wrapper for reply(). Is sent on server errors.
  */
 exports.send500error = function (res) {
-	this.reply(res, 500, 'The server encountered an error. Please try again!');
+	this.reply(res, 500, cd.ERR, 'The server encountered an error. Please try again!');
 };
 
 /**
@@ -45,11 +46,12 @@ exports.handleTumHttpsReq = function(httpResp, res, tum_id, callback) {
 	httpResp.on('data', function(data) {
 		responseString += data;
 	});
+	var this_pointer = this;
 	httpResp.on('end', function() {
 		console.log('-----> Response from TUMonline: ' + responseString);
 		parseString(responseString, function (err, result) {
 			if(err) {
-				this.handleTumHttpsError(err, res);
+				this_pointer.handleTumHttpsError(err, res);
 			}
 			callback(res, tum_id, result);
 		});		

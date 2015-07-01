@@ -5,7 +5,6 @@ var mongoose = require('mongoose'),
     out = require('./reply.js'),
     utils = require('./utils.js'),
     db = require('./db-utils.js'),
-    crypto = require('crypto'),
     config = require('../../config/config.js'),
     cd = require('../../config/message_codes.js');
 
@@ -18,26 +17,33 @@ var mongoose = require('mongoose'),
 function onTumTokenResponse(res, tum_id, tumAnswerJson) {
 	console.log('onTumTokenRes; id: ' + tum_id + '; jsonAns: ' + tumAnswerJson);
 
-	var token = tumAnswerJson.token;
-	console.log('Extracting token from TUM response: ' + token);
+	if(tumAnswerJson === undefined) { // something very wrong here!
+		out.reply(res, 500, cd.TUM_ERR, 'TUMonline is not behaving properly');
+	} else if(tumAnswerJson.error !== undefined) { // TUM sent an error message
+		out.reply(res, 404, cd.TUM_NO_TOK, 
+			'TUMonline did not answer with a token for this tum_id!');
+	} else { // everything fine here
+		var token = tumAnswerJson.token;
+		console.log('Extracting token from TUM response: ' + token);
 
-	var status = 'student'; //TODO: check that!
+		var status = 'student'; //TODO: check that!
 
-	// generating pseudo ID
-	var pid = utils.random();
-	console.log(pid);	
-	// saving the user
-	var user = new User({
-		tum_id: tum_id,
-		pseudo_id: pid,
-		token: token,
-		status: status
-	});
-	user.save(db.handleDBsave);
-	// responding...
-	out.reply(res, 200, cd.OK, 
-		'Token generation successful. Please send public key.',
-		{ tum_id: tum_id, pseudo_id: pid, token: token });
+		// generating pseudo ID
+		var pid = utils.random();
+		console.log(pid);	
+		// saving the user
+		var user = new User({
+			tum_id: tum_id,
+			pseudo_id: pid,
+			token: token,
+			status: status
+		});
+		user.save(db.handleDBsave);
+		// responding...
+		out.reply(res, 200, cd.OK, 
+			'Token generation successful. Please send public key.',
+			{ tum_id: tum_id, pseudo_id: pid, token: token });
+	}
 }
 
 /**
@@ -72,6 +78,8 @@ function registerGetTokenForUser(req, res, tum_id, user) {
 				  pseudo_id: user.pseudo_id,
 				  token: user.token });
 			} else { // otherwise request a new one from TUMonline
+				//TODO: do we need this branch?
+				// probably we do not want to do that
 				contactTUMonline(res, tum_id);
 			}
 		} else {
@@ -87,7 +95,6 @@ function registerGetTokenForUser(req, res, tum_id, user) {
  * This token is either fetched from the DB or from TUMonline, if it is the first time.
  */
 exports.register_get_token = function(req, res) {
-
 	var tum_id = req.query.tum_id;
 	//console.log('----> /register get token : tum_id: %s, token: %s ', tum_id, token);
 

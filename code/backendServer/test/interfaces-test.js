@@ -6,10 +6,12 @@ var vows = require('vows'),
     cd = require('../config/message_codes.js');
 // getting test data from central test data folder
 var testUser1 = require('../../testResources/user_01.json');
+var testUser3 = require('../../testResources/user_03.json');
 var realUser = require('../../testResources/real_user.json');
 var config = require('./test_config');
 //require('./test_helpers');
 
+//////////////////////////////////////////////////////////////////////////////////////
 vows.describe('Backend - NFC Reader Interface /check').addBatch({
 	'/check get user public key correct': {
 		topic: function() {
@@ -29,9 +31,9 @@ vows.describe('Backend - NFC Reader Interface /check').addBatch({
 	}
 }).export(module);
 
-
+//////////////////////////////////////////////////////////////////////////////////////
 vows.describe('Backend - Smartphone Interface /register').addBatch({
-	'/register get token correct': {
+	'/register get token, correct, known user': {
 		topic: function() {
 			callback = this.callback;
 			sendGet('/register?tum_id=' + testUser1.tum_id);
@@ -44,6 +46,43 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
             		assert.equal (topic.tum_id, testUser1.tum_id);
 			assert.equal (topic.pseudo_id, testUser1.pseudo_id);
 			assert.equal (topic.token, testUser1.token);
+        	}
+
+	}
+}).addBatch({
+	'/register get token, correct, new user': {
+		topic: function() {
+			callback = this.callback;
+			sendGet('/register?tum_id=' + testUser3.tum_id);
+		},
+		'Check response status': function (topic) {
+            		assert.equal (topic.status, 200);
+            		assert.equal (topic.code, 0);
+        	},
+		'Check response token': function (topic) {
+			assert.isNotNull (topic.token);
+			assert.isFalse (topic.token === undefined);
+			// save token in temp object
+			// later we can check if the server has saved it, too
+			testUser3.token = topic.token;
+        	}
+
+	}
+}).addBatch({
+	'/register get token, correct, known user, see if we get the same token': {
+		topic: function() {
+			callback = this.callback;
+			sendGet('/register?tum_id=' + testUser3.tum_id);
+		},
+		'Check response status': function (topic) {
+            		assert.equal (topic.status, 200);
+            		assert.equal (topic.code, 0);
+        	},
+		'Check response token': function (topic) {
+			assert.isNotNull (topic.token);
+			assert.isFalse (topic.token === undefined);
+			// check if the server has saved the right token
+			assert.equal(topic.token, testUser3.token);
         	}
 
 	}
@@ -126,6 +165,7 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
 	}
 }).export(module);
 
+//////////////////////////////////////////////////////////////////////////////////////
 vows.describe('Backend - Smartphone Interface /register for real user!').addBatch({
 	'/register get token correct': {
 		topic: function() {
@@ -151,6 +191,7 @@ vows.describe('Backend - Smartphone Interface /register for real user!').addBatc
 	}
 }).export(module);
 
+//////////////////////////////////////////////////////////////////////////////////////
 vows.describe('Backend - Smartphone Interface /tokenActive for real user!').addBatch({
 	'/tokenActive for active token correct': {
 		topic: function() {
@@ -181,6 +222,7 @@ vows.describe('Backend - Smartphone Interface /tokenActive for real user!').addB
 	}
 }).export(module);
 
+//////////////////////////////////////////////////////////////////////////////////////
 var req; // request object
 var callback;   // callback function called on server response
 		// use via callback(null, params..)
@@ -252,32 +294,3 @@ var sendGet = function(path) {
 var sendPost = function(path, jsonString) {
 	sendData(path, 'POST', jsonString);
 }
-
-/* Same functionality with request.js instead of https.js */
-//var message = {
-//  tum_id: testUser1.tum_id,
-//  token: testUser1.token
-//};
-//
-//var headers = {
-//  'Content-Type': 'application/json',
-//  'Content-Length': message.length
-//};
-//
-//var options = {
-//  uri: 'https://localhost:3000/register',
-//  ca: [ fs.readFileSync('./cert.pem') ],
-//  'content-type': 'application/json',
-//  headers: headers,
-//  form: message
-//};
-//
-//var fkt = function() {
-//	request.post(options, function (err, res, body) {
-//	  if (err) {
-//	    console.error('Error: ', err);
-//	  }
-//	  console.log('Server response: ', body);
-//	});
-//};
-////fkt();
