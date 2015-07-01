@@ -7,23 +7,25 @@ var mongoose = require('mongoose'),
  * helper function. Looks up user by tum_id and calls callback
  */
 exports.getUserByTumId = function(req, res, tum_id, callback) {
-	User.findOne({ tum_id: tum_id }, function(err, user) {
-		if (err) {
-			this.handleDBsave(err, res);
-		}
-		callback(req, res, tum_id, user);
-	});
+	this.getUser(req, res, { tum_id: tum_id }, tum_id, callback);
 };
 
 /**
  * helper function. Looks up user by tum_id and calls callback
  */
 exports.getUserByPseudoId = function(req, res, pid, callback) {
-        User.findOne({ pseudo_id: pid }, function(err, user) {
+	this.getUser(req, res, { pseudo_id: pid }, pid, callback);
+}; 
+
+/**
+ * General version of the two functions above
+ */
+exports.getUser = function(req, res, searchJSON, value, callback) {
+        User.findOne(searchJSON, function(err, user) {
                 if (err) {
                         this.handleDBsave(err, res);
                 }       
-                callback(req, res, pid, user);
+                callback(req, res, value, user);
         });     
 }; 
 
@@ -33,7 +35,7 @@ exports.getUserByPseudoId = function(req, res, pid, callback) {
  */
 exports.handleDBsave = function(err, res) {
 	if (err) { 
-		console.err('user save error: ', err); 
+		console.error('user save error: ', err); 
 		out.send500error(res);
 	}
 };
