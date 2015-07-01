@@ -49,6 +49,10 @@ Ablauf:
 		{ status: 400,
 		  code: 31, //TUM_DUP_TOK
 		  message: 'There is already a token for this user.' }	
+  Error possibility:	TumOnline is sending error messages or not behaving properly
+		{ status: 500,
+		  code: 39, //TUM_ERR
+		  message: 'TUMonline is not behaving properly.' }	
 
 - Step 2: Check if the user has activated his token in TumOnline
   Request:	GET /tokenactive?token=491652672440A20D6BD49B63E60DADB9

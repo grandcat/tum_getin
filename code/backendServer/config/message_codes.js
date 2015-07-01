@@ -20,5 +20,6 @@ module.exports = {
 
 	// 30 - 39: TUMonline related issues
 	TUM_NO_TOK: 30,	// TUMonline does not answer with a token
-	TUM_DUP_TOK: 31 // The user already has a token
+	TUM_DUP_TOK: 31,// The user already has a token
+	TUM_ERR: 39	// TUMonline sends error messages or otherwise behaves strangely
 };
