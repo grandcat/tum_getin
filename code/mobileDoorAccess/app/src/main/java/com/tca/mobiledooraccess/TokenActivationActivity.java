@@ -74,6 +74,8 @@ public class TokenActivationActivity extends Activity {
             Log.d(TAG, "Token activated");
             SharedPreferences.Editor editor = appSettings.edit();
             editor.putBoolean("token_activated", true);
+            // User should be registered successfully now
+            editor.putBoolean("registered", true);
             editor.commit();
             Intent intent = new Intent(this, MainActivity.class);
             startActivity(intent);

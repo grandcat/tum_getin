@@ -20,7 +20,7 @@ import java.security.SecureRandom;
 /**
  * State machine for NFC high-level logic and protocol
  */
-public final class StmProtocolHandler extends BaseMsgHandler {
+public final class StatefulProtocolHandler extends BaseMsgHandler {
     private static final String TAG = "StmProtocolHandler";
     // NFC protocol
     public final static int MSG_NFC_CONNECTION_LOST = 0;
@@ -45,7 +45,7 @@ public final class StmProtocolHandler extends BaseMsgHandler {
     private String r_S = "";    //< Random nonce r_S
     private String r_T = "";    //< Received nonce r_T from terminal
 
-    public StmProtocolHandler() {
+    public StatefulProtocolHandler() {
         super();
     }
 
@@ -56,19 +56,22 @@ public final class StmProtocolHandler extends BaseMsgHandler {
         Log.d(MessageExchangeService.TAG, "Got message with what " + msg.what);
 
         switch (msg.what) {
+            /**
+             * Initial message on first contact.
+             */
             case MSG_NFC_NEW_TERMINAL: {
-                /**
-                 * Initial message on first contact
-                 */
-                r_T = r_S = "";
-                initCryptoOnce();
-
                 // Always take new messenger because CardEmulation's manager is recreated each time
                 // it binds to a new terminal
                 mNfcCardEmulationService = msg.replyTo;
 
-                // Protocol step 1
-                byte[] rawMsg = sendTokenAndNonce();
+                resetStates();
+                initCryptoOnce();
+
+                /**
+                 * Protocol step 1
+                 * Send {r_S, pseudo_student_id} encrypted with T_pub key
+                 */
+                byte[] rawMsg = sendStudentIdAndNonce();
                 // Encrypt message with terminal's public key
                 byte[] encryptedMsg = crypto.encryptPlaintext(rawMsg);
                 // Submit encrypted message to NFC card emulation service
@@ -81,15 +84,15 @@ public final class StmProtocolHandler extends BaseMsgHandler {
                             "CardEmulationService.");
                 }
 
-                // Go to next step in state machine: receiving a message from the terminal
+                // Go to step 2 in state machine: receiving a message from the terminal
                 stmNextState = PROTO_MSG2_RECEIVE_NONCE;
             }
             break;
 
+            /**
+             * Process incoming follow-up packets sent by NFC terminal.
+             */
             case MSG_NFC_RECEIVED_PACKET: {
-                /**
-                 * Processing incoming packet sent by NFC terminal.
-                 */
                 if (mNfcCardEmulationService == null) mNfcCardEmulationService = msg.replyTo;
 
                 byte[] dataIn = (byte[])msg.obj;
@@ -98,6 +101,7 @@ public final class StmProtocolHandler extends BaseMsgHandler {
                 try {
                     // Decrypt message
                     byte[] rawMsgIn = crypto.decryptCiphertext(dataIn);
+                    // Todo: if error: shutdown and cleanup
                     msgIn = new String(rawMsgIn, "UTF-8");
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
@@ -107,14 +111,19 @@ public final class StmProtocolHandler extends BaseMsgHandler {
                 byte[] rawMsg = null;
                 switch (stmNextState) {
                     case PROTO_MSG2_RECEIVE_NONCE: {
-                        Log.d(TAG, "Current stm step: PROTO_MSG2_RECEIVE_NONCE");
+                        /**
+                         * Protocol step 2 and step 3
+                         * 2. Receive {r_s, r_t, T} encrypted with our S_pub key
+                         * 3. Send {r_t, commands} encrypted with T_pub key
+                         */
+                        Log.d(TAG, "Current protocol step: PROTO_MSG2_RECEIVE_NONCE");
                         // TODO: add try block
                         rawMsg = checkResponseFromTerminal(msgIn);
 
                         stmNextState = PROTO_MSG3_SEND_TOKEN_AND_NONCE;
                     }
                     break;
-                    // Todo: default block to reset state machine in case of error
+                    // Todo: default action: reset state machine in case of unexpected error
                 }
                 // Encrypt and send response
                 if (rawMsg != null) {
@@ -135,6 +144,10 @@ public final class StmProtocolHandler extends BaseMsgHandler {
         }
     }
 
+    private void resetStates() {
+        r_T = r_S = "";
+    }
+
     private void initCryptoOnce() {
         if (crypto == null) {
             // Initialize crypto
@@ -152,7 +165,7 @@ public final class StmProtocolHandler extends BaseMsgHandler {
 
     }
 
-    private byte[] sendTokenAndNonce() {
+    private byte[] sendStudentIdAndNonce() {
         byte[] output = null;
 
         // Generate random nonce r_S

@@ -197,7 +197,7 @@ public class Backend {
                 sb.append(line + "\n");
             }
             JSONObject jsonObj = new JSONObject(sb.toString());
-            result = jsonObj.getBoolean("activated");
+            result = jsonObj.getBoolean("active");
 
         } catch (MalformedURLException e){
             Log.e(TAG, "MalformedURLException: " + e.getMessage());

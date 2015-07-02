@@ -14,11 +14,10 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.tca.mobiledooraccess.service.MessageExchangeService;
-import com.tca.mobiledooraccess.service.StmProtocolHandler;
+import com.tca.mobiledooraccess.service.StatefulProtocolHandler;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -69,7 +68,7 @@ public class CardEmulationService extends HostApduService {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
-                case StmProtocolHandler.MSG_NFC_SEND_PACKET:
+                case StatefulProtocolHandler.MSG_NFC_SEND_PACKET:
                     /**
                      * Prepare outgoing message to be sent to the NFC terminal.
                      */
@@ -144,7 +143,7 @@ public class CardEmulationService extends HostApduService {
     @Override
     public void onDeactivated(int reason) {
         if (connectionEstablished) {
-            Message msg = Message.obtain(null, StmProtocolHandler.MSG_NFC_CONNECTION_LOST);
+            Message msg = Message.obtain(null, StatefulProtocolHandler.MSG_NFC_CONNECTION_LOST);
             msg.arg1 = reason;
             try {
                 mNfcMessagingService.send(msg);
@@ -195,7 +194,7 @@ public class CardEmulationService extends HostApduService {
                 // Activate the communication channel.
                 connectionEstablished = true;
                 // Inform NFC state machine about new terminal
-                Message msg = Message.obtain(null, StmProtocolHandler.MSG_NFC_NEW_TERMINAL);
+                Message msg = Message.obtain(null, StatefulProtocolHandler.MSG_NFC_NEW_TERMINAL);
                 msg.replyTo = mResponseMessenger;
                 try {
                     mNfcMessagingService.send(msg);
@@ -308,7 +307,7 @@ public class CardEmulationService extends HostApduService {
             dataInReady.set(false);
             Log.i(TAG, "Received data with " + dataIn.size() + " bytes complete.");
             // Push to NFC service thread
-            Message msg = Message.obtain(null, StmProtocolHandler.MSG_NFC_RECEIVED_PACKET);
+            Message msg = Message.obtain(null, StatefulProtocolHandler.MSG_NFC_RECEIVED_PACKET);
             msg.obj = dataIn.toByteArray();
             msg.replyTo = mResponseMessenger;
             try {
