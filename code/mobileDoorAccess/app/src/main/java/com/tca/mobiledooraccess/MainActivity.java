@@ -153,6 +153,7 @@ public class MainActivity extends Activity {
             //start Regeistered Activity
             Intent intent = new Intent(this, RegisteredActivity.class);
             startActivity(intent);
+            finish();
         }else{
             Log.d(TAG, "User not registered, checking for token status...");
             if (token_received){
@@ -163,12 +164,14 @@ public class MainActivity extends Activity {
                     //start TokenActivation Activity
                     Intent intent = new Intent(this, TokenActivationActivity.class);
                     startActivity(intent);
+                    finish();
                 }
             }else{
                 Log.d(TAG, "No token received yet, starting NotRegistered Activity...");
                 //start NotRegisteredActivity
                 Intent intent = new Intent(this, NotRegisteredActivity.class);
                 startActivity(intent);
+                finish();
             }
         }
     }

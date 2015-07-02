@@ -1,11 +1,13 @@
 package com.tca.mobiledooraccess.service;
 
+import android.content.SharedPreferences;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Base64;
 import android.util.Log;
 
+import com.tca.mobiledooraccess.MainActivity;
 import com.tca.mobiledooraccess.R;
 import com.tca.mobiledooraccess.utils.RSACrypto;
 
@@ -173,13 +175,20 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
         byte[] rawNonce = new byte[32];
         secureRandom.nextBytes(rawNonce);
         r_S = Base64.encodeToString(rawNonce, Base64.DEFAULT);
+        // Get pseudo student ID from preferences
+        SharedPreferences prefs = appContext.getSharedPreferences(
+                MainActivity.TUM_GETIN_PREFERENCES,
+                appContext.MODE_PRIVATE
+        );
+        String pseudoID = prefs.getString("pseudo_ID", "");
 
         JSONObject jsonMsg = new JSONObject();
         try {
             jsonMsg.put("type", PROTO_MSG1_TUM_ID_AND_NONCE);   //< Message type
-            jsonMsg.put("pid", "Todo: pseudoID_inserthere");    //< Pseudo ID
+            jsonMsg.put("pid", pseudoID);                       //< Pseudo ID
             jsonMsg.put("rs", r_S);                             //< Random nonce r_S
 
+            Log.d(TAG, "Sending pseudoID and nonce: " + jsonMsg.toString());
             output = jsonMsg.toString().getBytes(Charset.forName("UTF-8"));
         } catch (JSONException e) {
             e.printStackTrace();
