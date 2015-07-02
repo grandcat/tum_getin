@@ -34,23 +34,6 @@ vows.describe('Backend - NFC Reader Interface /check').addBatch({
 
 //////////////////////////////////////////////////////////////////////////////////////
 vows.describe('Backend - Smartphone Interface /register').addBatch({
-	'/register get token, correct, known user': {
-		topic: function() {
-			callback = this.callback;
-			sendGet('/register?tum_id=' + testUser1.tum_id);
-		},
-		'Check response status': function (topic) {
-            		assert.equal (topic.status, 200);
-            		assert.equal (topic.code, 0);
-        	},
-		'Check response user data': function (topic) {
-            		assert.equal (topic.tum_id, testUser1.tum_id);
-			assert.equal (topic.pseudo_id, testUser1.pseudo_id);
-			assert.equal (topic.token, testUser1.token);
-        	}
-
-	}
-}).addBatch({
 	'/register get token, correct, new user': {
 		topic: function() {
 			callback = this.callback;
@@ -70,22 +53,15 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
 
 	}
 }).addBatch({
-	'/register get token, correct, known user, see if we get the same token': {
+	'/register get token, known user, see if we get an error': {
 		topic: function() {
 			callback = this.callback;
 			sendGet('/register?tum_id=' + realUser.tum_id);
 		},
 		'Check response status': function (topic) {
-            		assert.equal (topic.status, 200);
-            		assert.equal (topic.code, 0);
-        	},
-		'Check response token': function (topic) {
-			assert.isNotNull (topic.token);
-			assert.isFalse (topic.token === undefined);
-			// check if the server has saved the right token
-			assert.equal(topic.token, realUserNewToken);
+            		assert.equal (topic.status, 400);
+            		assert.equal (topic.code, cd.TUM_DUP_TOK);
         	}
-
 	}
 }).addBatch({
 	'/register post key correct': {
@@ -190,7 +166,7 @@ vows.describe('Backend - Smartphone Interface /register for real user!').addBatc
         	}
 
 	}
-}).export(module);
+}); //////// !!!!!!!!!!!! stupid test -- not active -- should lead to error!!!!!!!
 
 //////////////////////////////////////////////////////////////////////////////////////
 vows.describe('Backend - Smartphone Interface /tokenActive for real user!').addBatch({
@@ -219,6 +195,31 @@ vows.describe('Backend - Smartphone Interface /tokenActive for real user!').addB
         	},
 		'Check response active field': function (topic) {
 			assert.equal (topic.active, 'false');
+        	}
+	}
+}).export(module);
+
+//////////////////////////////////////////////////////////////////////////////////////
+vows.describe('Backend - Smartphone Interface /remove for real user!').addBatch({
+	'/remove for inactive token correct, easy request': {
+		topic: function() {
+			callback = this.callback;
+			sendGet('/remove?tum_id=' + realUser.tum_id);
+		},
+		'Check response status': function (topic) {
+            		assert.equal (topic.status, 200);
+            		assert.equal (topic.code, 0);
+        	}
+	}
+}).addBatch({
+	'Now a new register should work again because the user has been deleted.': {
+		topic: function() {
+			callback = this.callback;
+			sendGet('/register?tum_id=' + realUser.tum_id);
+		},
+		'Check response status': function (topic) {
+            		assert.equal (topic.status, 200);
+            		assert.equal (topic.code, 0);
         	}
 	}
 }).export(module);

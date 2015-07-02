@@ -14,12 +14,11 @@ var mongoose = require('mongoose'),
  * TumOnline went fine.
  */ 
 function onTumActiveResponse(res, token, tumAnswerJson) {
-	console.log('tumActResp; id: ' + token + '; jsonAns: ' + tumAnswerJson);
+	console.log('tumActResp; id: ' + token + '; jsonAns: ' + JSON.stringify(tumAnswerJson));
 
 	var active = tumAnswerJson.confirmed;
-	console.log('Extracting token from TUM response: ' + token);
 	
-	if(active === null || active === undefined || active === false) {
+	if(active === null || active === undefined || active === 'false') {
 		out.reply(res, 200, cd.OK, 'Token is not activated.', {active: active});
 	} else { // token is active
 		out.reply(res, 200, cd.OK, 'Token is activated.', {active: active});

@@ -130,7 +130,10 @@ Ablauf:
 		{ status: 400,
 		  code: 20, //ARG_MISS
 		  message: 'Request argument missing.' }
-
+  Error possibility:	Argument does not have the correct form.
+		{ status: 400,
+		  code: 21, //ARG_FORM
+		  message: 'Request argument does not have the correct form.' }
 
 >>> Interface Reader-Backend:
 
