@@ -67,21 +67,8 @@ function registerGetTokenForUser(req, res, tum_id, user) {
 	} else {
 		var token = user.token;
 		if (token !== undefined) {
-			console.log('Register returning saved token; id: ' + 
-					tum_id + ', tok: ' + token);
-			//TODO: validity check!
-			// Check if token from DB is still valid
-			if(true) { // if yes, then send the one from the DB
-				out.reply(res, 200, cd.OK, 
-				'Token generation successful. Please send public key.',
-				{ tum_id: user.tum_id, 
-				  pseudo_id: user.pseudo_id,
-				  token: user.token });
-			} else { // otherwise request a new one from TUMonline
-				//TODO: do we need this branch?
-				// probably we do not want to do that
-				contactTUMonline(res, tum_id);
-			}
+			out.reply(res, 400, cd.TUM_DUP_TOK,
+				'There is already a token for this user.');
 		} else {
 			// Request new token from TUMonline and save it in DB
 			contactTUMonline(res, tum_id);
