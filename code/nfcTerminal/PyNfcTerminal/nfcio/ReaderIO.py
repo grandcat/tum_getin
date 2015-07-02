@@ -1,9 +1,12 @@
+import base64
 from io import BytesIO
 import json
 import logging
+import os
 import struct
 import time
 from RSACrypto import RSACrypto
+from backend.BackendConnection import Backend
 
 from protocol import APDU
 from protocol.NfcReader import NFCReader
@@ -43,7 +46,7 @@ class ReaderIO(object):
 
         # Data is ready now: aggregate fragmented data chunks
         more_data = True
-        self.log.debug('Receiving data.')
+        self.log.debug('Receiving data ...')
 
         while more_data:
             mv_rx_buf = memoryview(rx_buf)
@@ -52,8 +55,8 @@ class ReaderIO(object):
 
             # Collect data input
             data_in_buf.write(mv_rx_buf[:rx_len-2])
+            # self.log.debug('Status byte: %s, requested: %s', hex_dump(mv_rx_buf[rx_len-2]), hex_dump(APDU.SUCCESS_LC_DATA))
             # Check status code at the end of the message for available data
-            self.log.debug('Status byte: %s, requested: %s', hex_dump(mv_rx_buf[rx_len-2]), hex_dump(APDU.SUCCESS_LC_DATA))
             if APDU.SUCCESS_LC_DATA == mv_rx_buf[rx_len-2]:
                 # More data available: fetch it
                 data_size = struct.unpack_from('!B', mv_rx_buf, rx_len-1)[0]
@@ -88,7 +91,7 @@ class ReaderIO(object):
             tx_payload = data_out_buf.read(self.MAX_CHUNK_SIZE)
             if len(tx_payload) > 0:
                 # TX data to send
-                remaining_bytes = data_len - data_out_buf.tell()  # available bytes in the next iteration
+                remaining_bytes = data_len - data_out_buf.tell()  # available bytes for the next iteration
                 tx_msg = APDU.build_write_message(min(remaining_bytes, self.MAX_CHUNK_SIZE))
                 tx_msg.extend(tx_payload)
                 self.log.debug('Remaining bytes for next round: %d', remaining_bytes)
@@ -104,32 +107,48 @@ class ReaderIO(object):
         """
         Defines the logic for the communication with the target.
 
-        IOErrors have to be handled carefully. Otherwise, the terminal application is stopped.
+        IOErrors have to be handled carefully. Otherwise, the terminal application might crash
+        and stops responding.
         :return:
         """
+        backend = Backend()
         crypto = RSACrypto()
         crypto.import_private_key_from_pem_file('../testResources/terminal_certs/private_key.pem')
+        # Todo: Load public key on demand from the backend instead
         crypto.import_public_key_from_pem_file('../testResources/terminal_certs/public_key.pem')
 
         hw_activated = True
         while hw_activated:
             try:
                 self.device.start_nfc_reader()
-
+                # Protocol states
                 nonce_r_S = None
                 nonce_r_T = None
 
                 """
-                Protocol step 1: receive {nonce r_s, pseudo_student_id} encrypted with our T_pub key
+                Protocol step 1: receive {r_S, pseudo_student_id} encrypted with our T_pub key
                 """
                 cipher_msg_in = self.receive_data()
-                self.log.info('Received raw data from client: %s', cipher_msg_in)
+                self.log.debug('Step 1: received raw data from client: %s', cipher_msg_in)
                 # Decrypt message
                 raw_msg_in = crypto.decrypt(cipher_msg_in)
-                self.log.info("Decrypted msg: %s", raw_msg_in)
+                self.log.debug('Decrypted msg: %s', raw_msg_in)
                 # Todo: check for errors
+
+                # Extract nonce and pseudo student ID
                 msg_in = json.loads(raw_msg_in.decode('utf-8'))
                 nonce_r_S = msg_in['rs']
+                pseudo_student_id = msg_in['pid']
+                # Fetch public key of student
+                self.log.info('Check Pseudo StudentID: %s', pseudo_student_id)
+                key = backend.get_public_key_raw(pseudo_student_id)
+                if key is not None:
+                    self.log.debug('Got pub key from backend: %s', key)
+                    # Todo: convert key to be usable in Python
+                else:
+                    # No key yet in the database: inform user
+                    self.log.info('No key in database for this pseudo ID.')
+                    pass
 
                 """
                 Protocol step 2: send {r_s, r_t, T} encrypted with S_pub key
@@ -138,14 +157,16 @@ class ReaderIO(object):
                 r_t: a new nonce
                 T: hash of our public key (does this help anything? better sign the message in addition to that)
                 """
-                nonce_r_T = "mysecretnoncefromTerminalrT"
+                rawRandom = os.urandom(32)
+                nonce_r_T = base64.b64encode(rawRandom).decode('utf-8')
+                self.log.debug('My random: %s', nonce_r_T)
+
                 msg_out = json.dumps({
-			        "type": 2,
+                    "type": 2,
                     "rs": nonce_r_S,
                     "rt": nonce_r_T
-		        }).encode('utf-8')
+                }).encode('utf-8')
                 self.log.debug('Preparing for sending message: %s', msg_out)
-                #msg_out = bytes(text.encode('utf-8'))
                 # Encrypt with public key of mobile phone
                 encrypted_msg_out = crypto.encrypt(msg_out)
                 self.send_data(encrypted_msg_out)
@@ -157,18 +178,19 @@ class ReaderIO(object):
                 It should be ok to trust the target.
                 """
                 cipher_msg_in = self.receive_data()
-                self.log.info('2. Received data from client: %s', cipher_msg_in)
+                self.log.debug('Step 3: received raw data from client: %s', cipher_msg_in)
                 # Decrypt message
                 raw_msg_in = crypto.decrypt(cipher_msg_in)
-                self.log.info("Decrypted msg: %s", raw_msg_in)
+                self.log.debug('Decrypted msg: %s', raw_msg_in)
                 # Todo: check for errors
                 msg_in = json.loads(raw_msg_in.decode('utf-8'))
                 msg_r_T = msg_in['rt']
                 if nonce_r_T == msg_r_T:
                     # Identical nonces: message should be fresh
-                    self.log.info('Nonces identical. r_T="%s"', nonce_r_T)
+                    self.log.info('Both nonce values are identical. r_T="%s"', nonce_r_T)
+                    # Grant access here
                 else:
-                    self.log.error('Nonces r_T do not match. Replay attack?')
+                    self.log.error('Nonce r_T and received value do not match. Replay attack?')
 
                 self.device.shutdown_nfc_reader()
 
@@ -180,6 +202,11 @@ class ReaderIO(object):
                 hw_activated = False
             except AttributeError as e:
                 self.log.error("AttributeError due to mismatch in protocol: " + str(e))
+                hw_activated = True
+            except ValueError as e:
+                # Probably the decryption failed
+                self.log.error("ValueError occurred. Could be an attack! Details: " + str(e))
+                time.sleep(5)
                 hw_activated = True
             except IOError as e:
                 self.log.error("IOError Exception: " + str(e))

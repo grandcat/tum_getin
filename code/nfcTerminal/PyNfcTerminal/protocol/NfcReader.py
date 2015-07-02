@@ -250,33 +250,33 @@ class NFCReader(object):
 
         return rx_buf, rx_len
 
-    def _message_loop(self, stm):
-        """Starts a loop that simulates an NFC reader to interact with a smart card"""
-
-        loop = True
-        rx_buf = []
-        rx_len = 0
-        while loop:
-            # State machine for communication with end device
-            tx_buf, tx_len = stm.do_IO(rx_buf, rx_len)
-            if stm.should_stop():
-                return
-
-            # Prepare message for sending
-            assert tx_len > 0
-            self.__tx_msg[:tx_len] = tx_buf
-            self.log.debug('Send [%d bytes]: %s', tx_len, hex_dump(tx_buf[:]))
-            # NFC hardware IO
-            rx_len = nfc.nfc_initiator_transceive_bytes(self.__device,
-                                                        ctypes.byref(self.__tx_msg),
-                                                        tx_len,
-                                                        ctypes.byref(self.__rx_msg),
-                                                        self.ISO7816_SHORT_APDU_MAX_LEN,
-                                                        0)
-            if rx_len < 0:
-                # Error occurred (e.g., target was removed from the carrier field) --> restart
-                self.log.warning('Error %d while transceiving data.', rx_len)
-                return
-            # Receiving message
-            rx_buf = bytes((ctypes.c_char * rx_len).from_buffer(self.__rx_msg))
-            self.log.debug('Receive [%d bytes]: %s', rx_len, hex_dump(rx_buf[:rx_len]))
+    # def _message_loop(self, stm):
+    #     """Starts a loop that simulates an NFC reader to interact with a smart card"""
+    #
+    #     loop = True
+    #     rx_buf = []
+    #     rx_len = 0
+    #     while loop:
+    #         # State machine for communication with end device
+    #         tx_buf, tx_len = stm.do_IO(rx_buf, rx_len)
+    #         if stm.should_stop():
+    #             return
+    #
+    #         # Prepare message for sending
+    #         assert tx_len > 0
+    #         self.__tx_msg[:tx_len] = tx_buf
+    #         self.log.debug('Send [%d bytes]: %s', tx_len, hex_dump(tx_buf[:]))
+    #         # NFC hardware IO
+    #         rx_len = nfc.nfc_initiator_transceive_bytes(self.__device,
+    #                                                     ctypes.byref(self.__tx_msg),
+    #                                                     tx_len,
+    #                                                     ctypes.byref(self.__rx_msg),
+    #                                                     self.ISO7816_SHORT_APDU_MAX_LEN,
+    #                                                     0)
+    #         if rx_len < 0:
+    #             # Error occurred (e.g., target was removed from the carrier field) --> restart
+    #             self.log.warning('Error %d while transceiving data.', rx_len)
+    #             return
+    #         # Receiving message
+    #         rx_buf = bytes((ctypes.c_char * rx_len).from_buffer(self.__rx_msg))
+    #         self.log.debug('Receive [%d bytes]: %s', rx_len, hex_dump(rx_buf[:rx_len]))
