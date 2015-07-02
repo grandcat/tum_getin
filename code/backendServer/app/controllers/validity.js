@@ -42,12 +42,11 @@ exports.check_token = function(arg) {
 
 
 /**
- * Example: 2048 bit = 256 bytes = 512 hex numbers
- * Plus first Byte 00 (signed), so 514 in total.
+ * Example: 2048 bit = 256 bytes ~393 base64 encoded characters
  */
 exports.check_key = function(arg) {
-	var regEx = new XRegExp('[a-f0-9]{514}');
-	if(arg.length === 514 && regEx.test(arg)) {
+	// var regEx = new XRegExp('[a-f0-9]{514}');
+	if(350 < arg.length && arg.length < 400) {
 		return true;
 	} else {
 		console.log('Key format error: ' + arg);
