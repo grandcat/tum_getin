@@ -148,9 +148,10 @@ class ReaderIO(object):
                     # Set public key for future secure communication with target
                     crypto.import_public_key_from_b64str(key)
                 else:
-                    # No key yet in the database: inform user
+                    # No key yet in the database
+                    # Todo: inform user
                     self.log.info('Currently no key associated with this pseudo ID.')
-                    pass
+                    raise ValueError('No key for empty or given pseudo ID.')
 
                 """
                 Protocol step 2: send {r_s, r_t, T} encrypted with S_pub key

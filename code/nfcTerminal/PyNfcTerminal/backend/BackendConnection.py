@@ -38,6 +38,9 @@ class Backend(object):
             return False
 
     def get_public_key_raw(self, pseudoID):
+        if pseudoID is '':
+            return None
+
         conn = http.client.HTTPSConnection(self.host, self.port, context=self.context)
         conn.request('GET', '/check?pseudo_id=' + pseudoID)
         response = json.loads(conn.getresponse().read().decode())
