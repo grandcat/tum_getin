@@ -167,7 +167,7 @@ public class Backend {
                 Log.d(TAG, "STATUS OF SERVER OKAY");
                 return 0;
             }else{
-                Log.e(TAG, "STATUS NOT OKAY:" + status);
+                Log.e(TAG, "STATUS NOT OKAY:" + status + ", Message: " + jsonObj.getString("message"));
             }
 
         }catch (MalformedURLException e){

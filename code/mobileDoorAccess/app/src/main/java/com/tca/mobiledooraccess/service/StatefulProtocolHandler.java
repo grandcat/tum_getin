@@ -155,8 +155,9 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
             // Initialize crypto
             crypto = new RSACrypto(appContext);
             try {
-                crypto.loadPrivateKeyFromResource(R.raw.private_key_android);
-                crypto.initDecryption();
+                //crypto.loadPrivateKeyFromResource(R.raw.private_key_android);
+                //crypto.initDecryption();
+                crypto.loadPrivateKeyFromPrefs();
                 // Note: public key should be loaded dynamically in production
                 crypto.loadPublicKeyFromResource(R.raw.public_key_android);
                 crypto.initEncryption();

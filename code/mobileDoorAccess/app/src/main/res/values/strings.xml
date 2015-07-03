@@ -2,5 +2,6 @@
     <string name="app_name">TUM Get In</string>
     <string name="app_aids">tum_get_in_version</string>
     <string name="register_tum_id_input">TUM ID (e.g "aa99zzz")</string>
+    <string name="keygen_dialog">Generating public/private keys. Will take a while...</string>
 
 </resources>

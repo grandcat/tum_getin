@@ -6,11 +6,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.tca.mobiledooraccess.utils.CryptoUtils;
+import com.tca.mobiledooraccess.utils.RSACrypto;
+
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 
 /**
  * Created by basti on 22.06.15.
@@ -23,6 +32,41 @@ public class TokenActivationActivity extends Activity {
 
 
     boolean tokenActivated;
+
+    final class KeyGeneration extends AsyncTask<Void, Integer, String> {
+        ProgressDialog dialog = new ProgressDialog(TokenActivationActivity.this);
+
+        @Override
+        protected void onPreExecute() {
+            dialog.setMessage(getString(R.string.keygen_dialog));
+            dialog.show();
+        }
+
+        @Override
+        protected String doInBackground(Void... params) {
+            try {
+                KeyPairGenerator keyGen = KeyPairGenerator.getInstance(
+                        RSACrypto.ALGORITHM,
+                        RSACrypto.SEC_PROVIDER);
+                keyGen.initialize(RSACrypto.KEYSIZE);
+                KeyPair keys = keyGen.generateKeyPair();
+                keys.getPrivate().getEncoded();
+
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            } catch (NoSuchProviderException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            dialog.dismiss();
+
+            super.onPostExecute(result);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,10 +114,12 @@ public class TokenActivationActivity extends Activity {
             e.printStackTrace();
         }
 
-        if (tokenActivated ){
+        if (tokenActivated){
             Log.d(TAG, "Token activated");
             SharedPreferences.Editor editor = appSettings.edit();
             editor.putBoolean("token_activated", true);
+            // Generate keys
+            new KeyGeneration().execute();
             // User should be registered successfully now
             editor.putBoolean("registered", true);
             editor.commit();

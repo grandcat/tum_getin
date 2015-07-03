@@ -1,10 +1,12 @@
 package com.tca.mobiledooraccess.utils;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Base64;
 import android.util.Log;
 
 import com.google.common.io.ByteStreams;
+import com.tca.mobiledooraccess.MainActivity;
 import com.tca.mobiledooraccess.R;
 
 import java.io.IOException;
@@ -38,6 +40,7 @@ public class RSACrypto {
     public static final String MODE = "NONE";
     public static final String PADDING = "OAEPWithSHA256AndMGF1Padding";
     public static final String CIPHER_ID = ALGORITHM + "/" + MODE + "/" + PADDING;
+    public static final int KEYSIZE = 2048;
     public static final String SEC_PROVIDER = "BC"; // Bouncy Castle by Android, might replace it
                                                     // by Spongy Castle for more functionality
 
@@ -134,6 +137,7 @@ public class RSACrypto {
             decryptionCipher = Cipher.getInstance(CIPHER_ID, SEC_PROVIDER);
             decryptionCipher.init(Cipher.DECRYPT_MODE, ownPrivKey, new OAEPParameterSpec("SHA-256",
                     "MGF1", MGF1ParameterSpec.SHA256, PSource.PSpecified.DEFAULT));
+            Log.d(TAG, "Decryption initialized.");
         } catch (NoSuchAlgorithmException|NoSuchProviderException|NoSuchPaddingException e) {
             // Should not be fired, because only depends on CIPHER_ID
             e.printStackTrace();
@@ -143,6 +147,26 @@ public class RSACrypto {
         } catch (InvalidKeyException e) {
             Log.e(TAG, "No valid private key was specified.");
             decryptionCipher = null;
+            e.printStackTrace();
+        }
+    }
+
+    public void loadPrivateKeyFromPrefs() {
+        SharedPreferences prefs = context.getSharedPreferences(
+                MainActivity.TUM_GETIN_PREFERENCES,
+                Context.MODE_PRIVATE
+        );
+        // Decode
+        String b64Key = prefs.getString("priv_key", "");
+        byte[] privateKey = Base64.decode(b64Key, Base64.NO_WRAP);
+        // Generate private key
+        try {
+            KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM);
+            PrivateKey privKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(privateKey));
+            initDecryption(privKey);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (InvalidKeySpecException e) {
             e.printStackTrace();
         }
     }

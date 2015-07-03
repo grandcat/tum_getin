@@ -50,6 +50,7 @@ public class NotRegisteredActivity extends Activity{
                     String result[] = backend.getTokenPseudoID(tumID);
                     Log.d(TAG, "Result from server: " + result[0] + "and " + result[1]);
                     SharedPreferences.Editor editor = appSettings.edit();
+                    editor.putString("tum_id", tumID);
                     editor.putString("tumOnlineToken", result[0]);
                     editor.putString("pseudo_ID", result[1]);
                     editor.putBoolean("token_received", true);
