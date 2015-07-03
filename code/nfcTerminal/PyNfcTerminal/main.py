@@ -1,6 +1,6 @@
 import logging
 
-from nfcio import ReaderIO
+from ProtocolLogic import ProtocolLogic
 from protocol import NFCReader
 
 if __name__ == '__main__':
@@ -9,5 +9,5 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
 
     device = NFCReader()
-    reader = ReaderIO(device)
+    reader = ProtocolLogic(device)
     reader.run()
