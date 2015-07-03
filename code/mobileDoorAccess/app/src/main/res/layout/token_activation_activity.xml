@@ -4,7 +4,8 @@
     android:layout_height="fill_parent" android:background="#ff0073cf"
     android:paddingLeft="15dp" android:paddingRight="15dp"
     android:paddingBottom="15dp"
-    android:clickable="false">
+    android:clickable="false"
+    android:id="@+id/token_activation_activity">
 
     <LinearLayout
         android:layout_width="fill_parent"

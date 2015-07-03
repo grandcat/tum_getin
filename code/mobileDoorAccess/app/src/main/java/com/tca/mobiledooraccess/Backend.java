@@ -185,18 +185,9 @@ public class Backend {
     public boolean tokenActivated(String token){
         Log.d(TAG, "Token Active GET-Request-Method");
         boolean result = false;
-        try{
-            URL url = new URL("https://" + host + ":" + port + "/tokenactive?token=" + token);
-            HttpsURLConnection urlConnection = (HttpsURLConnection)url.openConnection();
-            urlConnection.setSSLSocketFactory(context.getSocketFactory());
-            InputStream in = urlConnection.getInputStream();
-            BufferedReader br = new BufferedReader(new InputStreamReader(in));
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while((line = br.readLine()) != null){
-                sb.append(line + "\n");
-            }
-            JSONObject jsonObj = new JSONObject(sb.toString());
+        try {
+            String response = getRequest("tokenactive?token=" + token);
+            JSONObject jsonObj = new JSONObject(response);
             result = jsonObj.getBoolean("active");
 
         } catch (MalformedURLException e){
@@ -212,5 +203,47 @@ public class Backend {
         return result;
     }
 
+    public int deleteAccount(String tumId, String token) {
+        try {
+            String req = "remove?";
+            req += "tum_id=" + tumId;
+            req += "&token=" + token;
+            String response = getRequest(req);
+            // Check success
+            JSONObject jsonObj = new JSONObject(response);
+            int status = jsonObj.getInt("status");
+            if (200 == status) {
+                return 0;
+            } else {
+                // Error occurred while deleting user account
+                Log.d(TAG, "Error occurred while deleting user account: " + jsonObj.getString("message"));
+                return -1;
+            }
+
+        } catch (MalformedURLException e){
+            Log.e(TAG, "MalformedURLException: " + e.getMessage());
+        } catch (IOException e) {
+            Log.e(TAG, "IOException: " + e.getMessage());
+        } catch (JSONException e) {
+            Log.e(TAG, "JSON error: " + e.getMessage());
+        }
+        return 0;
+    }
+
+    public String getRequest(String params) throws IOException {
+        URL url = new URL("https://" + host + ":" + port + "/" + params);
+        HttpsURLConnection urlConnection = (HttpsURLConnection)url.openConnection();
+        urlConnection.setSSLSocketFactory(context.getSocketFactory());
+        InputStream in = urlConnection.getInputStream();
+        // Read input
+        BufferedReader br = new BufferedReader(new InputStreamReader(in));
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while((line = br.readLine()) != null){
+            sb.append(line + "\n");
+        }
+
+        return sb.toString();
+    }
 
 }
