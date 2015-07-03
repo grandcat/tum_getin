@@ -1,3 +1,4 @@
+import base64
 import logging
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA256
@@ -33,6 +34,11 @@ class RSACrypto:
 
         self.__encryption_cipher = PKCS1_OAEP.new(self.__target_public_key, hashAlgo=SHA256)
         self.log.debug('Initialized successfully RSA encryption.')
+
+    def import_public_key_from_b64str(self, public_key):
+        raw_key = base64.b64decode(public_key.encode('utf-8'))
+        target_key = RSA.importKey(raw_key)
+        self.init_encryption(target_key)
 
     def init_decryption(self, private_key=None):
         if private_key is not None:

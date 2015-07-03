@@ -145,9 +145,11 @@ class ReaderIO(object):
                 if key is not None:
                     self.log.debug('Got pub key from backend: %s', key)
                     # Todo: convert key to be usable in Python
+                    # Set public key for future secure communication with target
+                    crypto.import_public_key_from_b64str(key)
                 else:
                     # No key yet in the database: inform user
-                    self.log.info('No key in database for this pseudo ID.')
+                    self.log.info('Currently no key associated with this pseudo ID.')
                     pass
 
                 """
@@ -189,6 +191,7 @@ class ReaderIO(object):
                     # Identical nonces: message should be fresh
                     self.log.info('Both nonce values are identical. r_T="%s"', nonce_r_T)
                     # Grant access here
+                    self.log.info('ACCESS GRANTED.')
                 else:
                     self.log.error('Nonce r_T and received value do not match. Replay attack?')
 
