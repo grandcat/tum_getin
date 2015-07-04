@@ -12,6 +12,8 @@ module.exports = {
 	sessionCollection: 'sessions',
 	assets: {
 	},
+	// Path for LDAP server for AD: ldaps://ads.mwn.de:636
+	ldap_url: 'ldaps://ads.mwn.de:636',
 	// Path to TUMonline:
 	// 'https://campus.tum.de/tumonline/wbservicesbasic.';
 	tumOnl_url_host: 'campus.tum.de',

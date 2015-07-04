@@ -171,7 +171,10 @@ Ablauf:
   Answer:	{ status: '400',
 		  code: 21, //ARG_FORM
 		  message: 'pseudo_id does not have the correct form!' }
-
+  Error possibility:	Connection to AD does not work or results in strange errors.
+  Answer:	{ status: 500,
+		  code: 39, //TUM_ERR
+		  message: 'Active Directory is not behaving properly.' }	
 
 
 
