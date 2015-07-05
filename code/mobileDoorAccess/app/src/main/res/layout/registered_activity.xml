@@ -4,7 +4,8 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".RegisteredActivity"
-    android:id="@+id/registered_activity">
+    android:id="@+id/registered_activity"
+    android:weightSum="1">
 
     <Button
         android:layout_width="match_parent"
@@ -13,4 +14,15 @@
         android:id="@+id/button_delete_keys"
         android:layout_gravity="center_horizontal"
         android:onClick="deleteKeys" />
+
+    <ProgressBar
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/progress_bar_nfc_protocol"
+        android:layout_gravity="center_horizontal"
+        android:max="3"
+        android:progress="0"
+        android:indeterminate="false" />
+
 </LinearLayout>

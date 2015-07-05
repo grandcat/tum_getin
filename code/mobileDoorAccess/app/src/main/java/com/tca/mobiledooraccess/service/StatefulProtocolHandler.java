@@ -1,9 +1,11 @@
 package com.tca.mobiledooraccess.service;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Base64;
 import android.util.Log;
 
@@ -24,39 +26,58 @@ import java.security.SecureRandom;
  */
 public final class StatefulProtocolHandler extends BaseMsgHandler {
     private static final String TAG = "StmProtocolHandler";
-    // NFC protocol
+    /**
+     * NFC protocol states for communication with CardEmulationService.
+     */
     public final static int MSG_NFC_CONNECTION_LOST = 0;
     public final static int MSG_NFC_NEW_TERMINAL = 1;
     public final static int MSG_NFC_RECEIVED_PACKET = 2;
     public final static int MSG_NFC_SEND_PACKET = 3;
-
+    // Return-channel: messages targeting CardEmulationService
+    // This typically is outgoing data: Android phone --> terminal
     private Messenger mNfcCardEmulationService;
 
-    // Public / Private Key Cryptography
-    private RSACrypto crypto;
-
     /**
-     * Protocol state machine
+     * State machine for the "high-level" protocol.
+     * States emulate the progress in the ordered message exchange defined by the protocol.
      * Includes type of all possible states and the next state.
      */
+//    public enum ProtocolStep {
+//        PROTO_MSG0_TERMINAL_CERTIFICATE_HASH,
+//        PROTO_MSG1_TUM_ID_AND_NONCE,
+//        PROTO_MSG2_RECEIVE_NONCE,
+//        PROTO_MSG3_SEND_TOKEN_AND_NONCE
+//    }
     public final static int PROTO_MSG0_TERMINAL_CERTIFICATE_HASH = 0;
     public final static int PROTO_MSG1_TUM_ID_AND_NONCE = 1;
     public final static int PROTO_MSG2_RECEIVE_NONCE = 2;
     public final static int PROTO_MSG3_SEND_TOKEN_AND_NONCE = 3;
     private int stmNextState = 1;
-
+    // Protocol nonce
     private String r_S = "";    //< Random nonce r_S
     private String r_T = "";    //< Received nonce r_T from terminal
+    // Public / Private Key Cryptography
+    private RSACrypto crypto;
+
+    /**
+     * Progress states for broadcasting the current progress in the NFC protocol.
+     */
+    public final static String INTENT_PROTOCOL_PROGRESS = "tumgetin_nfc_protocol_progress";
+
 
     public StatefulProtocolHandler() {
         super();
     }
 
+    /**
+     * NFC state or incoming message aggregated by the CardEmulationService.
+     * Message direction: terminal --> Android phone
+     * @param msg   State or aggregated message received from the terminal.
+     */
     @Override
     public void handleMessage(Message msg) {
-        // process incoming messages here
-        Log.d(MessageExchangeService.TAG, "State machine handler is " + Thread.currentThread().getName());
-        Log.d(MessageExchangeService.TAG, "Got message with what " + msg.what);
+        // Log.d(MessageExchangeService.TAG, "State machine handler is " + Thread.currentThread().getName());
+        Log.d(TAG, "Got message with what " + msg.what);
 
         switch (msg.what) {
             /**
@@ -64,11 +85,14 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
              */
             case MSG_NFC_NEW_TERMINAL: {
                 // Always take new messenger because CardEmulation's manager is recreated each time
-                // it binds to a new terminal
+                // it binds to a new terminal.
                 mNfcCardEmulationService = msg.replyTo;
 
                 resetStates();
                 initCryptoOnce();
+
+                // Inform UI about new initial connection
+                broadcastProtocolProgress(PROTO_MSG1_TUM_ID_AND_NONCE);
 
                 /**
                  * Protocol step 1
@@ -86,14 +110,13 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
                     Log.e("TAG", "Response not sent; RemoteException calling into " +
                             "CardEmulationService.");
                 }
-
                 // Go to step 2 in state machine: receiving a message from the terminal
                 stmNextState = PROTO_MSG2_RECEIVE_NONCE;
             }
             break;
 
             /**
-             * Process incoming follow-up packets sent by NFC terminal.
+             * Incoming follow-up packets sent by the NFC terminal.
              */
             case MSG_NFC_RECEIVED_PACKET: {
                 if (mNfcCardEmulationService == null) mNfcCardEmulationService = msg.replyTo;
@@ -120,14 +143,20 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
                          * 3. Send {r_t, commands} encrypted with T_pub key
                          */
                         Log.d(TAG, "Current protocol step: PROTO_MSG2_RECEIVE_NONCE");
+                        // Inform UI about entering step 2
+                        broadcastProtocolProgress(stmNextState);
                         // TODO: add try block
                         rawMsg = checkResponseFromTerminal(msgIn);
 
+                        // Last step in state machine already reached
                         stmNextState = PROTO_MSG3_SEND_TOKEN_AND_NONCE;
                     }
                     break;
                     // Todo: default action: reset state machine in case of unexpected error
                 }
+                // Inform UI about success in last step
+                // Note: step 2 and 3 are combined here
+                broadcastProtocolProgress(stmNextState);
                 // Encrypt and send response
                 if (rawMsg != null) {
                     byte[] encryptedMsg = crypto.encryptPlaintext(rawMsg);
@@ -148,6 +177,7 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
     }
 
     private void resetStates() {
+        stmNextState = 1;
         r_T = r_S = "";
     }
 
@@ -166,10 +196,16 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
                 e.printStackTrace();
             }
         }
+        // Always reload our private key because it might be a new one
         crypto.loadPrivateKeyFromPrefs();
 
     }
 
+    /**
+     * Protocol step 1: pseudo_student_ID and fresh nonce
+     *
+     * @return Outgoing message to be sent.
+     */
     private byte[] sendStudentIdAndNonce() {
         byte[] output = null;
 
@@ -200,6 +236,16 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
         return output;
     }
 
+    /**
+     * Protocol step 3: compare nonce we sent to terminal with received one and forward
+     * terminal's nonce albeit some additional data
+     *
+     * Note: the protocol specifies to send the user token to the terminal. Currently, we omit
+     * this step, because this doesn't seem to improve security.
+     *
+     * @param msgIn Message received from the terminal.
+     * @return Outgoing message to be sent.
+     */
     private byte[] checkResponseFromTerminal(String msgIn) {
         byte[] output = null;
         boolean matchingNonceRS = false;
@@ -239,5 +285,12 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
         }
 
         return output;
+    }
+
+    private void broadcastProtocolProgress(int finishedStep) {
+        Log.d(TAG, "Broadcasting protocol step: " + finishedStep);
+        Intent intent = new Intent(INTENT_PROTOCOL_PROGRESS);
+        intent.putExtra("progress", finishedStep);
+        LocalBroadcastManager.getInstance(appContext).sendBroadcast(intent);
     }
 }
