@@ -13,7 +13,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
@@ -57,13 +60,48 @@ public class RSACrypto {
 
     }
 
-    /**
-     * Returns public key encoded as byte array.
-     * @return privateKey.getEncoded()
-     */
+    public static KeyPair generateKeyPair() {
+        try {
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance(
+                    ALGORITHM,
+                    SEC_PROVIDER);
+            keyGen.initialize(KEYSIZE);
+            return keyGen.generateKeyPair();
 
-    public byte[] getPublicKey() {
-        return targetPubKey.getEncoded();
+        } catch (NoSuchAlgorithmException|NoSuchProviderException e) {
+            Log.e(TAG, "Unexpected error occurred during generation of key pair.");
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public static String serializeKey(Key userKey) {
+        byte[] key = userKey.getEncoded();
+        return Base64.encodeToString(key, Base64.NO_WRAP);
+    }
+
+    /**
+     * Loads a PKCS#8 encoded private key file from the preferences.
+     */
+    public void loadPrivateKeyFromPrefs() {
+        SharedPreferences prefs = context.getSharedPreferences(
+                MainActivity.TUM_GETIN_PREFERENCES,
+                Context.MODE_PRIVATE
+        );
+        // Decode
+        String b64Key = prefs.getString("priv_key", "");
+        byte[] privateKey = Base64.decode(b64Key, Base64.NO_WRAP);
+        // Generate private key
+        try {
+            KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM);
+            PrivateKey privKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(privateKey));
+            initDecryption(privKey);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (InvalidKeySpecException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -147,26 +185,6 @@ public class RSACrypto {
         } catch (InvalidKeyException e) {
             Log.e(TAG, "No valid private key was specified.");
             decryptionCipher = null;
-            e.printStackTrace();
-        }
-    }
-
-    public void loadPrivateKeyFromPrefs() {
-        SharedPreferences prefs = context.getSharedPreferences(
-                MainActivity.TUM_GETIN_PREFERENCES,
-                Context.MODE_PRIVATE
-        );
-        // Decode
-        String b64Key = prefs.getString("priv_key", "");
-        byte[] privateKey = Base64.decode(b64Key, Base64.NO_WRAP);
-        // Generate private key
-        try {
-            KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM);
-            PrivateKey privKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(privateKey));
-            initDecryption(privKey);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (InvalidKeySpecException e) {
             e.printStackTrace();
         }
     }

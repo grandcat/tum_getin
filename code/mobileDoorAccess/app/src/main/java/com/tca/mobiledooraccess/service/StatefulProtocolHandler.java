@@ -39,6 +39,7 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
      * Protocol state machine
      * Includes type of all possible states and the next state.
      */
+    public final static int PROTO_MSG0_TERMINAL_CERTIFICATE_HASH = 0;
     public final static int PROTO_MSG1_TUM_ID_AND_NONCE = 1;
     public final static int PROTO_MSG2_RECEIVE_NONCE = 2;
     public final static int PROTO_MSG3_SEND_TOKEN_AND_NONCE = 3;

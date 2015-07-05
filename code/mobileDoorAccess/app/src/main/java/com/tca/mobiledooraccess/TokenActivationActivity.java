@@ -2,24 +2,18 @@ package com.tca.mobiledooraccess;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.tca.mobiledooraccess.utils.CryptoUtils;
-import com.tca.mobiledooraccess.utils.RSACrypto;
+import com.tca.mobiledooraccess.utils.KeyGeneratorTask;
 
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by basti on 22.06.15.
@@ -30,43 +24,7 @@ public class TokenActivationActivity extends Activity {
     private Backend backend;
     private SharedPreferences appSettings;
 
-
     boolean tokenActivated;
-
-    final class KeyGeneration extends AsyncTask<Void, Integer, String> {
-        ProgressDialog dialog = new ProgressDialog(TokenActivationActivity.this);
-
-        @Override
-        protected void onPreExecute() {
-            dialog.setMessage(getString(R.string.keygen_dialog));
-            dialog.show();
-        }
-
-        @Override
-        protected String doInBackground(Void... params) {
-            try {
-                KeyPairGenerator keyGen = KeyPairGenerator.getInstance(
-                        RSACrypto.ALGORITHM,
-                        RSACrypto.SEC_PROVIDER);
-                keyGen.initialize(RSACrypto.KEYSIZE);
-                KeyPair keys = keyGen.generateKeyPair();
-                keys.getPrivate().getEncoded();
-
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-            } catch (NoSuchProviderException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            dialog.dismiss();
-
-            super.onPostExecute(result);
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,19 +35,22 @@ public class TokenActivationActivity extends Activity {
         appSettings = getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
         //Get the token out of the shared preferences and
         //put it into the TextView
-        String token = appSettings.getString("tumOnlineToken", null);
+        String token = appSettings.getString("tumOnlineToken", "");
         TextView tokenTextView = (TextView)findViewById(R.id.textViewToken);
         tokenTextView.setText(token);
     }
 
-
+    /**
+     * Create View intent for the TUMOnline internet address.
+     */
     public void visitTUMOnlineClick(View view){
-        //Create View intent for the TUMOnline internet address.
         Log.d(TAG, "Visit TUM Online Click");
         Uri uri = Uri.parse("https://campus.tum.de/tumonline/webnav.ini");
         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
         startActivity(intent);
     }
+
+    // Todo: replace thread with Android AsyncTask
     public void checkTokenStatusClick(View view){
         Log.d(TAG, "Check Token status Click");
         final ProgressDialog progress = new ProgressDialog(view.getContext());
@@ -119,7 +80,10 @@ public class TokenActivationActivity extends Activity {
             SharedPreferences.Editor editor = appSettings.edit();
             editor.putBoolean("token_activated", true);
             // Generate keys
-            new KeyGeneration().execute();
+            // Note: we cannot use .get() here, because it blocks the UI thread. Consequently,
+            // the ProgressDialog would not show up.
+            new KeyGeneratorTask(view.getContext()).execute();
+
             // User should be registered successfully now
             editor.putBoolean("registered", true);
             editor.commit();
