@@ -1,12 +1,6 @@
-import base64
 from io import BytesIO
-import json
 import logging
-import os
 import struct
-import time
-from RSACrypto import RSACrypto
-from backend.BackendConnection import Backend
 
 from protocol import APDU
 from protocol.NfcReader import NFCReader
@@ -109,4 +103,4 @@ class ReaderIO(object):
 
         Needs to be overwritten to provide logic.
         """
-        raise NotImplementedError('Overwrite with function to implement the ReaderIO logic.')
+        raise NotImplementedError('Overwrite this function to implement the ReaderIO logic.')
