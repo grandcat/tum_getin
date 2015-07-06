@@ -30,7 +30,6 @@ function onTumTokenResponse(res, tum_id, tumAnswerJson) {
 
 		// generating pseudo ID
 		var pid = utils.random();
-		console.log(pid);	
 		// saving the user
 		var user = new User({
 			tum_id: tum_id,
@@ -116,11 +115,11 @@ function registerStoreKeyForUser(req, res, tum_id, user) {
 			out.reply(res, 400, cd.WRONG_TOK, 
 				'token seems to be wrong!');	
 		} else {
-		// actually store key
-		user.key = key;
-		user.save(db.handleDBsave);
-		out.reply(res, 200, cd.OK,
-			'Key stored successfully. User registration complete.');
+			// actually store key
+			user.key = key;
+			user.save(db.handleDBsave);
+			out.reply(res, 200, cd.OK,
+				'Key stored successfully. User registration complete.');
 		}
 	}
 }

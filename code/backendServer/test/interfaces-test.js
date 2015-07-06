@@ -225,6 +225,70 @@ vows.describe('Backend - Smartphone Interface /remove for real user!').addBatch(
 }).export(module);
 
 //////////////////////////////////////////////////////////////////////////////////////
+vows.describe('Backend - Smartphone Interface /renew').addBatch({
+	'/renew pseudo_id, correct request': {
+		topic: function() {
+			callback = this.callback;
+			sendGet('/renew?tum_id=' + testUser1.tum_id + 
+				'&token=' + testUser1.token);
+		},
+		'Check response status': function (topic) {
+            		assert.equal (topic.status, 200);
+            		assert.equal (topic.code, 0);
+        	},
+		'Check if pseudo_id is really new': function (topic) {
+            		assert.notEqual (topic.pseudo_id, testUser1.pseudo_id);
+        	}
+	}
+}).addBatch({
+	'/renew pseudo_id, tum_id missing': {
+		topic: function() {
+			callback = this.callback;
+			sendGet('/renew?token=' + testUser1.token);
+		},
+		'Check response status': function (topic) {
+            		assert.equal (topic.status, 400);
+            		assert.equal (topic.code, cd.ARG_MISS);
+        	}
+	}
+}).addBatch({
+	'/renew pseudo_id, token missing': {
+		topic: function() {
+			callback = this.callback;
+			sendGet('/renew?tum_id=' + testUser1.tum_id);
+		},
+		'Check response status': function (topic) {
+            		assert.equal (topic.status, 400);
+            		assert.equal (topic.code, cd.ARG_MISS);
+        	}
+	}
+}).addBatch({
+	'/renew pseudo_id, tum_id in wrong format': {
+		topic: function() {
+			callback = this.callback;
+			sendGet('/renew?tum_id=aaaaaaaaaa' +  
+				'&token=' + testUser1.token);
+		},
+		'Check response status': function (topic) {
+            		assert.equal (topic.status, 400);
+            		assert.equal (topic.code, cd.ARG_FORM);
+        	}
+	}
+}).addBatch({
+	'/renew pseudo_id, token in wrong format': {
+		topic: function() {
+			callback = this.callback;
+			sendGet('/renew?tum_id=' + testUser1.tum_id + 
+				'&token=3243546');
+		},
+		'Check response status': function (topic) {
+            		assert.equal (topic.status, 400);
+            		assert.equal (topic.code, cd.ARG_FORM);
+        	}
+	}
+}).export(module);
+
+//////////////////////////////////////////////////////////////////////////////////////
 var req; // request object
 var callback;   // callback function called on server response
 		// use via callback(null, params..)

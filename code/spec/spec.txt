@@ -30,7 +30,7 @@ Ablauf:
 		  code: 0, //OK
 		  message: 'Token generation successful. Please send public key.',
 		  tum_id: 'ga00aaa',
-		  pseudo_id: 'sdifuz563',
+		  pseudo_id: '44554dab23950a6b81c0621b9dc98899',
 		  token: '491652672440A20D6BD49B63E60DADB9' }
   Error possibility: 	No key 'tum_id' in request
   Answer:	{ status: 400,
@@ -104,6 +104,15 @@ Ablauf:
 		  code: 10, //NO_USR
 		  message: 'tum_id not found in DB. Please start with step 1!' }
 
+- Step 88:	The smartphone wants to renew the user's pseudo_id.
+		Makes sense to get some privacy. Makes it hard for readers to track the user.
+  Request:	GET /renew?tum_id=ga00aaa&token=491652672440A20D6BD49B63E60DADB9
+  Answer:	{ status: 200,
+		  code: 0, //OK
+		  pseudo_id: 44554dab23950a6b81c0621b9dc98899,
+		  message: 'Here is your new pseudo_id.' }
+  Error possibilities: See other requests. Possible: ARG_MISS, ARG_FORM, NO_USR, WRONG_TOK
+
 - Step 99: 	If the user wants to delete his account.
 	There might be several reasons for this:
 		- he really wants it
@@ -142,8 +151,8 @@ Ablauf:
   Answer:	Message with JSON body
 		{ status: 200,
 		  code: 0, //OK
-		  message: 'Valid user. Sending public key.'Valid user. Sending public key.',
-		  pseudo_id: 'sdifuz563',
+		  message: 'Valid user. Sending public key.',
+		  pseudo_id: '44554dab23950a6b81c0621b9dc98899',
 		  student_status: 'student',
 		  key: 
 		   '00c758d041eb5214eb80acefdda586b8cf33e9a6b63ddea1c5cdc5ed3df2

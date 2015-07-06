@@ -14,6 +14,7 @@ module.exports = {
 	},
 	// Path for LDAP server for AD: ldaps://ads.mwn.de:636
 	ldap_url: 'ldaps://ads.mwn.de:636',
+	ldap_search_string: 'OU=Users,OU=TU,OU=IAM,DC=ads,DC=mwn,DC=de',
 	// Path to TUMonline:
 	// 'https://campus.tum.de/tumonline/wbservicesbasic.';
 	tumOnl_url_host: 'campus.tum.de',

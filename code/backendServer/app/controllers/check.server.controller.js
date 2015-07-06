@@ -6,34 +6,26 @@ var mongoose = require('mongoose'),
     db = require('./db-utils.js'),
     val = require('./validity.js'),
     config = require('../../config/config.js'),
-//    acc = require('../../config/ad_credentials.js'),
+    acc = require('../../config/ad_credentials.js'),
     cd = require('../../config/message_codes.js');
 
 var opts = {
-  filter: '(objectclass=user)',
-  scope: 'sub'
+	scope: 'base',
+	//filter: '(CN=gu95ray)'
+	filter: '(&(&(&(OU=Users)(OU=TU))(OU=IAM))(CN=gu95ray))'
+	// (&(&(&(&(OU=Users)(OU=TU))(OU=IAM))
+	//attributes: 'cn',
+	//sizeLimit: 1
 };
 
 /**
- * Callback fired when ...
+ * Callback fired if the Active Directory does not behave properly
  */
-
-//client.search('ou=users,o=acme.com', opts, function(err, res) {
-//  assert.ifError(err);
-//
-//  res.on('searchEntry', function(entry) {
-//    console.log('entry: ' + JSON.stringify(entry.object));
-//  });
-//  res.on('searchReference', function(referral) {
-//    console.log('referral: ' + referral.uris.join());
-//  });
-//  res.on('error', function(err) {
-//    console.error('error: ' + err.message);
-//  });
-//  res.on('end', function(result) {
-//    console.log('status: ' + result.status);
-//  });
-//});
+function handleADerror(res, err, info) {
+	console.log('\n!!! Error connecting to AD. ' + info + ' --- ' + err + ' !!! \n');
+	out.reply(res, 500, cd.TUM_ERR,
+	'Active Directory is not behaving properly.');
+}
 
 /**
  * Callback fired when the DB has found an user for this pseudo_id
@@ -46,28 +38,51 @@ function returnStoredKey(req, res, pid, user) {
 		if (key === undefined) {
 			out.reply(res, 404, cd.NO_KEY, 'No key for this pseudo_id!');
 		} else {
-			//TODO: check student status in AD!!!
-			//console.log('----> Trying to connect to TUM AD...');
-			//
-			//var client = ldap.createClient({
-			//	url: config.ldap_url
-			//});
-			//client.bind(acc.user, acc.pw, function(err) {
-			//	if(err) {
-			//		console.log('Error connecting to AD: ' + err);
-			//		out.reply(res, 500, cd.TUM_ERR,
-			//		'Active Directory is not behaving properly.');
-			//	}
-			//	console.log('AD bind OK.');
-			//	//TODO: do something
-			//	client.search('CN=test,OU=Development,DC=Home', opts, 
-			//		function (err, search) {
-			//		search.on('searchEntry', function (entry) {
-			//			var user = entry.object;
-			//			console.log(user.objectGUID);
-			//		});
-			//	});
-			//});
+			var tum_id = 'gu95ray'; //TODO: change
+			console.log('----> Trying to connect to TUM AD...');
+			
+			var client = ldap.createClient({
+				url: config.ldap_url
+			});
+			try {
+			  client.bind(acc.user, acc.pw, function(err) {
+				if(err) {
+					handleADerror(res, err, 'in .bind()');
+				}
+
+				console.log('----> AD bind OK.');
+
+				//TODO: do something
+				// search string: OU=Users,OU=TU,OU=IAM,DC=ads,DC=mwn,DC=de;
+  				// filter: '(&(&(&(&(&(OU=Users)(OU=TU))(OU=IAM))(DC=ads))(DC=mwn))(DC=de))',
+				var searchString = config.ldap_search_string + ',CN=' + tum_id;
+				client.search('DC=ads,DC=mwn,DC=de', opts, 
+					function (err, res) {
+	
+					console.log('----> AD search returned. ' + res);
+
+					if(err) {
+						handleADerror(res, err, 'in .search()');
+					}
+
+					res.on('searchEntry', function(entry) {
+					  console.log('\n\nentry: ' + JSON.stringify(entry.object));
+						//var user = entry.object;
+					});
+					res.on('searchReference', function(referral) {
+					  console.log('\n\nreferral: ' + referral.uris.join());
+					});
+					res.on('error', function(err) {
+					  console.error('\n\nerror: ' + err.message);
+					});
+					res.on('end', function(result) {
+					  console.log('\n\nstatus: ' + result.status);
+					});
+				});
+			  });
+			} catch(err) {
+				handleADerror(res, err, 'catching');
+			}
 
 			if (user.status && user.status === 'student') {
 				out.reply(res, 200, cd.OK, 'Valid user. Sending public key.',
