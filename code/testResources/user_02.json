@@ -2,6 +2,7 @@
 	"tum_id": "gb99bbb",
 	"token": "501652672440A20D6BD49B63E60DADC0",
 	"pseudo_id": "aabb4dab23950a6b81c0621b9dc9aabb",
+	"salt": "someSalt",
 	"status": "alumnus",
 	"revoked": "false",
 	"key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnXhPLTuPDtCs5ShMBsvZ5MAUEPERe5/mcf1Ok3d7gwV6apYml4tRllY5eqiSluu9vYGNWHg/jtC3/sLof9dzAMFj96Lc0KOLEEuu1omT0WqeiTOuA6rGNOBdppXxoqXoChq5xt3q9tE5hIcO+d2vum2xLk+cHqFhcjRvKv60MXxiH6n08tNmPhmv0CsmdmK0zSTEquAz+r5nyUEQ2vRgumTVIzYY2z8Vh1X1jdeRh2sXKhH/0iRuSE4rlDnytCC74PL0hEop7E5ulhZkBu03xaiEW//4TfBh42YNSQLg3xcLZLt2A51hFYwT/mXveOatGn7GtZtYe1ADE7tpY1PCUQIDAQAA"

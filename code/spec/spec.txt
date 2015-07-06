@@ -5,6 +5,7 @@ Python:
 Backend:
 - Definition pseudo_id: Random hex number; 16 bytes long.
 - Definition of message status codes: in /backendServer/config/message_codes.js
+- Definition salt: Random 8 bytes in base64 encoding
 
 Smartphone:
 -Schlüsselgenerierung RSA - 2048
@@ -31,6 +32,7 @@ Ablauf:
 		  message: 'Token generation successful. Please send public key.',
 		  tum_id: 'ga00aaa',
 		  pseudo_id: '44554dab23950a6b81c0621b9dc98899',
+		  salt: 'somethingInBase64',
 		  token: '491652672440A20D6BD49B63E60DADB9' }
   Error possibility: 	No key 'tum_id' in request
   Answer:	{ status: 400,
@@ -110,7 +112,8 @@ Ablauf:
   Answer:	{ status: 200,
 		  code: 0, //OK
 		  pseudo_id: 44554dab23950a6b81c0621b9dc98899,
-		  message: 'Here is your new pseudo_id.' }
+		  salt: 'newSalt'
+		  message: 'Here is your new pseudo_id and salt.' }
   Error possibilities: See other requests. Possible: ARG_MISS, ARG_FORM, NO_USR, WRONG_TOK
 
 - Step 99: 	If the user wants to delete his account.
@@ -147,12 +150,14 @@ Ablauf:
 >>> Interface Reader-Backend:
 
 - Smartphone sent its pseudo ID. Now ask backend for the corresponding public key.
+  In addition to the public key the server sends the user's token (+salt) hashed with SHA256
   Request:	GET /check?pseudo_id=sdifuz563
   Answer:	Message with JSON body
 		{ status: 200,
 		  code: 0, //OK
 		  message: 'Valid user. Sending public key.',
 		  pseudo_id: '44554dab23950a6b81c0621b9dc98899',
+		  token_hash: 'tokenHashedWithSHA256',
 		  student_status: 'student',
 		  key: 
 		   '00c758d041eb5214eb80acefdda586b8cf33e9a6b63ddea1c5cdc5ed3df2

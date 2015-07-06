@@ -22,6 +22,10 @@ var UserSchema = new Schema({
 		type: String,
 		trim: true,
 	},
+	salt: {
+		type: String,
+		trim: true,
+	},
 	key: {
 		type: String,
 		trim: true,

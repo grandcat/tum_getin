@@ -30,18 +30,28 @@ function onTumTokenResponse(res, tum_id, tumAnswerJson) {
 
 		// generating pseudo ID
 		var pid = utils.random();
-		// saving the user
-		var user = new User({
-			tum_id: tum_id,
-			pseudo_id: pid,
-			token: token,
-			status: status
-		});
-		user.save(db.handleDBsave);
-		// responding...
-		out.reply(res, 200, cd.OK, 
-			'Token generation successful. Please send public key.',
-			{ tum_id: tum_id, pseudo_id: pid, token: token });
+
+		// generating salt that can be used for hashing the token
+		// necessary in some later steps by backend and smartphone
+		var salt = utils.salt();
+
+		if (pid === null || salt === null) {
+			out.send500error(res);
+		} else {
+			// saving the user
+			var user = new User({
+				tum_id: tum_id,
+				pseudo_id: pid,
+				salt: salt,
+				token: token,
+				status: status
+			});
+			user.save(db.handleDBsave);
+			// responding...
+			out.reply(res, 200, cd.OK, 
+				'Token generation successful. Please send public key.',
+				{ tum_id: tum_id, pseudo_id: pid, salt: salt, token: token });
+		}
 	}
 }
 

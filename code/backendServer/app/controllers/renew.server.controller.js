@@ -19,11 +19,20 @@ function onGetUserForRenew(req, res, tum_id, user) {
 		if (token === user.token) {
 			// generating new pseudo ID
 			var pid = utils.random();
-			// saving the user
-			user.save(db.handleDBsave);
-			// responding...
-			out.reply(res, 200, cd.OK, 'Here is your new pseudo_id.',
-				{ tum_id: tum_id, pseudo_id: pid });
+			// generating new salt
+			var salt = utils.salt();
+
+			if (pid === null || salt === null) {
+				out.send500error(res);
+			} else {
+				// saving the user
+				user.pseudo_id = pid;
+				user.salt = salt;
+				user.save(db.handleDBsave);
+				// responding...
+				out.reply(res, 200, cd.OK, 'Here is your new pseudo_id and salt.',
+					{ tum_id: tum_id, pseudo_id: pid, salt: salt });
+			}
 		} else { // consistency problem!!! 
 			out.reply(res, 400, cd.ARG_FORM, 
 				'Request argument does not have the correct form.');

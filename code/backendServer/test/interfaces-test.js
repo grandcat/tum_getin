@@ -27,8 +27,11 @@ vows.describe('Backend - NFC Reader Interface /check').addBatch({
 			assert.equal (topic.pseudo_id, testUser1.pseudo_id);
 			assert.equal (topic.student_status, testUser1.status);
 			assert.equal (topic.key, testUser1.key);
-        	}
-
+        	},
+		'Check that the token hash exists': function(topic) {
+			assert.isNotNull(topic.token_hash);
+			assert.isFalse(topic.token_hash === undefined);
+		}
 	}
 }).export(module);
 
@@ -49,8 +52,11 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
 			// save token in temp object
 			// later we can check if the server has saved it, too
 			realUserNewToken = topic.token;
-        	}
-
+        	},
+		'Check response salt': function (topic) {
+			assert.isNotNull (topic.salt);
+			assert.isFalse (topic.salt === undefined);
+		}
 	}
 }).addBatch({
 	'/register get token, known user, see if we get an error': {
@@ -160,6 +166,10 @@ vows.describe('Backend - Smartphone Interface /register for real user!').addBatc
 			assert.isNotNull (topic.pseudo_id); 
 			assert.isFalse (topic.pseudo_id === undefined); 
         	},
+		'Check response has salt': function (topic) {
+			assert.isNotNull (topic.salt); 
+			assert.isFalse (topic.salt === undefined); 
+        	},
 		'Check response has token': function (topic) {
 			assert.isNotNull (topic.token);
 			assert.isFalse (topic.token === undefined);
@@ -236,8 +246,9 @@ vows.describe('Backend - Smartphone Interface /renew').addBatch({
             		assert.equal (topic.status, 200);
             		assert.equal (topic.code, 0);
         	},
-		'Check if pseudo_id is really new': function (topic) {
+		'Check if pid and salt is really new': function (topic) {
             		assert.notEqual (topic.pseudo_id, testUser1.pseudo_id);
+            		assert.notEqual (topic.salt, testUser1.salt);
         	}
 	}
 }).addBatch({

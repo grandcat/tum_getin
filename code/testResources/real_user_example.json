@@ -2,6 +2,7 @@
 	"tum_id": "xx00xxx",
 	"token": "",
 	"pseudo_id": "",
+	"salt": "",
 	"status": "",
 	"revoked": "",
 	"key": "bla"

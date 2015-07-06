@@ -2,6 +2,7 @@
 var mongoose = require('mongoose'),
     User = mongoose.model('User'),
     ldap = require('ldapjs'),
+    crypto = require('crypto'),
     out = require('./reply.js'),
     db = require('./db-utils.js'),
     val = require('./validity.js'),
@@ -83,10 +84,18 @@ function returnStoredKey(req, res, pid, user) {
 			} catch(err) {
 				handleADerror(res, err, 'catching');
 			}
-
+			
 			if (user.status && user.status === 'student') {
+				// hashing user token so that the NFC terminal does not get it in clear text
+
+				var shasum = crypto.createHash('sha256');
+				shasum.update(user.token + user.salt);	// hashing token + salt
+				var hash = shasum.digest('base64');	// in base64 encoding
+
+				// sending the reply
 				out.reply(res, 200, cd.OK, 'Valid user. Sending public key.',
 					{ pseudo_id: pid,
+					  token_hash: hash, 
 					  student_status: user.status,
 					  key: user.key	});
 			} else { // not a student!
