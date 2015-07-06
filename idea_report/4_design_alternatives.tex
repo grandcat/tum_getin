@@ -98,7 +98,7 @@ Explanation:
 	\item $ S \rightarrow R $:
 	\begin{itemize}
 		\item If $ S $ receives a valid answer in step 2, it should be fine to proceed.
-		\item $ S $ sends $ r_T $, a salted SHA-256 hash of $ studentToken $ and data to $ T $, encrypted with $ K_{T-pub} $. The key was verified in step 2.
+		\item $ S $ sends $ r_T $, a salted SHA-256 hash of $ studentToken $ and data to $ T $, encrypted with $ K_{T-pub} $.
 		\item Salted SHA-256 student token $ H(salt|studentToken) $: as the random salt is unique per user and only known to the back-end and the Android client, the terminal does not touch critical data.
 		Still, by comparing the hash values received by the back-end on retrieval of the user's public key, and the one sent by the smartphone in this step, the identity of the user is proven indirectly.
 	\end{itemize}
