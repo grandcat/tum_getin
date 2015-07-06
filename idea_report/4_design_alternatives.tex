@@ -68,9 +68,9 @@ The scheme is enhanced to provide further security features specific for the uti
 	% \newinst[4]{rnc}{RNC}
 	\mess{S}{1. $ {\{r_S, pseudoStudentID\}}_{K_{T-pub}} $}{T}
 	\postlevel
-	\mess{T}{2. $ {\{r_S, r_T, T\}}_{K_{S-pub}} $}{S}
+	\mess{T}{2. $ {\{r_S, r_T\}}_{K_{S-pub}} $}{S}
 	\postlevel
-	\mess{S}{3. $ {\{r_T, studentToken, commands\}}_{K_{T-pub}} $}{T}
+	\mess{S}{3. $ {\{r_T, H(salt|studentToken), commands\}}_{K_{T-pub}} $}{T}
 	%\mess{nodeb}{Synchronization Indication}{rnc}
 	%\filldraw[fill=black!30] ($(RRC Connection Setup to)+(0,-.3)$) rectangle ($(Synchronization Indication from) +(0,.3)$)
 	%node[midway] {L1 Synchronization};
@@ -92,14 +92,15 @@ Explanation:
 	\begin{itemize}
 		\item The reader $ T $ looks up the public key $ K_{S-pub} $ based on the pseudo student ID. If it doesn't exist, further communication stops here.
 		\item On success, $ T $ generates a random number $ r_T $ and sends it back to $ S $ together with $ r_S $ and a hash of its own public key, encrypted with the user's public key $ K_{S-pub} $.
-		\item Providing the identity $ T $, the requesting party can verify whether the reader's public key changed. This could originate from an attack in step 1 (e.g., fake reader). In that case, abort further communication to assure confidentiality.
+%		\item Providing the identity $ T $, the requesting party can verify whether the reader's public key changed. This could originate from an attack in step 1 (e.g., fake reader). In that case, abort further communication to assure confidentiality.
 	\end{itemize}	
 	% 3.
 	\item $ S \rightarrow R $:
 	\begin{itemize}
 		\item If $ S $ receives a valid answer in step 2, it should be fine to proceed.
-		\item $ S $ sends $ r_T $, the optional $ studentToken $ and data to $ T $, encrypted with $ K_{T-pub} $. The key was verified in step 2.
-		\item Optional $ studentToken $: additional secret value the attacker doesn't know beside $ r_T $.
+		\item $ S $ sends $ r_T $, a salted SHA-256 hash of $ studentToken $ and data to $ T $, encrypted with $ K_{T-pub} $. The key was verified in step 2.
+		\item Salted SHA-256 student token $ H(salt|studentToken) $: as the random salt is unique per user and only known to the back-end and the Android client, the terminal does not touch critical data.
+		Still, by comparing the hash values received by the back-end on retrieval of the user's public key, and the one sent by the smartphone in this step, the identity of the user is proven indirectly.
 	\end{itemize}
 \end{enumerate}
 
