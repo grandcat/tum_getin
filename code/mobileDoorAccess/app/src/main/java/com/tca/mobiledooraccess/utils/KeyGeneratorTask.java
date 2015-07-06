@@ -68,7 +68,7 @@ public final class KeyGeneratorTask extends AsyncTask<Void, Void, Integer> {
         settings.commit();
 
         // Send public key to backend
-        if (dialog != null) dialog.setMessage(c.getString(R.string.uploadKey));
+        // if (dialog != null) dialog.setMessage(c.getString(R.string.uploadKey));
         Backend backend = new Backend("www.grandcat.org", "3000");
         int res = backend.sendPublicKey(tumId, token, publicKeyB64);
         Log.d(TAG, "Result for key transmission to backend: " + res);
