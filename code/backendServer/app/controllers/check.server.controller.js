@@ -11,12 +11,10 @@ var mongoose = require('mongoose'),
     cd = require('../../config/message_codes.js');
 
 var opts = {
-	scope: 'base',
-	//filter: '(CN=gu95ray)'
-	filter: '(&(&(&(OU=Users)(OU=TU))(OU=IAM))(CN=gu95ray))'
-	// (&(&(&(&(OU=Users)(OU=TU))(OU=IAM))
-	//attributes: 'cn',
-	//sizeLimit: 1
+	scope: 'sub',
+	filter: '',//'(CN=ga00aaa)',
+	attributes: 'department',
+	sizeLimit: 1
 };
 
 /**
@@ -29,17 +27,39 @@ function handleADerror(res, err, info) {
 }
 
 /**
+ * Callback fired when the AD search has returned something
+ */
+function handleADresult(res, user, dep) {
+	if (dep !== '' && dep === 'Studium') {
+		// hashing user token so that the NFC terminal does not get it in clear text
+
+		var shasum = crypto.createHash('sha256');
+		shasum.update(user.salt + user.token);	// hashing token + salt
+		var hash = shasum.digest('base64');	// in base64 encoding
+
+		// sending the reply
+		out.reply(res, 200, cd.OK, 'Valid user. Sending public key.',
+			{ pseudo_id: user.pseudo_id,
+			  token_hash: hash,
+			  student_status: 'student',
+			  key: user.key	});
+	} else { // not a student!
+		out.reply(res, 403, cd.FORBIDDEN, 
+			'This person is no longer a student!');
+	}
+}
+
+/**
  * Callback fired when the DB has found an user for this pseudo_id
  */
-function returnStoredKey(req, res, pid, user) {
+function returnStoredKey(httpsReq, httpsRes, pid, user) {
 	if (user === null || user === undefined) { // no user found: bad! 
-		out.reply(res, 404, cd.NO_USR, 'This pseudo_id does not exist!');
+		out.reply(httpsRes, 404, cd.NO_USR, 'This pseudo_id does not exist!');
 	} else {
 		var key = user.key;
 		if (key === undefined) {
-			out.reply(res, 404, cd.NO_KEY, 'No key for this pseudo_id!');
+			out.reply(httpsRes, 404, cd.NO_KEY, 'No key for this pseudo_id!');
 		} else {
-			var tum_id = 'gu95ray'; //TODO: change
 			console.log('----> Trying to connect to TUM AD...');
 			
 			var client = ldap.createClient({
@@ -48,59 +68,42 @@ function returnStoredKey(req, res, pid, user) {
 			try {
 			  client.bind(acc.user, acc.pw, function(err) {
 				if(err) {
-					handleADerror(res, err, 'in .bind()');
+					handleADerror(httpsRes, err, 'in .bind()');
 				}
-
 				console.log('----> AD bind OK.');
+				
+				// setting search for tum_id
+				opts.filter = '(CN=' + user.tum_id + ')';
 
-				//TODO: do something
 				// search string: OU=Users,OU=TU,OU=IAM,DC=ads,DC=mwn,DC=de;
-  				// filter: '(&(&(&(&(&(OU=Users)(OU=TU))(OU=IAM))(DC=ads))(DC=mwn))(DC=de))',
-				var searchString = config.ldap_search_string + ',CN=' + tum_id;
-				client.search('DC=ads,DC=mwn,DC=de', opts, 
+				client.search(config.ldap_search_string, opts, 
 					function (err, res) {
-	
+
 					console.log('----> AD search returned. ' + res);
-
 					if(err) {
-						handleADerror(res, err, 'in .search()');
+						handleADerror(httpsRes, err, 'in .search()');
 					}
-
+					var dep = ''; // department attribute stores student status
 					res.on('searchEntry', function(entry) {
-					  console.log('\n\nentry: ' + JSON.stringify(entry.object));
-						//var user = entry.object;
+						console.log('\nAD entry: ' + JSON.stringify(entry.object));
+						dep = entry.object.department;
+						console.log('\t-> ' + dep);
 					});
-					res.on('searchReference', function(referral) {
-					  console.log('\n\nreferral: ' + referral.uris.join());
-					});
+					//res.on('searchReference', function(referral) {
+					//  console.log('\n\nreferral: ' + referral.uris.join());
+					//});
 					res.on('error', function(err) {
-					  console.error('\n\nerror: ' + err.message);
+						console.error('\n\nerror: ' + err.message);
+						handleADerror(httpsRes, err, 'search res.on(error)');
 					});
 					res.on('end', function(result) {
-					  console.log('\n\nstatus: ' + result.status);
+						console.log('----> AD return status: ' + result.status + '\n');
+						handleADresult(httpsRes, user, dep);
 					});
 				});
 			  });
 			} catch(err) {
-				handleADerror(res, err, 'catching');
-			}
-			
-			if (user.status && user.status === 'student') {
-				// hashing user token so that the NFC terminal does not get it in clear text
-
-				var shasum = crypto.createHash('sha256');
-				shasum.update(user.salt + user.token);	// hashing token + salt
-				var hash = shasum.digest('base64');	// in base64 encoding
-
-				// sending the reply
-				out.reply(res, 200, cd.OK, 'Valid user. Sending public key.',
-					{ pseudo_id: pid,
-					  token_hash: hash, 
-					  student_status: user.status,
-					  key: user.key	});
-			} else { // not a student!
-				out.reply(res, 403, cd.FORBIDDEN, 
-					'This person is no longer a student!');
+				handleADerror(httpsRes, err, 'catching');
 			}
 		}
 	}

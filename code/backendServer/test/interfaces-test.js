@@ -9,31 +9,9 @@ var testUser1 = require('../../testResources/user_01.json');
 var testUser3 = require('../../testResources/user_03.json');
 var realUser = require('../../testResources/real_user.json');
 var realUserNewToken = '';
+var realUserPseudoId = '';
 var config = require('./test_config');
 //require('./test_helpers');
-
-//////////////////////////////////////////////////////////////////////////////////////
-vows.describe('Backend - NFC Reader Interface /check').addBatch({
-	'/check get user public key correct': {
-		topic: function() {
-			callback = this.callback;
-			sendGet('/check?pseudo_id=' + testUser1.pseudo_id);
-		},
-		'Check response status': function (topic) {
-            		assert.equal (topic.status, 200);
-            		assert.equal (topic.code, 0);
-        	},
-		'Check response user data': function (topic) {
-			assert.equal (topic.pseudo_id, testUser1.pseudo_id);
-			assert.equal (topic.student_status, testUser1.status);
-			assert.equal (topic.key, testUser1.key);
-        	},
-		'Check that the token hash exists': function(topic) {
-			assert.isNotNull(topic.token_hash);
-			assert.isFalse(topic.token_hash === undefined);
-		}
-	}
-}).export(module);
 
 //////////////////////////////////////////////////////////////////////////////////////
 vows.describe('Backend - Smartphone Interface /register').addBatch({
@@ -52,6 +30,12 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
 			// save token in temp object
 			// later we can check if the server has saved it, too
 			realUserNewToken = topic.token;
+        	},
+		'Check response pseudo_id': function (topic) {
+			assert.isNotNull (topic.pseudo_id);
+			assert.isFalse (topic.pseudo_id === undefined);
+			// save pid in temp object
+			realUserPseudoId = topic.pseudo_id;
         	},
 		'Check response salt': function (topic) {
 			assert.isNotNull (topic.salt);
@@ -145,6 +129,45 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
             		assert.equal (topic.status, 404);
             		assert.equal (topic.code, cd.NO_USR);
         	}
+	}
+}).export(module);
+
+//////////////////////////////////////////////////////////////////////////////////////
+vows.describe('Backend - NFC Reader Interface /check').addBatch({
+	'/register post key correct - needed so that the real user has a key': {
+		topic: function() {
+			callback = this.callback;
+			var user = {
+			  tum_id: realUser.tum_id,
+			  token: realUserNewToken,
+			  key: realUser.key
+			};
+			sendPost('/register', user);
+		},
+		'Check response status': function (topic) {
+            		assert.equal (topic.status, 200);
+            		assert.equal (topic.code, 0);
+        	}
+	}
+}).addBatch({
+	'/check get user public key correct': {
+		topic: function() {
+			callback = this.callback;
+			sendGet('/check?pseudo_id=' + realUserPseudoId);
+		},
+		'Check response status': function (topic) {
+            		assert.equal (topic.status, 200);
+            		assert.equal (topic.code, 0);
+        	},
+		'Check response user data': function (topic) {
+			assert.equal (topic.pseudo_id, realUserPseudoId);
+			assert.equal (topic.student_status, 'student');
+			assert.equal (topic.key, realUser.key);
+        	},
+		'Check that the token hash exists': function(topic) {
+			assert.isNotNull(topic.token_hash);
+			assert.isFalse(topic.token_hash === undefined);
+		}
 	}
 }).export(module);
 
