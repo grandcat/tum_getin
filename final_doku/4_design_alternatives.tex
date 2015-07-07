@@ -1,0 +1,139 @@
+\section{Design Alternatives}\label{sec:alt}
+In the previous section, the overall architecture is presented without going into detail about the used hardware, the back-end or how secure channels are implemented.
+This section demonstrates competing drafts for the concrete design of central parts of our project. 
+% By showing its advantages and drawbacks, it points out why different approaches are reasonable.
+Due to dependent advantages and drawbacks, different approaches are reasonable for the same goal. These are discussed as follows.
+
+
+\subsection{Hardware Setup}
+A major part is a reliable communication link between an Android smartphone and a NFC reader.
+To reach this goal, the NFC reader must support common NFC standards (e.g., ISO/IEC 14443) and provide stable transmission properties.
+Therefore, we examine two different hardware setups to finally get a proper solution:
+%
+\begin{itemize}
+	\item Raspberry Pi with Explore-NFC PN521 reader cape by NXP \footnote{\url{http://www.nxp.com/demoboard/PNEV512R.html}} or PN532 compliant cape.
+	\item Smartphone with NFC capabilities and Android 4.4 or newer.
+\end{itemize}
+%
+Using the Raspberry Pi as underlying platform and a NFC transceiver, a cheap and powerful setup is possible.
+Providing a rich interface to interact with the environment, it allows an easy integration into existing door electronics.
+For communication, either the vendors of these NFC capes provide SDKs or free libraries exist to abstract low-level functionality. 
+However, the protocol layer is often incomplete and needs tweaks. This might influence the stability in the communication link.
+
+On the other side, a smartphone with NFC transceiver and Android 4.4 (or higher versions) offers all required APIs in a simple way to exchange data between two Android smartphones over NFC.
+Additionally, integrated capabilities like Wifi or Bluetooth allow enhanced applications. The downsides of this approach are much higher costs, missing interfaces to interact directly with most door electronics and required user interaction for certain tasks (e.g.~OS upgrade).
+
+
+\subsection{Back-end}\label{sec:alt:backend}
+As introduced in section \ref{sec:arch}, a central part of the overall project is a reliable back-end.
+Its task is either to store and distribute public keys for the public-key cryptography implementation (see section \ref{sec:alt:proto:pubkey}) or to manage secret hashes as dynamic keys for the hash lock implementation (see section \ref{sec:alt:proto:hashlock}).
+It is also responsible for authentication of a new user using TUM Web Services to prevent identity theft.
+
+We intend to use Node.js as technology for the back-end. Referring to projects it is already being used for, it provides a reliable and fast service.
+The exposed web service API allows a fast integration with Android and provides a secure communication channel using standards like TLS.
+For persistent storage, the key-value database MongoDB is the preferred choice.
+
+
+\subsection{Protocols for Authentication between Smartphone and NFC Reader}\label{sec:alt:proto}
+A critical aspect in our project is the communication between a smartphone $ S $ and the NFC component $ T $.
+It is important that it is safe so that no unauthorized party can easily gain access or eavesdrop sensitive information like the student ID.
+By placing the reader's antenna in the inner side of the door, it should be safe from physical threats from outside.
+To ensure a secure communication on top of the data carrier, we plan to use one of the protocols introduced in this section.
+Which one to finally choose depends on multiple aspects like the capabilities of the NFC hardware (e.g.~processing power), Android support or fault tolerance. This needs some testing done during the project. 
+
+\subsubsection{Public-Key Cryptography}\label{sec:alt:proto:pubkey}
+The first proposed protocol uses a Public Key Infrastructure to establish secure communication links between the participants.
+For authentication on both sides and mitigation of several attack scenarios, it uses some ideas of the Needham-Schroeder-Lowe Public Key protocol. Lowe contributes an important security fix we use.
+The scheme is enhanced to provide further security features specific for the utilised backend and the scenario.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Redefine the \mess due to problems with math support $ \some_function $ %
+% See: http://tex.stackexchange.com/questions/164707/how-to-use-greek-    %
+%      letters-in-pgf-umlsd-or-generally-terms-starting-with              %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\renewcommand{\mess}[4][0]{
+  \stepcounter{seqlevel}
+  \path
+  (#2)+(0,-\theseqlevel*\unitfactor-0.7*\unitfactor) node (mess from) {};
+  \addtocounter{seqlevel}{#1}
+  \path
+  (#4)+(0,-\theseqlevel*\unitfactor-0.7*\unitfactor) node (mess to) {};
+  \draw[->,>=angle 60] (mess from) -- (mess to) node[midway, above]
+  {#3};
+}
+%
+\begin{sequencediagram}
+	\newinst{S}{Smartphone $ S $}
+	\newinst[9]{T}{NFC Reader $ T $}
+	% \newinst[4]{rnc}{RNC}
+	\mess{S}{1. $ {\{r_S, pseudoStudentID\}}_{K_{T-pub}} $}{T}
+	\postlevel
+	\mess{T}{2. $ {\{r_S, r_T\}}_{K_{S-pub}} $}{S}
+	\postlevel
+	\mess{S}{3. $ {\{r_T, H(salt|studentToken), commands\}}_{K_{T-pub}} $}{T}
+	%\mess{nodeb}{Synchronization Indication}{rnc}
+	%\filldraw[fill=black!30] ($(RRC Connection Setup to)+(0,-.3)$) rectangle ($(Synchronization Indication from) +(0,.3)$)
+	%node[midway] {L1 Synchronization};
+\end{sequencediagram}
+%
+Explanation:
+%
+\begin{enumerate}
+	% 1.
+	\item $ S \rightarrow R $:
+	\begin{itemize}
+		\item $ S $ generates a random number $ r_S $ and sends it to $ T $ together with the $ pseudoStudentID $, encrypted with the reader's public key $ K_{T-pub} $.
+		\item The official student ID is replaced by the pseudonym $ pseudoStudentID $, which is associated with the official ID of the student in the backend.
+		Like this, a MITM attack would not allow to directly gain information about the requesting person's ID.
+		Furthermore, this pseudonym association can be changed regularly.
+	\end{itemize}	
+	% 2.
+	\item $ S \leftarrow R $:
+	\begin{itemize}
+		\item The reader $ T $ looks up the public key $ K_{S-pub} $ based on the pseudo student ID. If it doesn't exist, further communication stops here.
+		\item On success, $ T $ generates a random number $ r_T $ and sends it back to $ S $ together with $ r_S $ and a hash of its own public key, encrypted with the user's public key $ K_{S-pub} $.
+%		\item Providing the identity $ T $, the requesting party can verify whether the reader's public key changed. This could originate from an attack in step 1 (e.g., fake reader). In that case, abort further communication to assure confidentiality.
+	\end{itemize}	
+	% 3.
+	\item $ S \rightarrow R $:
+	\begin{itemize}
+		\item If $ S $ receives a valid answer in step 2, it should be fine to proceed.
+		\item $ S $ sends $ r_T $, a salted SHA-256 hash of $ studentToken $ and data to $ T $, encrypted with $ K_{T-pub} $.
+		\item Salted SHA-256 student token $ H(salt|studentToken) $: as the random salt is unique per user and only known to the back-end and the Android client, the terminal does not touch critical data.
+		Still, by comparing the hash values received by the back-end on retrieval of the user's public key, and the one sent by the smartphone in this step, the identity of the user is proven indirectly.
+	\end{itemize}
+\end{enumerate}
+
+%Points to mention:
+%Key revocation
+
+\subsubsection{SRFID: Extended Randomized Hash Lock}\label{sec:alt:proto:hashlock}
+A second interesting protocol is the hashed-based security scheme by Walid I. Khedr\footnote{\url{http://www.sciencedirect.com/science/article/pii/S1110866513000054}}.
+This might be an alternative to the public key based system, because it is more lightweight.
+For cryptography on both sides, it only needs a strong one-way hash function $ H $.
+%In case that this protocol is used instead of the more demanding public key cryptography, 
+%
+\begin{sequencediagram}
+	\newinst{S}{Smartphone $ S $}
+	\newinst[9]{T}{NFC Reader $ T $}
+	% \newinst[4]{rnc}{RNC}
+	\mess{T}{1. $ r_T $}{S}
+	\postlevel
+	\mess{S}{2. $ ID_T = H(ID_H || SQN), M_1 = H(ID_H || r_T || r_S), r_S $}{T}
+	\postlevel
+	\mess{T}{3. $ ID_T, M_2 = H(ID_H || SQN || r_T || r_S), r_T, r_S $}{S}
+	%\mess{nodeb}{Synchronization Indication}{rnc}
+	%\filldraw[fill=black!30] ($(RRC Connection Setup to)+(0,-.3)$) rectangle ($(Synchronization Indication from) +(0,.3)$)
+	%node[midway] {L1 Synchronization};
+\end{sequencediagram}
+%
+Details will not be presented here, because it is discussed in detail in the referred paper above.
+Nevertheless, some aspects have to be highlighted in the scope of this project:
+\begin{itemize}
+	\item In contrast to the original protocol, the smartphone $ S $ also generates a random number $ r_S $ beside $ r_T $ from the reader.
+	Consequently, it is more likely to identify a replay attack by a fake reader. This could optionally be reported by the app.
+	\item The sequence counter $ SQN $ is incremented both on the back-end and the smartphone for each handshake.
+	Like this, the identifier of the smartphone $ ID_T $, derived from the shared secrets $ID_H$ and $SQN$, is not the same on every connection to mitigate tracing.
+	Still the reader / back-end is able to identify the communicating party, because it also knows the shared secrets $ID_H$ and $SQN$.
+	In case of a desynchronization attack, the relation can be re-established by asking the back-end to present the unique $studentToken$ (from TUM Webservice).
+\end{itemize}
