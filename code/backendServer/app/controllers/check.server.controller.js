@@ -89,7 +89,7 @@ function returnStoredKey(req, res, pid, user) {
 				// hashing user token so that the NFC terminal does not get it in clear text
 
 				var shasum = crypto.createHash('sha256');
-				shasum.update(user.token + user.salt);	// hashing token + salt
+				shasum.update(user.salt + user.token);	// hashing token + salt
 				var hash = shasum.digest('base64');	// in base64 encoding
 
 				// sending the reply
