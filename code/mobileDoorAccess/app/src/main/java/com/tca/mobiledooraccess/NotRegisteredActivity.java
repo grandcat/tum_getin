@@ -2,7 +2,6 @@ package com.tca.mobiledooraccess;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -10,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
+
 
 /**
  * Created by basti on 22.06.15.
@@ -47,16 +47,17 @@ public class NotRegisteredActivity extends Activity{
             Thread t = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    String result[] = backend.getTokenPseudoID(tumID);
+                    String result[] = backend.getUserCredentials(tumID);
                     Log.d(TAG, "Result from server: " + result[0] + "and " + result[1]);
                     SharedPreferences.Editor editor = appSettings.edit();
                     editor.putString("tum_id", tumID);
                     editor.putString("tumOnlineToken", result[0]);
                     editor.putString("pseudo_ID", result[1]);
+                    editor.putString("salt", result[2]);
                     editor.putBoolean("token_received", true);
                     editor.commit();
                     progress.dismiss();
-                    }
+                }
             });
             t.start();
             try {

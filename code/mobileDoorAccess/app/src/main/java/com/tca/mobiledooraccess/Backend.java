@@ -89,9 +89,9 @@ public class Backend {
     //and will return it as a String-Array
     // Index 0: token
     // Index 1: pseudoID
-    public String[] getTokenPseudoID(String tumID){
+    public String[] getUserCredentials(String tumID){
         Log.d(TAG, "getting Token and Pseudo ID");
-        String [] results = new String[2];
+        String [] results = new String[3];
         try {
             URL url = new URL("https://" + host + ":" + port + "/register?tum_id=" + tumID );
             HttpsURLConnection urlConnection = (HttpsURLConnection)url.openConnection();
@@ -111,6 +111,7 @@ public class Backend {
             if (status == 200){
                 results[0] = jsonObj.getString("token");
                 results[1] = jsonObj.getString("pseudo_id");
+                results[2] = jsonObj.getString("salt");
             }else{
                 Log.e(TAG, "STATUS NOT OKAY:" + status);
             }
@@ -123,7 +124,6 @@ public class Backend {
 
         } catch (Exception e){
             String msg = e.getMessage();
-            String asdf = msg;
         }
         return results;
     }
@@ -144,6 +144,7 @@ public class Backend {
             JSONObject jsonParams = new JSONObject();
             jsonParams.put("tum_id", tumID);
             jsonParams.put("token", token);
+            // TODO: salt required
             jsonParams.put("key", key);
 
             OutputStreamWriter out = new OutputStreamWriter(urlConnection.getOutputStream());
@@ -196,9 +197,6 @@ public class Backend {
             Log.e(TAG, "IOException: " + e.getMessage());
         } catch (JSONException e){
 
-        } catch (Exception e){
-            String msg = e.getMessage();
-            String asdf = msg;
         }
         return result;
     }

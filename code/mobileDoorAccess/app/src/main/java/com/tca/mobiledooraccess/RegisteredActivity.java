@@ -15,9 +15,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.tca.mobiledooraccess.service.StatefulProtocolHandler;
-import com.tca.mobiledooraccess.utils.RSACrypto;
 
-import java.security.KeyPair;
 import java.util.concurrent.ExecutionException;
 
 /**

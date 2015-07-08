@@ -19,6 +19,8 @@ import org.json.JSONObject;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 /**
@@ -213,7 +215,7 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
         SecureRandom secureRandom = new SecureRandom();
         byte[] rawNonce = new byte[32];
         secureRandom.nextBytes(rawNonce);
-        r_S = Base64.encodeToString(rawNonce, Base64.DEFAULT);
+        r_S = Base64.encodeToString(rawNonce, Base64.NO_WRAP);
         // Get pseudo student ID from preferences
         SharedPreferences prefs = appContext.getSharedPreferences(
                 MainActivity.TUM_GETIN_PREFERENCES,
@@ -271,12 +273,35 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
         }
 
         if (matchingNonceRS) {
-            // Everything fine, generate response including our token and the terminal's nonce r_T
+            // Everything fine, generate response including our salted token hash
+            // and the terminal's nonce r_T
+
+            // Generate hash from salted token
+            SharedPreferences prefs = appContext.getSharedPreferences(
+                    MainActivity.TUM_GETIN_PREFERENCES,
+                    appContext.MODE_PRIVATE
+            );
+            String salt = prefs.getString("salt", "");
+            String token = prefs.getString("tumOnlineToken", "");
+            String tokenHash = "";
+            try {
+                // sha256(salt + token) as base64
+                byte[] c = (salt + token).getBytes("UTF-8");
+                MessageDigest hashFunc = MessageDigest.getInstance("SHA-256");
+                hashFunc.reset();
+                byte[] hashedToken = hashFunc.digest(c);
+                tokenHash = Base64.encodeToString(hashedToken, Base64.NO_WRAP);
+                Log.d(TAG, "Salted token hash: " + tokenHash);
+            } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+
+            // Prepare outgoing protocol message
             JSONObject jsonMsg = new JSONObject();
             try {
                 jsonMsg.put("type", PROTO_MSG3_SEND_TOKEN_AND_NONCE);   //< Message type
-                jsonMsg.put("tok", "Todo: tokeninserthere");            //< Pseudo ID
-                jsonMsg.put("rt", r_T);                                 //< Random nonce r_S
+                jsonMsg.put("htoken", tokenHash);                       //< Hashed user token
+                jsonMsg.put("rt", r_T);                                 //< Received nonce r_T
 
                 output = jsonMsg.toString().getBytes(Charset.forName("UTF-8"));
             } catch (JSONException e) {
