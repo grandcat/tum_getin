@@ -24,14 +24,17 @@ import android.widget.Toast;
 
 
 
-public class RegisterStep1 extends Fragment {
-
-
+public class RegisterStep1 extends Fragment implements OnRefreshListener{
+    private static final String TAG = "RegisterStep1";
     public static final String TUM_GETIN_PREFERENCES = "TGI_PREFS";
-    public static final String TAG = "NotRegisteredActivity";
     private Backend backend;
     private SharedPreferences appSettings;
     ProgressDialog mProgressDialog;
+
+
+    public void onRefresh(){
+        Log.d(TAG, "Refresh");
+    }
 
     // Store instance variables based on arguments passed
     @Override
@@ -131,6 +134,7 @@ public class RegisterStep1 extends Fragment {
             super.onPostExecute(aVoid);
             onServerResponse();
         }
+
     }
 
 }

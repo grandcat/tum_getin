@@ -93,6 +93,22 @@ public class MainActivity extends ActionBarActivity {
         viewPager = (ViewPager) findViewById(R.id.viewPager);
         adapterViewPager = new MyPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(adapterViewPager);
+        viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                ((OnRefreshListener) adapterViewPager.getItem(position)).onRefresh();
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
         MainActivity.context = getApplicationContext();
 
     }
@@ -114,12 +130,18 @@ public class MainActivity extends ActionBarActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_delete_account) {
-            return true;
+        switch (id){
+            case R.id.action_delete_account:
+                return true;
+            case R.id.action_update_key_pair:
+                return true;
+            case R.id.action_update_pseudo_id:
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
+
+
 
 //    private void checkAppStatus(){
 //        SharedPreferences settings;
@@ -186,7 +208,7 @@ public class MainActivity extends ActionBarActivity {
             // Log.d(TAG, "Shutting down NFC MessageExchange service.");
         }
     }
-    public static class MyPagerAdapter extends FragmentPagerAdapter {
+    public static class MyPagerAdapter extends FragmentPagerAdapter{
         private static int NUM_ITEMS = 2;
 
         public MyPagerAdapter(FragmentManager fragmentManager) {
@@ -210,7 +232,6 @@ public class MainActivity extends ActionBarActivity {
                     return null;
             }
         }
-
         // Returns the page title for the top indicator
         @Override
         public CharSequence getPageTitle(int position) {
