@@ -64,6 +64,35 @@
 
 \makeatother
 
+%todo anfang
+  \newcommand{\todo}[1]{
+  % Add to todo list
+  \addcontentsline{tdo}{todo}{\protect{#1}}
+  %
+  \begin{tikzpicture}[remember picture, baseline=-0.75ex]
+      \node [coordinate] (inText) {};
+  \end{tikzpicture}
+  %
+  % Make the margin par
+  \marginpar{
+      \begin{tikzpicture}[remember picture]
+          \definecolor{orange}{rgb}{1,0.5,0}
+   
+          \draw node[draw=black, fill=orange, text width = 3cm] (inNote)
+                   {#1};
+      \end{tikzpicture}
+  }
+  %
+  \begin{tikzpicture}[remember picture, overlay]
+      \draw[draw = orange, thick]
+          ([yshift=-0.2cm] inText)
+              -| ([xshift=-0.2cm] inNote.west)
+              -| (inNote.west);
+  \end{tikzpicture}
+  %
+  }
+% todo ende
+
 %________________________________________________________
 
 \begin{document}
@@ -91,7 +120,7 @@
 \begin{center}
 {\LARGE\textbf{\textsc{GetInTUM - Door Access System}}}
 
-\large \textit{Idea Report for Android Practical Course (F13)} \\
+\large \textit{Final Documentation for Android Practical Course (F13)} \\
 \large \today
 \end{center}
 
@@ -110,6 +139,18 @@
 Bj\"{o}rn Kirschner & Sebastian Schleemilch & Stefan Smarzly
 \end{tabular}
 \end{bigcenter}
+
+\bigskip
+\bigskip
+
+\hrule
+\bigskip
+\bigskip
+
+
+\bigskip
+
+\textbf{Abstract:} blabla ... \todo{TODO!!!}
 
 \newpage
 \bigskip
