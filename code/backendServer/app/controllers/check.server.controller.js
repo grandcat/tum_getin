@@ -62,48 +62,52 @@ function returnStoredKey(httpsReq, httpsRes, pid, user) {
 		} else {
 			console.log('----> Trying to connect to TUM AD...');
 			
-			var client = ldap.createClient({
-				url: config.ldap_url
-			});
 			try {
-			  client.bind(acc.user, acc.pw, function(err) {
-				if(err) {
-					handleADerror(httpsRes, err, 'in .bind()');
-				}
-				console.log('----> AD bind OK.');
-				
-				// setting search for tum_id
-				opts.filter = '(CN=' + user.tum_id + ')';
-
-				// search string: OU=Users,OU=TU,OU=IAM,DC=ads,DC=mwn,DC=de;
-				client.search(config.ldap_search_string, opts, 
-					function (err, res) {
-
-					console.log('----> AD search returned. ' + res);
-					if(err) {
-						handleADerror(httpsRes, err, 'in .search()');
-					}
-					var dep = ''; // department attribute stores student status
-					res.on('searchEntry', function(entry) {
-						console.log('\nAD entry: ' + JSON.stringify(entry.object));
-						dep = entry.object.department;
-						console.log('\t-> ' + dep);
-					});
-					//res.on('searchReference', function(referral) {
-					//  console.log('\n\nreferral: ' + referral.uris.join());
-					//});
-					res.on('error', function(err) {
-						console.error('\n\nerror: ' + err.message);
-						handleADerror(httpsRes, err, 'search res.on(error)');
-					});
-					res.on('end', function(result) {
-						console.log('----> AD return status: ' + result.status + '\n');
-						handleADresult(httpsRes, user, dep);
-					});
+				var client = ldap.createClient({
+					url: config.ldap_url
 				});
-			  });
+				try {
+				  client.bind(acc.user, acc.pw, function(err) {
+					if(err) {
+						handleADerror(httpsRes, err, 'in .bind()');
+					}
+					console.log('----> AD bind OK.');
+					
+					// setting search for tum_id
+					opts.filter = '(CN=' + user.tum_id + ')';
+
+					// search string: OU=Users,OU=TU,OU=IAM,DC=ads,DC=mwn,DC=de;
+					client.search(config.ldap_search_string, opts, 
+						function (err, res) {
+
+						console.log('----> AD search returned. ' + res);
+						if(err) {
+							handleADerror(httpsRes, err, 'in .search()');
+						}
+						var dep = ''; // department attribute stores student status
+						res.on('searchEntry', function(entry) {
+							console.log('\nAD entry: ' + JSON.stringify(entry.object));
+							dep = entry.object.department;
+							console.log('\t-> ' + dep);
+						});
+						//res.on('searchReference', function(referral) {
+						//  console.log('\n\nreferral: ' + referral.uris.join());
+						//});
+						res.on('error', function(err) {
+							console.error('\n\nerror: ' + err.message);
+							handleADerror(httpsRes, err, 'search res.on(error)');
+						});
+						res.on('end', function(result) {
+							console.log('----> AD return status: ' + result.status + '\n');
+							handleADresult(httpsRes, user, dep);
+						});
+					});
+				  });
+				} catch(err) {
+					handleADerror(httpsRes, err, 'catching LDAP bind or search problem');
+				}
 			} catch(err) {
-				handleADerror(httpsRes, err, 'catching');
+				handleADerror(httpsRes, err, 'catching LDAP client creation problem');
 			}
 		}
 	}
