@@ -10,4 +10,35 @@ This paper serves as an idea report proposing a solution to control access to un
 %Apart from this application we plan a prototypical implementation of a NFC reader using 
 
 
-The following chapter motivates the need for such a door access solution and sketches the project idea. Chapter \ref{sec:arch} then details the proposed technical architecture. Due to a several possible approaches, chapter \ref{sec:alt} justifies our design decisions. Finally, chapter \ref{sec:team} introduces all team members and chapter \ref{sec:plan} outlines a project plan.
+The following chapter motivates the need for such a door access solution and sketches the project idea. Chapter \ref{sec:arch} then details the proposed technical architecture. Due to a several possible approaches, chapter \ref{sec:alt} justifies our design decisions. Finally, chapter \ref{sec:team} introduces all team members and chapter \ref{sec:plan} outlines a project plan.\todo{Anpassen}
+
+\subsection{Problem description}
+
+\todo{ganzes Kap kürzen!}
+
+Full-time students at TU München often face the problem that courses or seminars take place on a Saturday or a Sunday.
+Since buildings at the university campus are generally closed at weekends, students have to ring for the security personnel to open the door. But due to the number of students entering and leaving university buildings, door wardens hardly ever check the legitimacy of any entrant's business, i.e.~if they really are students.\\
+This situation is unsatisfactory for all participants:
+
+\begin{itemize}
+\item Students needlessly have to wait for someone to open the door.
+\item Door wardens get distracted from more important work.
+\item Door wardens and university authorities cannot guarantee that entering people are students (or authorised persons in general).
+\end{itemize}
+
+\subsection{Solution}
+
+In order to overcome all problems mentioned in the previous chapter, we suggest that students authenticate at a door system and are granted or denied access automatically. This would...
+
+\begin{itemize}
+\item reduce possible waiting times for students,
+\item unburden door wardens,
+\item and guarantee that only students and other authorised persons are granted access.
+\end{itemize}
+
+A few areas in TUM buildings already use an access mechanism via the student card.
+But for security reasons this student card solution is not ideal.
+Because the card only identifies via an imprinted unique ID, reading and duplicating the card is possible.
+For this reason we try to develop a smartphone solution which implements state of the art security mechanisms.
+This solution could not only be used for main door entrances to the university but also to control access to chairs or other restricted areas. It would be an overall solution, relying solely on the user's smartphone.
+ 
