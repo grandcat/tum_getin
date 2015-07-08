@@ -6,4 +6,7 @@
     <string name="uploadKey">Uploading key to backend.</string>
     <string name="keygen_dialog_title">Key Update</string>
 
+    <string name="action_delete_account">Reset Account</string>
+    <string name="action_update_key_pair">Get new Key-Pair</string>
+    <string name="action_update_pseudo_id">Get new Pseudo-ID</string>
 </resources>

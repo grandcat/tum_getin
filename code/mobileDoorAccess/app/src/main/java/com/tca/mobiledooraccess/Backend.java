@@ -113,6 +113,9 @@ public class Backend {
                 results[1] = jsonObj.getString("pseudo_id");
                 results[2] = jsonObj.getString("salt");
             }else{
+                results[0] = Integer.toString(jsonObj.getInt("code"));
+                results[1] = null;
+                results[2] = null;
                 Log.e(TAG, "STATUS NOT OKAY:" + status);
             }
 
