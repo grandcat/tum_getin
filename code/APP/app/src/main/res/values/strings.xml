@@ -1,9 +1,0 @@
-<resources>
-    <string name="app_name">TUM Get In</string>
-
-    <string name="action_delete_account">Reset Account</string>
-    <string name="action_update_key_pair">Get new Key-Pair</string>
-    <string name="action_update_pseudo_id">Get new Pseudo-ID</string>
-
-
-</resources>
