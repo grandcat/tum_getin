@@ -42,17 +42,18 @@ class Backend(object):
 
     def get_public_key_raw(self, pseudoID):
         if pseudoID == '':
-            return None
+            return None, None
 
         conn = http.client.HTTPSConnection(self.host, self.port, context=self.context)
         conn.request('GET', '/check?pseudo_id=' + pseudoID)
         response = json.loads(conn.getresponse().read().decode())
         conn.close()
+        print(response)
         if 'key' in response:
-            return response['key']
+            return response['key'], response['token_hash']
         else:
-            return None
+            return None, None
 
 # Test backend connection with certificate verification
 # backend = Backend(cert_path='../res/cert.pem')
-# print(backend.get_public_key_raw("lsdsdfsdjkflsdf"))
+# print(backend.get_public_key_raw('2934d189234f881da7fe0ecb4528eaa9'))

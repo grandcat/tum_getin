@@ -32,6 +32,7 @@ class ProtocolLogic(ReaderIO):
                 # Protocol states
                 nonce_r_S = None
                 nonce_r_T = None
+                backend_token_hash = None
 
                 """
                 Protocol step 1: receive {r_S, pseudo_student_id} encrypted with our T_pub key
@@ -46,7 +47,7 @@ class ProtocolLogic(ReaderIO):
                 pseudo_student_id = msg_in['pid']
                 # Fetch public key of student
                 self.log.info('Check Pseudo StudentID: %s', pseudo_student_id)
-                key = backend.get_public_key_raw(pseudo_student_id)
+                key, backend_token_hash = backend.get_public_key_raw(pseudo_student_id)
                 if key is not None:
                     self.log.debug('Got pub key from backend: %s', key)
                     # Todo: convert key to be usable in Python
@@ -59,7 +60,7 @@ class ProtocolLogic(ReaderIO):
                     raise ValueError('No key for empty or given pseudo ID.')
 
                 """
-                Protocol step 2: send {r_s, r_t, T} encrypted with S_pub key
+                Protocol step 2: send {r_s, r_t} encrypted with S_pub key
 
                 r_s: the nonce the target sent us
                 r_t: a new nonce of our own
@@ -79,7 +80,7 @@ class ProtocolLogic(ReaderIO):
                 self.encrypt_and_send(msg_out)
 
                 """
-                Protocol step 3: receive {r_t, commands} encrypted with our T_pub key
+                Protocol step 3: receive {r_t, token_hash} encrypted with our T_pub key
 
                 At this step, the properties freshness and confidentiality should be fulfilled.
                 It should be ok to trust the target.
@@ -89,13 +90,17 @@ class ProtocolLogic(ReaderIO):
                 # Todo: check for errors
                 msg_in = json.loads(raw_msg_in.decode('utf-8'))
                 msg_r_T = msg_in['rt']
-                if nonce_r_T == msg_r_T:
-                    # Identical nonces: message should be fresh
-                    self.log.info('Both nonce values are identical. r_T="%s"', nonce_r_T)
+                msg_token_hash = msg_in['htoken']
+                self.log.debug('Androids token hash: %s', msg_token_hash)
+                # Validate response
+                if nonce_r_T == msg_r_T and backend_token_hash == msg_token_hash:
+                    # Identical nonces and hashed tokens: message should be fresh and user should be authentic
+                    self.log.info('Both nonce values are identical and hashes are the same. r_T="%s", hash="%s"',
+                                  nonce_r_T, backend_token_hash)
                     # Grant access here
                     self.log.info('ACCESS GRANTED.')
                 else:
-                    self.log.error('Nonce r_T and received value do not match. Replay attack?')
+                    self.log.error('Nonce r_T and received value or token hashes do not match. Replay attack?')
 
                 self.device.shutdown_nfc_reader()
 
