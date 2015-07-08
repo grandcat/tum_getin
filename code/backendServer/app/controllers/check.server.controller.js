@@ -59,9 +59,11 @@ function returnStoredKey(httpsReq, httpsRes, pid, user) {
 		var key = user.key;
 		if (key === undefined) {
 			out.reply(httpsRes, 404, cd.NO_KEY, 'No key for this pseudo_id!');
+		} else if (process.env.NO_AD && process.env.NO_AD === 'true') {
+			// for testing without AD checks when we have no LRZ-VPN available
+			handleADresult(httpsRes, user, 'Studium');
 		} else {
 			console.log('----> Trying to connect to TUM AD...');
-			
 			try {
 				var client = ldap.createClient({
 					url: config.ldap_url
