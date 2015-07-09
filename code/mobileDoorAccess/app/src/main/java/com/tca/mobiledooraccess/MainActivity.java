@@ -3,16 +3,12 @@ package com.tca.mobiledooraccess;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
 import android.os.Messenger;
-import android.os.RemoteException;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -23,21 +19,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import com.tca.mobiledooraccess.service.MessageExchangeService;
 import com.tca.mobiledooraccess.utils.KeyGeneratorTask;
-import com.tca.mobiledooraccess.utils.RSACrypto;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.nio.charset.Charset;
-import java.security.InvalidKeyException;
 
 /**
  * Available Preferences:
  * Bool - "registered"
  * Bool - "token_received"
  * Bool - "token_activated"
+ * Bool - "keys_generated"
  *
  * String - "tum_ID"
  * String - "pseudo_ID"
@@ -54,6 +43,7 @@ public class MainActivity extends ActionBarActivity {
     SharedPreferences appSettings;
     private static Fragment fragmentStep1;
     private static Fragment fragmentStep2;
+    private static Fragment fragmentRegistered;
     private Backend backend;
     ProgressDialog mProgressDialog;
 
@@ -101,10 +91,12 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
         viewPager = (ViewPager) findViewById(R.id.viewPager);
-        adapterViewPager = new MyPagerAdapter(getSupportFragmentManager());
-        viewPager.setAdapter(adapterViewPager);
         fragmentStep1 = new RegisterStep1();
         fragmentStep2 = new RegisterStep2();
+        fragmentRegistered = new Registered();
+        adapterViewPager = new MyPagerAdapter(getSupportFragmentManager());
+        viewPager.setAdapter(adapterViewPager);
+
 
         viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -309,7 +301,7 @@ public class MainActivity extends ActionBarActivity {
         }
     }
     public static class MyPagerAdapter extends FragmentPagerAdapter{
-        private static int NUM_ITEMS = 2;
+        private static int NUM_ITEMS = 3;
 
         public MyPagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
@@ -328,6 +320,8 @@ public class MainActivity extends ActionBarActivity {
                     return fragmentStep1;
                 case 1: // Fragment # 0 - This will show FirstFragment different title
                     return fragmentStep2;
+                case 2:
+                    return fragmentRegistered;
                 default:
                     return null;
             }
@@ -335,7 +329,11 @@ public class MainActivity extends ActionBarActivity {
         // Returns the page title for the top indicator
         @Override
         public CharSequence getPageTitle(int position) {
-            return "Step " + (position + 1);
+           if (position <= 1 ) {
+               return "Step " + (position + 1);
+           }else{
+               return "Registered";
+           }
         }
 
     }

@@ -18,6 +18,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.tca.mobiledooraccess.utils.KeyGeneratorTask;
+
 /**
  * Created by basti on 07.07.15.
  */
@@ -91,6 +93,7 @@ public class RegisterStep1 extends Fragment implements OnRefreshListener{
         if (appSettings.getBoolean("token_received", false)){
             InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
+            new KeyGeneratorTask(MainActivity.context);
             MainActivity.viewPager.setCurrentItem(1);
         }else{
             //InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);

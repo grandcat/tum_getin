@@ -86,7 +86,7 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
         protected void onPreExecute(){
             mProgressDialog = new ProgressDialog(getActivity());
             mProgressDialog.setIndeterminate(false);
-            mProgressDialog.setMessage("Connecting to server...");
+            mProgressDialog.setMessage("Updating Content...");
             mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             mProgressDialog.show();
         }
