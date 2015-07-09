@@ -1,28 +1,26 @@
 'use strict';
-//TODO: kill useless imports
 var mongoose = require('mongoose'),
     User = mongoose.model('User'),
+    log = require('../../config/logger.js'),
     val = require('./validity.js'),
     out = require('./reply.js'),
     cd = require('../../config/message_codes.js'),
     db = require('./db-utils.js'),
     config = require('../../config/config.js');
 
-//TODO: do proper logging! Into a file and not the console...
-
 /**
  * The callback fired if everything with the request to 
  * TumOnline went fine.
  */ 
 function onTumActiveDeleteResponse(res, tum_id, tumAnswerJson) {
-	console.log('tumActDelResp; id: ' + tum_id + '; jsonAns: ' + JSON.stringify(tumAnswerJson));
+	log.info('tumActDelResp; id: ' + tum_id + '; jsonAns: ' + JSON.stringify(tumAnswerJson));
 
 	var active = tumAnswerJson.confirmed;
 	
 	if(active === null || active === undefined || active === 'false') {
 		// fine. delete user now
 		User.remove({ tum_id: tum_id }, function(err) {
-			if (err) { console.log('user remove error: ', err); }
+			if (err) { log.info('user remove error: ', err); }
 			out.reply(res, 200, cd.OK, 'Account has been deleted.');
 		});
 	} else { // token is active
@@ -32,6 +30,10 @@ function onTumActiveDeleteResponse(res, tum_id, tumAnswerJson) {
 	}
 }
 
+/**
+ * Callback fired when a user has been found in the DB.
+ * Proceeds with functionality needed by remove().
+ */
 function onGetUserForDelete(req, res, tum_id, user) {
 	var token = req.query.token;
 	if(user === null || user === undefined) { // user is already deleted
@@ -48,7 +50,7 @@ function onGetUserForDelete(req, res, tum_id, user) {
 		if (val.check_token(token)) {
 			if (token === user.token) {
 				User.remove({ tum_id: tum_id }, function(err) {
-					if (err) { console.log('user remove error: ', err); }
+					if (err) { log.info('user remove error: ', err); }
 					out.reply(res, 200, cd.OK, 'Account has been deleted.');
 				});
 			} else { // consistency problem!!! 

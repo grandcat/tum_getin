@@ -1,16 +1,17 @@
 'use strict';
-//TODO: kill useless imports
 var mongoose = require('mongoose'),
     User = mongoose.model('User'),
+    log = require('../../config/logger.js'),
     val = require('./validity.js'),
     out = require('./reply.js'),
     utils = require('./utils.js'),
     cd = require('../../config/message_codes.js'),
     db = require('./db-utils.js');
 
-//TODO: do proper logging! Into a file and not the console...
-
-
+/** 
+ * Callback fired when a user has been found in the DB.
+ * Proceeds with functionality for .renew_pseudo_id()
+ */
 function onGetUserForRenew(req, res, tum_id, user) {
 	var token = req.query.token;
 	if(user === null || user === undefined) { // no user found

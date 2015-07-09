@@ -1,5 +1,6 @@
 'use strict';
-var XRegExp = require('xregexp').XRegExp;
+var XRegExp = require('xregexp').XRegExp,
+    log = require('../../config/logger.js');
 
 /**
  * Example: ga99aaa
@@ -9,7 +10,7 @@ exports.check_tum_id = function(arg) {
 	if(arg.length === 7 && regEx.test(arg)) {
 		return true;
 	} else {
-		console.log('tum_id format error: ' + arg);
+		log.info('tum_id format error: ' + arg);
 		return false;
 	}
 };
@@ -22,7 +23,7 @@ exports.check_pseudo_id = function(arg) {
 	if(arg.length === 32 && regEx.test(arg)) {
 		return true;
 	} else {
-		console.log('pseudo_id format error: ' + arg);
+		log.info('pseudo_id format error: ' + arg);
 		return false;
 	}
 };
@@ -35,7 +36,7 @@ exports.check_token = function(arg) {
 	if(arg.length === 32 && regEx.test(arg)) {
 		return true;
 	} else {
-		console.log('Token format error: ' + arg);
+		log.info('Token format error: ' + arg);
 		return false;
 	}
 };
@@ -49,7 +50,7 @@ exports.check_key = function(arg) {
 	if(350 < arg.length && arg.length < 400) {
 		return true;
 	} else {
-		console.log('Key format error: ' + arg);
+		log.info('Key format error: ' + arg);
 		return false;
 	}
 };

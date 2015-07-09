@@ -1,20 +1,18 @@
 'use strict';
-//TODO: kill useless imports
 var mongoose = require('mongoose'),
     User = mongoose.model('User'),
     val = require('./validity.js'),
+    log = require('../../config/logger.js'),
     out = require('./reply.js'),
     cd = require('../../config/message_codes.js'),
     config = require('../../config/config.js');
-
-//TODO: do proper logging! Into a file and not the console...
 
 /**
  * The callback fired if everything with the request to 
  * TumOnline went fine.
  */ 
 function onTumActiveResponse(res, token, tumAnswerJson) {
-	console.log('tumActResp; id: ' + token + '; jsonAns: ' + JSON.stringify(tumAnswerJson));
+	log.info('tumActResp; id: ' + token + '; jsonAns: ' + JSON.stringify(tumAnswerJson));
 
 	var active = tumAnswerJson.confirmed;
 	
