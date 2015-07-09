@@ -101,7 +101,8 @@ function returnStoredKey(httpsReq, httpsRes, pid, user) {
 							handleADerror(httpsRes, err, 'search res.on(error)');
 						});
 						res.on('end', function(result) {
-							log.error('----> AD return status: ' + result.status + '\n');
+							log.info('----> AD return status (0 means OK): ' + 
+								result.status + '\n');
 							handleADresult(httpsRes, user, dep);
 						});
 					});
