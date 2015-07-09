@@ -1,4 +1,8 @@
 'use strict';
+
+// directory for log files
+module.exports.__logdir = __dirname + '/logs/';
+
 /**
  * Module dependencies.
  */
