@@ -47,8 +47,12 @@ public class MainActivity extends ActionBarActivity {
     public static final String TUM_GETIN_PREFERENCES = "TGI_PREFS";
     public static Context context;
     private static final String TAG = "MainActivity";
+    SharedPreferences appSettings;
+    private static Fragment fragmentStep1;
+    private static Fragment fragmentStep2;
 
-    FragmentPagerAdapter adapterViewPager;
+
+    public static FragmentPagerAdapter adapterViewPager;
     public static ViewPager viewPager;
 
     MyServiceConnection mConnection;
@@ -93,6 +97,8 @@ public class MainActivity extends ActionBarActivity {
         viewPager = (ViewPager) findViewById(R.id.viewPager);
         adapterViewPager = new MyPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(adapterViewPager);
+        fragmentStep1 = new RegisterStep1();
+        fragmentStep2 = new RegisterStep2();
         viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -110,6 +116,7 @@ public class MainActivity extends ActionBarActivity {
             }
         });
         MainActivity.context = getApplicationContext();
+        appSettings = getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
 
     }
 
@@ -225,9 +232,9 @@ public class MainActivity extends ActionBarActivity {
         public Fragment getItem(int position) {
             switch (position) {
                 case 0: // Fragment # 0 - This will show FirstFragment
-                    return new RegisterStep1();
+                    return fragmentStep1;
                 case 1: // Fragment # 0 - This will show FirstFragment different title
-                    return new RegisterStep2();
+                    return fragmentStep2;
                 default:
                     return null;
             }

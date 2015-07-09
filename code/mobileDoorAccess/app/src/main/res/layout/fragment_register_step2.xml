@@ -9,13 +9,65 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="Please visit TUMOnline and activate your token"
+        android:text="Please request a token in Step 1"
+        android:id="@+id/infoText"
         android:background="#ff0a4f9b"
         android:textColor="#ffffffff"
         android:textSize="30dp"
         android:paddingTop="30dp"
         android:clickable="false" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp">
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:id="@+id/visitTUMOnlineButton"
+            android:background="#ffe8e8e8"
+            android:text="Open TUMOnline Site"
+            android:visibility="invisible"
+            />
+    </LinearLayout>
 
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.5"
+            android:src="@drawable/token_not_activated"
+            android:background="#ff0a4f9b"
+            android:paddingBottom="0dp"
+            android:paddingTop="10dp"
+            android:text="Status:"
+            android:gravity="center"
+            android:textColor="#ffffffff"
+            android:textSize="20dp"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="0.5"
+            android:src="@drawable/update_status"
+            android:background="#ff0a4f9b"
+            android:paddingBottom="0dp"
+            android:paddingTop="10dp"
+            android:clickable="true"
+            android:text="Update:"
+            android:gravity="center"
+            android:textColor="#ffffffff"
+            android:textSize="20dp"
+            />
+    </LinearLayout>
 
 
     <LinearLayout
@@ -30,7 +82,8 @@
             android:src="@drawable/token_not_activated"
             android:background="#ff0a4f9b"
             android:paddingBottom="10dp"
-            android:paddingTop="10dp"/>
+            android:paddingTop="10dp"
+            />
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="100dp"
