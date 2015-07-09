@@ -1,10 +1,12 @@
 package com.tca.mobiledooraccess;
 
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -19,8 +21,10 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.tca.mobiledooraccess.service.MessageExchangeService;
+import com.tca.mobiledooraccess.utils.KeyGeneratorTask;
 import com.tca.mobiledooraccess.utils.RSACrypto;
 
 import org.json.JSONException;
@@ -50,6 +54,8 @@ public class MainActivity extends ActionBarActivity {
     SharedPreferences appSettings;
     private static Fragment fragmentStep1;
     private static Fragment fragmentStep2;
+    private Backend backend;
+    ProgressDialog mProgressDialog;
 
 
     public static FragmentPagerAdapter adapterViewPager;
@@ -99,6 +105,7 @@ public class MainActivity extends ActionBarActivity {
         viewPager.setAdapter(adapterViewPager);
         fragmentStep1 = new RegisterStep1();
         fragmentStep2 = new RegisterStep2();
+
         viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -116,8 +123,8 @@ public class MainActivity extends ActionBarActivity {
             }
         });
         MainActivity.context = getApplicationContext();
+        backend = new Backend("www.grandcat.org", "3000");
         appSettings = getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
-
     }
 
     @Override
@@ -139,13 +146,99 @@ public class MainActivity extends ActionBarActivity {
 
         switch (id){
             case R.id.action_delete_account:
+                new DeleteAccount().execute();
                 return true;
             case R.id.action_update_key_pair:
+                new UpdateKeyPair().execute();
                 return true;
             case R.id.action_update_pseudo_id:
+                new UpdatePseudoIDandSalt().execute();
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    final class DeleteAccount extends AsyncTask<Void, Integer, Boolean> {
+        protected void onPreExecute(){
+            mProgressDialog = new ProgressDialog(MainActivity.this);
+            mProgressDialog.setIndeterminate(false);
+            mProgressDialog.setMessage("Connecting to server...");
+            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            mProgressDialog.show();
+        }
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            String tumId = appSettings.getString("tum_id", "");
+            String token = appSettings.getString("tumOnlineToken", "");
+            // Try to delete account
+            int status = backend.deleteAccount(tumId, token);
+            if (0 == status) {
+                // Delete local data
+                SharedPreferences.Editor settings = appSettings.edit();
+                settings.remove("tum_id").remove("pseudo_ID").remove("tumOnlineToken").remove("priv_key");
+                settings.remove("token_activated").remove("token_received").remove("registered");
+                settings.apply();
+                // Notify UI
+                mProgressDialog.dismiss();
+                return true;
+            } else {
+                mProgressDialog.dismiss();
+                return false;
+            }
+        }
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            Toast.makeText(MainActivity.this, "Deletion complete, dont forget to delete your token in TUMOnline", Toast.LENGTH_SHORT).show();
+            super.onPostExecute(aBoolean);
+        }
+    }
+    final class UpdateKeyPair extends AsyncTask<Void, Void, Void> {
+        protected void onPreExecute(){
+            mProgressDialog = new ProgressDialog(MainActivity.this);
+            mProgressDialog.setIndeterminate(false);
+            mProgressDialog.setMessage("Connecting to server...");
+            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            mProgressDialog.show();
+        }
+        @Override
+        protected Void doInBackground(Void... params) {
+            String publicKey = appSettings.getString("publicKey", null);
+            String privateKey = appSettings.getString("privateKey", null);
+            String tumID = appSettings.getString("tum_id", null);
+            String token = appSettings.getString("tumOnlineToken", null);
+
+            if (publicKey != null && privateKey != null && tumID != null && token != null){
+                new KeyGeneratorTask(context).execute();
+            }else{
+
+            }
+            mProgressDialog.dismiss();
+            return null;
+        }
+    }
+    final class UpdatePseudoIDandSalt extends AsyncTask<Void, Void, Void> {
+        protected void onPreExecute(){
+            mProgressDialog = new ProgressDialog(MainActivity.this);
+            mProgressDialog.setIndeterminate(false);
+            mProgressDialog.setMessage("Connecting to server...");
+            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            mProgressDialog.show();
+        }
+        @Override
+        protected Void doInBackground(Void... params) {
+            String tumID = appSettings.getString("tum_id", null);
+            String token = appSettings.getString("tumOnlineToken", null);
+            SharedPreferences.Editor editor = appSettings.edit();
+
+            String result[] = backend.getNewPseudoID(tumID, token);
+
+            if (!result[0].equals("0")){
+                editor.putString("pseudo_id", result[0]);
+                editor.putString("salt", result[1]);
+            }
+            mProgressDialog.dismiss();
+            return null;
+        }
     }
 
 

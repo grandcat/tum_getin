@@ -3,6 +3,7 @@ package com.tca.mobiledooraccess;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.media.Image;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -37,21 +38,38 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
         ImageView tokenStatus = (ImageView) view.findViewById(R.id.imageTokenStatus);
         TextView infoText = (TextView) view.findViewById(R.id.infoText);
         Button openBrowser = (Button) view.findViewById(R.id.visitTUMOnlineButton);
+        ImageView updateStatus = (ImageView) view.findViewById(R.id.imageUpdate);
+        TextView updateText = (TextView) view.findViewById(R.id.textUpdate);
+        TextView statusText = (TextView) view.findViewById(R.id.statusText);
+        TextView tokenStatusText = (TextView) view.findViewById(R.id.tokenStatusText);
+
+        infoText.setVisibility(View.VISIBLE);
+        tokenStatus.setVisibility(View.VISIBLE);
+        updateStatus.setVisibility(View.VISIBLE);
+        updateText.setVisibility(View.VISIBLE);
+        statusText.setVisibility(View.VISIBLE);
+        tokenStatusText.setVisibility(View.VISIBLE);
 
         if (!tokenReceived){
             infoText.setText("Please request a token at Step 1");
             tokenStatus.setImageResource(R.drawable.token_not_activated);
             openBrowser.setVisibility(View.INVISIBLE);
+            tokenStatusText.setTextColor(Color.parseColor("#ee100f"));
+            tokenStatusText.setText("!Activated");
         }
 
         if (tokenReceived && !tokenActivated){
             infoText.setText("Please visit TUM-Online and activate your token");
             openBrowser.setVisibility(View.VISIBLE);
+            tokenStatusText.setTextColor(Color.parseColor("#ee100f"));
+            tokenStatusText.setText("!Activated");
             tokenStatus.setImageResource(R.drawable.token_not_activated);
         }
         if(tokenReceived && tokenActivated){
             infoText.setText("Your token is activated");
             tokenStatus.setImageResource(R.drawable.token_activated);
+            tokenStatusText.setTextColor(Color.parseColor("#29b530"));
+            tokenStatusText.setText("Activated");
             openBrowser.setVisibility(View.INVISIBLE);
         }
     }

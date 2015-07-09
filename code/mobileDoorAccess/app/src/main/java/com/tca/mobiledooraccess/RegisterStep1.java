@@ -89,6 +89,8 @@ public class RegisterStep1 extends Fragment implements OnRefreshListener{
         editText.setText("");
 
         if (appSettings.getBoolean("token_received", false)){
+            InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
             MainActivity.viewPager.setCurrentItem(1);
         }else{
             //InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);

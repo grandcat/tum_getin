@@ -84,6 +84,46 @@ public class Backend {
         }
     }
 
+    public String[] getNewPseudoID(String tumID, String token){
+        Log.d(TAG, "getting new Pseudo ID and Token");
+        String [] results = new String[2];
+        try {
+            URL url = new URL("https://" + host + ":" + port + "/renew?tum_id=" + tumID +
+                    "&token=" + token);
+            HttpsURLConnection urlConnection = (HttpsURLConnection)url.openConnection();
+            urlConnection.setSSLSocketFactory(context.getSocketFactory());
+            InputStream in = urlConnection.getInputStream();
+            BufferedReader br = new BufferedReader(new InputStreamReader(in));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while((line = br.readLine()) != null){
+                sb.append(line + "\n");
+            }
+            JSONObject jsonObj = new JSONObject(sb.toString());
+            int status = jsonObj.getInt("status");
+
+            Log.d(TAG, "STATUS of Server: " + status);
+
+            if (status == 200){
+                results[0] = jsonObj.getString("pseudo_id");
+                results[1] = jsonObj.getString("salt");
+            }else{
+                results[0] = Integer.toString(jsonObj.getInt("code"));
+                results[1] = null;
+                Log.e(TAG, "STATUS NOT OKAY:" + status);
+            }
+        } catch (MalformedURLException e){
+            Log.e(TAG, "MalformedURLException: " + e.getMessage());
+        } catch (IOException e){
+            Log.e(TAG, "IOException: " + e.getMessage());
+        } catch (JSONException e){
+
+        } catch (Exception e){
+            String msg = e.getMessage();
+        }
+        return results;
+    }
+
     //This Method will make a GET request to the backend server
     //It will extract the token and the pseudoID from the json-body
     //and will return it as a String-Array
