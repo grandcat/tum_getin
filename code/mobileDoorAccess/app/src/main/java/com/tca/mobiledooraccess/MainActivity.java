@@ -93,7 +93,7 @@ public class MainActivity extends ActionBarActivity {
         viewPager = (ViewPager) findViewById(R.id.viewPager);
         fragmentStep1 = new RegisterStep1();
         fragmentStep2 = new RegisterStep2();
-        fragmentRegistered = new Registered();
+        fragmentRegistered = new RegisterCompleted();
         adapterViewPager = new MyPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(adapterViewPager);
 
@@ -316,11 +316,11 @@ public class MainActivity extends ActionBarActivity {
         @Override
         public Fragment getItem(int position) {
             switch (position) {
-                case 0: // Fragment # 0 - This will show FirstFragment
+                case 0: // Fragment # 0 - This will show RegisterStep1
                     return fragmentStep1;
-                case 1: // Fragment # 0 - This will show FirstFragment different title
+                case 1: // Fragment # 1 - This will show RegisterStep2
                     return fragmentStep2;
-                case 2:
+                case 2: // Fragment # 2 - This will show RegisterCompleted
                     return fragmentRegistered;
                 default:
                     return null;

@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 /**
  * Created by basti on 09.07.15.
  */
-public class Registered extends Fragment implements OnRefreshListener {
+public class RegisterCompleted extends Fragment implements OnRefreshListener {
 
     public void updateLayout(){
 
