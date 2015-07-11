@@ -1,1 +1,68 @@
 \section{Tutorial}\label{sec:tutorial}
+
+Before actually using the \app solution on a smartphone, both the \be and a \ter have to be running.
+Hence this chapter starts with installation instructions for \be and \ter.
+
+General note: a command line starting with \# indicates a root shell, a \$ symbol indicates one without super-user privileges.
+
+\subsection{Install and Launch Backend Server}
+
+The server was implemented based on the JavaScript (JS) technologies \node and \textit{ME(A)N.js} (M = \mongo, E = $express.js$ [web server], A = $angular.js$ [currently not used], N = \node).
+Hence it requires a running \mongo database and \node to be installed.
+This chapter serves as a recommendation for starting the server.
+Experienced users may also install some components locally (without the $-g$ option) or omit some parts.\medskip\\
+1.) Install \node.\smallskip\\
+2.) Install $npm$, the Node Package Manager.\smallskip\\
+3.) Download \mongo.\smallskip\\
+4.) Start \mongo via
+\begin{lstlisting}
+   $ <path-to-mongodb>/bin/mongod
+\end{lstlisting}
+5.) Install $bower$, a package manager.
+\begin{lstlisting}
+   # npm install -g bower
+\end{lstlisting}
+6.) Install $grunt$, a JS task runner for automation.
+\begin{lstlisting}
+   # npm install -g grunt-cli
+\end{lstlisting}
+7.) Install $vows$, a JS framework for writing and executing test suites. This is only necessary if tests need to be run.
+\begin{lstlisting}
+   # npm install -g vows
+\end{lstlisting}
+8.) Install all \node dependencies of the \be server. $npm$ automatically loads all dependencies defined in $package.json$ and stores them locally.
+\begin{lstlisting}
+   $ npm install
+\end{lstlisting}
+9.) Finally, \textbf{run the server} via the $grunt$ client (optionally with the environment variable \textit{NODE\_ENV=test}).
+\begin{lstlisting}
+   $ grunt
+\end{lstlisting}\bigskip
+(10.) Optionally, run the $vows$ test suite (change to $/test$ directory first; \textit{NODE\_ENV=test} is required for some unit tests).
+\begin{lstlisting}
+   $ vows interfaces-test.js --spec
+\end{lstlisting}
+
+\subsection{Install and Launch NFC Terminal}
+
+...
+
+\subsection{Use the GetInTUM Android Application}
+
+...
+
+
+
+\iffalse
+\bigskip
+% -------------------------------------------------------------------
+%[language={[x86masm]Assembler}, escapeinside={(*§}{§*)}, basicstyle=\ttfamily\scriptsize, caption={blablabla}, label={lst:1}]
+\begin{lstlisting}
+# npm install -g bower
+# npm install -g grunt-cli
+# npm install -g vows		(optional; runs unit tests)
+$ npm install
+\end{lstlisting}
+\bigskip
+
+\fi

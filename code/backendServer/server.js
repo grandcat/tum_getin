@@ -1,4 +1,8 @@
 'use strict';
+
+// directory for log files
+module.exports.__logdir = __dirname + '/logs/';
+
 /**
  * Module dependencies.
  */
@@ -30,5 +34,6 @@ app.listen(config.port);
 exports = module.exports = app;
 
 // Logging initialization
-console.log('TUM_getin backend started on port ' + config.port);
+var log = require('./config/logger.js');
+log.info('\n\nTUM_getin backend started on port ' + config.port + '\n\n');
 

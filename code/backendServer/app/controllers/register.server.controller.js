@@ -2,20 +2,19 @@
 var mongoose = require('mongoose'),
     User = mongoose.model('User'),
     val = require('./validity.js'),
+    log = require('../../config/logger.js'),
     out = require('./reply.js'),
     utils = require('./utils.js'),
     db = require('./db-utils.js'),
     config = require('../../config/config.js'),
     cd = require('../../config/message_codes.js');
 
-//TODO: do proper logging! Into a file and not the console...
-
 /**
  * The callback fired if everything with the token request to 
  * TumOnline went fine.
  */ 
 function onTumTokenResponse(res, tum_id, tumAnswerJson) {
-	console.log('onTumTokenRes; id: ' + tum_id + '; jsonAns: ' + tumAnswerJson);
+	log.info('onTumTokenRes; id: ' + tum_id + '; jsonAns: ' + tumAnswerJson);
 
 	if(tumAnswerJson === undefined) { // something very wrong here!
 		out.reply(res, 500, cd.TUM_ERR, 'TUMonline is not behaving properly');
@@ -24,10 +23,9 @@ function onTumTokenResponse(res, tum_id, tumAnswerJson) {
 			'TUMonline did not answer with a token for this tum_id!');
 	} else { // everything fine here
 		var token = tumAnswerJson.token;
-		console.log('Extracting token from TUM response: ' + token);
+		log.info('Extracting token from TUM response: ' + token);
 
-		var status = 'student'; //TODO: check that!
-
+		var status = 'student';
 		// generating pseudo ID
 		var pid = utils.random();
 
@@ -92,7 +90,7 @@ function registerGetTokenForUser(req, res, tum_id, user) {
  */
 exports.register_get_token = function(req, res) {
 	var tum_id = req.query.tum_id;
-	//console.log('----> /register get token : tum_id: %s, token: %s ', tum_id, token);
+	//log.info('----> /register get token : tum_id: %s, token: %s ', tum_id, token);
 
 	if(tum_id === undefined) { // then something is wrong
 		// Send error message back
@@ -144,7 +142,7 @@ exports.register_store_key = function(req, res) {
 	var tum_id = req.body.tum_id;
 	var token = req.body.token;
 	var key = req.body.key;
-	//console.log('----> /register store key : tum_id: %s, token: %s ', tum_id, token);
+	//log.info('----> /register store key : tum_id: %s, token: %s ', tum_id, token);
 
 	// check if all parameters are set in the request
 	if(tum_id === undefined || token === undefined || key === undefined) { 

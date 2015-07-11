@@ -3,6 +3,7 @@ var mongoose = require('mongoose'),
     User = mongoose.model('User'),
     ldap = require('ldapjs'),
     crypto = require('crypto'),
+    log = require('../../config/logger.js'),
     out = require('./reply.js'),
     db = require('./db-utils.js'),
     val = require('./validity.js'),
@@ -21,9 +22,9 @@ var opts = {
  * Callback fired if the Active Directory does not behave properly
  */
 function handleADerror(res, err, info) {
-	console.log('\n!!! Error connecting to AD. ' + info + ' --- ' + err + ' !!! \n');
+	log.error('\n!!! Error connecting to AD. ' + info + ' --- ' + err + ' !!! \n');
 	out.reply(res, 500, cd.TUM_ERR,
-	'Active Directory is not behaving properly.');
+		'Active Directory is not behaving properly.');
 }
 
 /**
@@ -63,7 +64,7 @@ function returnStoredKey(httpsReq, httpsRes, pid, user) {
 			// for testing without AD checks when we have no LRZ-VPN available
 			handleADresult(httpsRes, user, 'Studium');
 		} else {
-			console.log('----> Trying to connect to TUM AD...');
+			log.info('----> Trying to connect to TUM AD...');
 			try {
 				var client = ldap.createClient({
 					url: config.ldap_url
@@ -73,7 +74,7 @@ function returnStoredKey(httpsReq, httpsRes, pid, user) {
 					if(err) {
 						handleADerror(httpsRes, err, 'in .bind()');
 					}
-					console.log('----> AD bind OK.');
+					log.info('----> AD bind OK.');
 					
 					// setting search for tum_id
 					opts.filter = '(CN=' + user.tum_id + ')';
@@ -82,25 +83,26 @@ function returnStoredKey(httpsReq, httpsRes, pid, user) {
 					client.search(config.ldap_search_string, opts, 
 						function (err, res) {
 
-						console.log('----> AD search returned. ' + res);
+						log.info('----> AD search returned. ' + res);
 						if(err) {
 							handleADerror(httpsRes, err, 'in .search()');
 						}
 						var dep = ''; // department attribute stores student status
 						res.on('searchEntry', function(entry) {
-							console.log('\nAD entry: ' + JSON.stringify(entry.object));
+							log.info('\nAD entry: ' + JSON.stringify(entry.object));
 							dep = entry.object.department;
-							console.log('\t-> ' + dep);
+							log.info('\t-> ' + dep);
 						});
 						//res.on('searchReference', function(referral) {
 						//  console.log('\n\nreferral: ' + referral.uris.join());
 						//});
 						res.on('error', function(err) {
-							console.error('\n\nerror: ' + err.message);
+							log.error('\n\nerror: ' + err.message);
 							handleADerror(httpsRes, err, 'search res.on(error)');
 						});
 						res.on('end', function(result) {
-							console.log('----> AD return status: ' + result.status + '\n');
+							log.info('----> AD return status (0 means OK): ' + 
+								result.status + '\n');
 							handleADresult(httpsRes, user, dep);
 						});
 					});

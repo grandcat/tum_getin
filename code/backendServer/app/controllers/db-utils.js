@@ -1,6 +1,7 @@
 'use strict';
 var mongoose = require('mongoose'),
     User = mongoose.model('User'),
+    log = require('../../config/logger.js'),
     out = require('./reply.js');
 
 /**
@@ -35,7 +36,7 @@ exports.getUser = function(req, res, searchJSON, value, callback) {
  */
 exports.handleDBsave = function(err, res) {
 	if (err) { 
-		console.error('user save error: ', err); 
+		log.error('user save error: ', err); 
 		out.send500error(res);
 	}
 };

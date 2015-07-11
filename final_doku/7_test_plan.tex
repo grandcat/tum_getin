@@ -1,1 +1,55 @@
 \section{Test Plan}\label{sec:test_plan}
+
+\todo{struktur!}
+Test coverage, Test methods, Test responsibilities
+
+...Das Ganze auf den Funktionen aus den letzten Kapiteln basieren lassen....\\
+
+
+Due to the strict separation of the components \be, \ph and \ter testing could partly be initiated in early stages of the project.
+
+Particularly the \be component was required to quickly reach a robust state because both other components heavily rely on its functioning.
+In order to guarantee this robustness, development followed a test-driven approach from the beginning.
+Functionality required in the \be was first defined in a specifications document.
+Subsequently test cases based on these specifications were written using \vows\footnote{Vows: Asynchronous behaviour driven development for Node. http://www.vowsjs.org}.
+Only then did we begin to actually implement the defined functionality.
+
+...\todo{...}
+
+
+Test scenarios: high level\\
+- user has TumOnline account, is student\\
+- user has TumOnline account, not student anymore\\
+- user has no TumOnline account\\
+
+low level:\\
+- testing all possible mistakes: requests with wrong / missing arguments\\
+- sending broken / incomplete packets\\
+- interrupting connections\\
+- possible failures of involved systems. E.g. TumOnline token max reached, AD not responding, general connection problems, ...
+...\\
+
+
+...
+
+%-------- from Wikipedia: -----------------
+\iffalse
+IEEE 829-2008, also known as the 829 Standard for Software Test Documentation, is an IEEE standard that specifies the form of a set of documents for use in defined stages of software testing, each stage potentially producing its own separate type of document.[1] These stages are:
+
+Test plan identifier
+Introduction
+Test items
+Features to be tested
+Features not to be tested
+Approach
+Item pass/fail criteria
+Suspension criteria and resumption requirements
+Test deliverables
+Testing tasks
+Environmental needs
+Responsibilities
+Staffing and training needs
+Schedule
+Risks and contingencies
+Approvals
+\fi

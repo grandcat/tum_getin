@@ -22,7 +22,6 @@
 *.mtc1
 *.out
 *.synctex.gz
-*.pdf
 
 # Python
 __pycache__/

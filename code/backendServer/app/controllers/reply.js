@@ -1,6 +1,7 @@
 'use strict';
 var parseString = require('xml2js').parseString,
     https = require('https'),
+    log = require('../../config/logger.js'),
     cd = require('../../config/message_codes.js'),
     config = require('../../config/config.js');
 //var util = require('util'); // for deep inspection of objects
@@ -15,9 +16,9 @@ exports.reply = function(res, http_status, msg_code, res_message, json) {
 		for (var attrname in json) { msg[attrname] = json[attrname]; }
 	}
 	// very verbose form:
-	//console.log('-> Sending reply: \n\tRequest was: %s \n\tResponding: %s', 
+	//log.info('-> Sending reply: \n\tRequest was: %s \n\tResponding: %s', 
 	//		util.inspect(res, false, 1), JSON.stringify(msg));
-	console.log('-> Sending reply: \n\tRequest was: %s %s \n\tResponding: %s', 
+	log.info('-> Sending reply: \n\tRequest was: %s %s \n\tResponding: %s', 
 			res.req.method, res.req.url, JSON.stringify(msg));
 	res.json(msg);
 };
@@ -33,7 +34,7 @@ exports.send500error = function (res) {
  * The callback fired if the HTTPS to TumOnline makes problems
  */
 exports.handleTumHttpsError = function(err, res) {
-	console.error('Error at contacting TumOnline' + err);
+	log.error('Error at contacting TumOnline' + err);
 	this.send500error(res);
 };
 
@@ -48,7 +49,7 @@ exports.handleTumHttpsReq = function(httpResp, res, tum_id, callback) {
 	});
 	var this_pointer = this;
 	httpResp.on('end', function() {
-		console.log('-----> Response from TUMonline: ' + responseString);
+		log.info('-----> Response from TUMonline: ' + responseString);
 		parseString(responseString, function (err, result) {
 			if(err) {
 				this_pointer.handleTumHttpsError(err, res);
@@ -62,7 +63,7 @@ exports.handleTumHttpsReq = function(httpResp, res, tum_id, callback) {
  * Sends arbitrary requests to TUMonline
  */
 exports.tumOnlineReq = function(res, path, parameter, callback) {
-	console.log('------> Contacting TUMonline...');
+	log.info('------> Contacting TUMonline...');
 	var options = {
 		host: config.tumOnl_url_host,
 		port: 443,

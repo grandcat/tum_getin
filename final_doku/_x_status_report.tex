@@ -1,0 +1,33 @@
+Status Report GetInTUM
+
+This paper reports the current status of the Android project GetInTum. Due to our modular architecture, this report is structured into the three main building blocks “Backend”, “Android” and “NFC Terminal”.
+
+
+Backend
+
+Purpose of the backend server is to provide a public key infrastructure for every registered user. The server was implemented using node.js and ME(A)N.js as basic technologies (M = MongoDB, E = express.js [web server], A = angular.js [currently not used], N = node.js).
+The basic implementation of the backend is working and, since we strictly followed the “test-driven development” paradigm, should be very robust. A comprehensive test suite checks the backend’s interfaces regularly (= regression testing; using vows.js as test framework).
+In general, HTTPS interfaces to the smartphone and the NFC terminal work soundly, with a few corner cases still missing. Communication between backend and TUMonline is working, too. Student status checks to the TUM Active Directory have not been implemented yet.
+
+
+Android
+
+The basic architecture of the android app is defined and vital parts are already working.
+It consists of four activities so far:
+MainActivity as an entry point for the app - it will coordinate the other activities depending on the registration status.
+NotRegistered-Activity which is the first activity starting after a fresh app installation. It will ask for the user’s TUM-ID and will request a TUMonline token from the backend server for that ID.
+TokenActivation-Activity which waits for the user to activate the received token in TUMonline. There will be a button that links to TUMonline as well as a refresh button which checks the activation status of the token across the backend. When the token is activated, the key-pair for secure communication will be created and the public part, together with the token will be sent to the backend.
+Registered-Activity which is the only one that will be displayed when a user registration is complete and the user restarts the app. It will interact with an NFC service thread for the progress.
+In the background, the service thread handles the communication with an NFC terminal and uses a state machine for the cryptographic authentication. Most of the building blocks like fragmentation of the messages and protocol for a coordinated exchange are implemented. We start implementing the cryptography for as the next major step.
+
+
+NFC Terminal
+
+The terminal is the counterpart of our Android app to securely authenticate a TUM member and to permit access to a room or building. The backend is implemented in Python 3 and uses libnfc and ctype bindings to communicate with a PN532 based NFC device. The building blocks like the messaging protocol and fragmentation for the bi-directional NFC communication and the connection to the REST backend are working. As for the Android app, the cryptography utilizing the public key infrastructure, is to be implemented next.
+
+
+Time schedule
+
+Milestone 1 slightly behind schedule.
+Milestone 3 OK so far. Detailed features need to be added of course to complete the app.
+Since we stick to the concepts of “continuous integration” and “test-driven development” throughout the project, milestones 5 (integration done) and 6 (testing done) pose little risk and should even be reached earlier.

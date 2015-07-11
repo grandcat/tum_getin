@@ -4,6 +4,7 @@
  * Module dependencies.
  */
 var fs = require('fs'),
+	log = require('./logger'),
 	https = require('https'),
 	express = require('express'),
 	morgan = require('morgan'),
@@ -107,7 +108,7 @@ module.exports = function(db) {
 		if (!err) return next();
 
 		// Log it
-		console.error(err.stack);
+		log.error(err.stack);
 
 		// Error page
 		res.status(500).render('500', {
@@ -130,17 +131,17 @@ module.exports = function(db) {
 		    user_01 = require('../../testResources/user_01.json'),
 		    user_02 = require('../../testResources/user_02.json');
 
-		console.log('---> Test mode: Loading test data into DB...');
+		log.info('---> Test mode: Loading test data into DB...');
 		
 		User.remove({}, function(err) {
-			if (err) { console.log('user remove error: ', err); }
+			if (err) { log.error('user remove error: ', err); }
 			var user = new User(user_01);
 			user.save(function(err) {
-				if (err) { console.log('user save error: ', err); }
+				if (err) { log.error('user save error: ', err); }
 			});
 			user = new User(user_02);
 			user.save(function(err) {
-				if (err) { console.log('user save error: ', err); }
+				if (err) { log.error('user save error: ', err); }
 			});
 		});
 
@@ -150,7 +151,7 @@ module.exports = function(db) {
 	// always enforce https!!!
 	if (true) { //process.env.NODE_ENV === 'secure') {
 		// Log SSL usage
-		console.log('Securely using https protocol');
+		log.info('Securely using https protocol');
 
 		// Load SSL key and certificate
 		var privateKey = fs.readFileSync('./config/sslcerts/key.pem', 'utf8');
