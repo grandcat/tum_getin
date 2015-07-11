@@ -93,7 +93,7 @@ public class RegisterStep1 extends Fragment implements OnRefreshListener{
         if (appSettings.getBoolean("token_received", false)){
             InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
-            new KeyGeneratorTask(MainActivity.context);
+            // new KeyGeneratorTask(MainActivity.context);
             MainActivity.viewPager.setCurrentItem(1);
         }else{
             //InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -113,6 +113,7 @@ public class RegisterStep1 extends Fragment implements OnRefreshListener{
 
         protected Void doInBackground(String... params) {
             String result[] = backend.getUserCredentials(params[0]);
+            // TODO: remove critical data
             Log.d(TAG, "Result from server: " + result[0] + " | " + result[1]);
             SharedPreferences.Editor editor = appSettings.edit();
 
@@ -127,6 +128,7 @@ public class RegisterStep1 extends Fragment implements OnRefreshListener{
                     editor.putString("tum_id", params[0]);
                     editor.putString("tumOnlineToken", result[0]);
                     editor.putString("pseudo_ID", result[1]);
+                    editor.putString("salt", result[2]);
                     editor.putBoolean("token_received", true);
                     editor.commit();
             }

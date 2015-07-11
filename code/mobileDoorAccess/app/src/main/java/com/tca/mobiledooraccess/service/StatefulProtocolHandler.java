@@ -283,6 +283,7 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
             );
             String salt = prefs.getString("salt", "");
             String token = prefs.getString("tumOnlineToken", "");
+            Log.d(TAG, "Salt: " + salt + ", token: " + token);
             String tokenHash = "";
             try {
                 // sha256(salt + token) as base64

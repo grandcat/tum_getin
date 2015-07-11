@@ -17,6 +17,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.tca.mobiledooraccess.utils.KeyGeneratorTask;
+
 /**
  * Created by basti on 07.07.15.
  */
@@ -79,9 +81,9 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
         appSettings = MainActivity.context.getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
         String token = appSettings.getString("tumOnlineToken", null);
         String userID = appSettings.getString("tum_id", null);
-        new GetUserStatus().execute(token,userID);
-
+        new GetUserStatus().execute(token, userID);
     }
+
     final class GetUserStatus extends AsyncTask<String, Void, Void> {
         protected void onPreExecute(){
             mProgressDialog = new ProgressDialog(getActivity());
@@ -100,7 +102,8 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
             editor.putBoolean("token_activated", tokenActivated);
 
             if (userCredentials[0].equals("31")){
-                editor.putBoolean("token_received",true);
+                // Duplicate token, therefore one exists
+                editor.putBoolean("token_received", true);
             }else{
                 editor.putBoolean("token_received",false);
             }
@@ -113,6 +116,7 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             updateLayout();
+            new KeyGeneratorTask(getActivity()).execute();
         }
 
     }
