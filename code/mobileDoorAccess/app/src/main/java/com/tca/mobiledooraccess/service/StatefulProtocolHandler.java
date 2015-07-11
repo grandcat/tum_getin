@@ -11,6 +11,7 @@ import android.util.Log;
 
 import com.tca.mobiledooraccess.MainActivity;
 import com.tca.mobiledooraccess.R;
+import com.tca.mobiledooraccess.UnlockProgressActivity;
 import com.tca.mobiledooraccess.utils.RSACrypto;
 
 import org.json.JSONException;

@@ -13,6 +13,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.tca.mobiledooraccess.UnlockProgressActivity;
 import com.tca.mobiledooraccess.service.MessageExchangeService;
 import com.tca.mobiledooraccess.service.StatefulProtocolHandler;
 
@@ -198,12 +199,18 @@ public class CardEmulationService extends HostApduService {
                 msg.replyTo = mResponseMessenger;
                 try {
                     mNfcMessagingService.send(msg);
+                    Log.d(TAG, "NFC communication channel established.");
+
+                    // Start responsible activity to visualize unlock progress
+                    Intent unlockActivity = new Intent(this, UnlockProgressActivity.class);
+                    unlockActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(unlockActivity);
+
                     return APDU.StatusMessage.SUCCESS;
                 } catch (RemoteException e) {
                     Log.e(TAG, "Could not send data input to NFC state machine.");
                     e.printStackTrace(); // TODO: remove stacktrace
                 }
-                Log.d(TAG, "NFC communication channel established.");
 
             } else {
                 // Binding to the NFC message exchange service not ready yet
