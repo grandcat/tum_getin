@@ -33,3 +33,5 @@ __pycache__/
 
 # VIM swap files
 *.swp
+
+final_doku/report.pdf
