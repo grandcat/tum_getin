@@ -86,18 +86,18 @@
             android:paddingTop="10dp"
             android:visibility="invisible"
             />
-        <ImageView
+        <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="100dp"
             android:layout_gravity="center"
-            android:layout_weight="0.5"
             android:id="@+id/imageUpdate"
+            android:layout_weight="0.5"
+            android:scaleType="centerInside"
+            android:background="@null"
             android:src="@drawable/update_status"
-            android:background="#ff0a4f9b"
-            android:paddingTop="10dp"
-            android:clickable="true"
             android:visibility="invisible"
             />
+
     </LinearLayout>
 
     <LinearLayout

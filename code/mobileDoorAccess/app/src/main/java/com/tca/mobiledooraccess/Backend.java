@@ -75,6 +75,7 @@ public class Backend {
             Log.e(TAG, "Certificate Exception: " + e.getMessage());
         }catch (IOException e){
             Log.e(TAG, "IOException: " + e.getMessage());
+            // e.printStackTrace();
         }catch (KeyStoreException e){
             Log.e(TAG, "KeyStoreException: " + e.getMessage());
         }catch (NoSuchAlgorithmException e){

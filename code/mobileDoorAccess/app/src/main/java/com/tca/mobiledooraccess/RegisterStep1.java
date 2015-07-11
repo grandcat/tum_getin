@@ -95,10 +95,10 @@ public class RegisterStep1 extends Fragment implements OnRefreshListener{
             imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
             // new KeyGeneratorTask(MainActivity.context);
             MainActivity.viewPager.setCurrentItem(1);
-        }else{
+        } else {
             //InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             //imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
-            Toast.makeText(getActivity(), "Your TUM ID is invalid", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), "Your TUM ID is invalid or already registered.", Toast.LENGTH_LONG).show();
         }
     }
 

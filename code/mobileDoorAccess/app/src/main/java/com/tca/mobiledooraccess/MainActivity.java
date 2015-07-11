@@ -97,7 +97,6 @@ public class MainActivity extends ActionBarActivity {
         adapterViewPager = new MyPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(adapterViewPager);
 
-
         viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -332,7 +331,7 @@ public class MainActivity extends ActionBarActivity {
            if (position <= 1 ) {
                return "Step " + (position + 1);
            }else{
-               return "Registered";
+               return "Registration completed";
            }
         }
 

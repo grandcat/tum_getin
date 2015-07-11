@@ -13,7 +13,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -30,8 +33,11 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
     private Backend backend;
     ProgressDialog mProgressDialog;
 
+    ImageButton updateStatus;
+
 
     private void updateLayout(){
+        // Reload settings to encouter for changes in register step 1
         appSettings = MainActivity.context.getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
         boolean tokenReceived = appSettings.getBoolean("token_received", false);
         boolean tokenActivated = appSettings.getBoolean("token_activated", false);
@@ -40,7 +46,6 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
         ImageView tokenStatus = (ImageView) view.findViewById(R.id.imageTokenStatus);
         TextView infoText = (TextView) view.findViewById(R.id.infoText);
         Button openBrowser = (Button) view.findViewById(R.id.visitTUMOnlineButton);
-        ImageView updateStatus = (ImageView) view.findViewById(R.id.imageUpdate);
         TextView updateText = (TextView) view.findViewById(R.id.textUpdate);
         TextView statusText = (TextView) view.findViewById(R.id.statusText);
         TextView tokenStatusText = (TextView) view.findViewById(R.id.tokenStatusText);
@@ -61,13 +66,14 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
         }
 
         if (tokenReceived && !tokenActivated){
-            infoText.setText("Please visit TUM-Online and activate your token");
+            infoText.setText("Please visit TUMonline and activate your token");
             openBrowser.setVisibility(View.VISIBLE);
             tokenStatusText.setTextColor(Color.parseColor("#ee100f"));
             tokenStatusText.setText("!Activated");
             tokenStatus.setImageResource(R.drawable.token_not_activated);
         }
         if(tokenReceived && tokenActivated){
+            // Todo: forward to regisiterd fragment
             infoText.setText("Your token is activated");
             tokenStatus.setImageResource(R.drawable.token_activated);
             tokenStatusText.setTextColor(Color.parseColor("#29b530"));
@@ -76,15 +82,31 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
         }
     }
 
-    public void onRefresh(){
+    /**
+     * Triggered if fragment is visible.
+     */
+    public void onRefresh() {
         Log.d(TAG, "Refresh");
-        appSettings = MainActivity.context.getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
-        String token = appSettings.getString("tumOnlineToken", null);
-        String userID = appSettings.getString("tum_id", null);
+//        appSettings = MainActivity.context.getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
+//        String token = appSettings.getString("tumOnlineToken", null);
+//        String userID = appSettings.getString("tum_id", null);
+//        new GetUserStatus().execute(token, userID);
+        updateLayout();
+    }
+
+    public void refreshTokenStatus(View v) {
+        RotateAnimation ra = new RotateAnimation(0, 360,
+                Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+        ra.setFillAfter(true);
+        ra.setDuration(1000);
+        updateStatus.startAnimation(ra);
+        // Update status
+        String token = appSettings.getString("tumOnlineToken", "");
+        String userID = appSettings.getString("tum_id", "");
         new GetUserStatus().execute(token, userID);
     }
 
-    final class GetUserStatus extends AsyncTask<String, Void, Void> {
+    final class GetUserStatus extends AsyncTask<String, Void, Integer> {
         protected void onPreExecute(){
             mProgressDialog = new ProgressDialog(getActivity());
             mProgressDialog.setIndeterminate(false);
@@ -93,7 +115,7 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
             mProgressDialog.show();
         }
 
-        protected Void doInBackground(String... params) {
+        protected Integer doInBackground(String... params) {
             boolean tokenActivated = backend.tokenActivated(params[0]);
             String userCredentials[] = backend.getUserCredentials(params[1]);
             Log.d(TAG, "Token activated: " + tokenActivated);
@@ -101,22 +123,28 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
 
             editor.putBoolean("token_activated", tokenActivated);
 
-            if (userCredentials[0].equals("31")){
+            int tokenStatus = -1;
+            // Note: do not see the sense of using userCredentials[] here
+            if (tokenActivated){
                 // Duplicate token, therefore one exists
                 editor.putBoolean("token_received", true);
+                tokenStatus = 0;
             }else{
                 editor.putBoolean("token_received",false);
+                tokenStatus = -1;
             }
             editor.commit();
             mProgressDialog.dismiss();
-            return null;
+            return tokenStatus;
         }
 
         @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
+        protected void onPostExecute(Integer tokenResult) {
+            super.onPostExecute(tokenResult);
             updateLayout();
-            new KeyGeneratorTask(getActivity()).execute();
+            if (0 == tokenResult) {
+                new KeyGeneratorTask(getActivity()).execute();
+            }
         }
 
     }
@@ -126,6 +154,7 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Logic bindings
         appSettings = getActivity().getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
         backend = new Backend("www.grandcat.org", "3000");
     }
@@ -135,13 +164,15 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_register_step2, container, false);
 
+        // Reference UI fields
+        updateStatus = (ImageButton)view.findViewById(R.id.imageUpdate);
+
         view.findViewById(R.id.imageUpdate).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onRefresh();
+                refreshTokenStatus(v);
             }
         });
-
         view.findViewById(R.id.visitTUMOnlineButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
