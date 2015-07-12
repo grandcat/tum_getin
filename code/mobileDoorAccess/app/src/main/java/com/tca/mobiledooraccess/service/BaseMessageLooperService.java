@@ -43,8 +43,9 @@ public class BaseMessageLooperService extends Service {
         mLooperThread.start();
         Log.i(TAG, "Looper service thread started.");
 
-        mServiceLooper = mLooperThread.getLooper();
         mServiceHandler = mLooperThread.getHandler();   // blocks until handler is created
+        mServiceLooper = mLooperThread.getLooper();     // Attention: has to be executed after
+                                                        // getHandler to be non-null
         // Initialize messenger interface for communication with CardEmulationService
         mMessenger = new Messenger(mLooperThread.getHandler());
     }
@@ -53,7 +54,7 @@ public class BaseMessageLooperService extends Service {
     public void onDestroy() {
         if (!shutdownInvoked) {
             // Stop looper thread
-            //mServiceLooper.quit();
+            mServiceLooper.quit();
             shutdownInvoked = true;
         }
     }

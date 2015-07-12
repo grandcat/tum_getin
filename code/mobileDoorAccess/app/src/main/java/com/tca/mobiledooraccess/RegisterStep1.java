@@ -45,6 +45,7 @@ public class RegisterStep1 extends Fragment implements OnRefreshListener{
         super.onCreate(savedInstanceState);
         backend = new Backend("www.grandcat.org", "3000");
         appSettings = getActivity().getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
+        Log.d(TAG, "Test pseudo ID: " + appSettings.getString("pseudo_id", ""));
     }
 
     // Inflate the view for the fragment based on layout XML

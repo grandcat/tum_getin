@@ -7,7 +7,7 @@
     <ImageView
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layout_margin="5dp"
+        android:layout_margin="8dp"
         android:id="@+id/icon"
         android:src="@drawable/btn_check_buttonless_off" />
 
@@ -21,7 +21,7 @@
             android:id="@+id/label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingTop="5dp"
+            android:paddingTop="1dp"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:text="Medium Bold Text"
             android:textStyle="bold" />
@@ -32,8 +32,8 @@
             android:layout_height="wrap_content"
             android:textColor="#343434"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:layout_marginTop="1dip"
-            android:text="Some description text..." />
+            android:layout_marginTop="2dip"
+            android:text="Send our encrypted credentials to authenticate." />
 
     </LinearLayout>
 

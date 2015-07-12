@@ -76,4 +76,12 @@ public class ProgressListAdapter extends ArrayAdapter<String> {
         }
         notifyDataSetChanged();
     }
+
+    public void setIconUntilPositionReverse(int untilPositionReverse, int resourceID) {
+        // Need to manually iterate to be able to do it backwards
+        for (int i = items.size() - 1; i > untilPositionReverse; i--) {
+            ProgressStatusModel item = items.get(i);
+            item.iconId = resourceID;
+        }
+    }
 }

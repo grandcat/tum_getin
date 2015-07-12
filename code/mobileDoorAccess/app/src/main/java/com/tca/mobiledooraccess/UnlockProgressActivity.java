@@ -60,9 +60,12 @@ public class UnlockProgressActivity extends ActionBarActivity{
 
         // Update progressStatus list
         if (newProgress > 0 && newProgress <= NUM_PROGRESS_STATUS_ENTRIES) {
-            // Update previous status items if we missed a broadcast
             if (newProgress - 1 > progress) {
+                // Update previous status items if we missed a broadcast
                 mProgressAdapter.setIconUntilPosition(newProgress - 1, R.drawable.btn_check_buttonless_on);
+            } else if (newProgress <= progress) {
+                // Mobile is attached again after previous protocol exchange: clear
+                mProgressAdapter.setIconUntilPositionReverse(newProgress - 1, R.drawable.btn_check_buttonless_off);
             }
             // Update item related to current progress number
             ProgressStatusModel progressItem = statusItems.get(newProgress - 1);
@@ -95,34 +98,38 @@ public class UnlockProgressActivity extends ActionBarActivity{
         mProgressAdapter = new ProgressListAdapter(this, statusItems);
         mProgressList.setAdapter(mProgressAdapter);
 
-        // Set already reached progress from intent if supplied
-        int progress = getIntent().getIntExtra("progress", 0);
-        Log.d(TAG, "Progress: " + progress);
-        updateProgressSuccess(progress);
-
         // Register for NFC protocol progress
         LocalBroadcastManager.getInstance(this).registerReceiver(
                 mNfcProgressReceiver,
                 new IntentFilter(StatefulProtocolHandler.INTENT_PROTOCOL_PROGRESS)
         );
 
+        // Set already reached progress from intent if supplied.
+        //
+        // Do not update if the app was resumed, because Android's bundle extras still
+        // contain old progress data.
+        int progress = getIntent().getIntExtra("progress", 0);
+        int state = 0;
+        if (savedInstanceState != null) {
+            if (savedInstanceState.getBoolean("running", false))
+                state = 2;
+            else
+                state = 1;
+        }
+        Log.d(TAG, "Progress: " + progress + ", running: " + state);
+        updateProgressSuccess(progress);
     }
+
+    @Override
     protected void onResume() {
         super.onResume();
-
-    }
-
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-
+        Log.d(TAG, "Resumed.");
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        // Remove progress value here that was added while starting this activity
-        Log.d(TAG, "App paused; Delete progress.");
-        getIntent().removeExtra("progress");
+        Log.d(TAG, "Paused.");
     }
 
     @Override
@@ -131,6 +138,7 @@ public class UnlockProgressActivity extends ActionBarActivity{
         // Unregister NFC protocol progress
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mNfcProgressReceiver);
     }
+
     private static ArrayList<ProgressStatusModel> generateStatusList() {
         ArrayList<ProgressStatusModel> progressList = new ArrayList<>(NUM_PROGRESS_STATUS_ENTRIES);
         // Progress status message 1
@@ -138,9 +146,13 @@ public class UnlockProgressActivity extends ActionBarActivity{
                 "Device connected",
                 "Touch a TUM terminal with your phone."));
         // Progress status message 2
-        progressList.add(new ProgressStatusModel("Received handshake", "Desc2"));
+        progressList.add(new ProgressStatusModel(
+                "Received handshake",
+                "Terminal responds with a valid challenge we have to do."));
         // Progress status message 3
-        progressList.add(new ProgressStatusModel("Cryptographic exchange", "Desc3"));
+        progressList.add(new ProgressStatusModel(
+                "Cryptographic exchange",
+                "Send our encrypted credentials to authenticate for opening the door."));
 
         return progressList;
     }
@@ -150,11 +162,15 @@ public class UnlockProgressActivity extends ActionBarActivity{
         getMenuInflater().inflate(R.menu.menu, menu);
         return true;
     }
+
+    /**
+     * Handle action bar item clicks here. The action bar will
+     * automatically handle clicks on the Home/Up button, so long
+     * as you specify a parent activity in AndroidManifest.xml.
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+        //
         int id = item.getItemId();
 
         switch (id){

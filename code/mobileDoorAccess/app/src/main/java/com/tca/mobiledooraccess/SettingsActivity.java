@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.text.style.UpdateAppearance;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.tca.mobiledooraccess.utils.KeyGeneratorTask;
@@ -29,7 +30,7 @@ public class SettingsActivity extends PreferenceActivity {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.preferences);
         appSettings = getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
-        context = getApplicationContext();
+        context = SettingsActivity.this;
         backend = new Backend("www.grandcat.org", "3000");
 
         Preference p1 = (Preference)findPreference("pref_delete_account");
@@ -44,7 +45,8 @@ public class SettingsActivity extends PreferenceActivity {
         p2.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                new UpdateKeyPair().execute();
+                // new UpdateKeyPair().execute();
+                new KeyGeneratorTask(context).execute();
                 return false;
             }
         });
@@ -56,8 +58,6 @@ public class SettingsActivity extends PreferenceActivity {
                 return false;
             }
         });
-
-
 
     }
 
@@ -145,10 +145,14 @@ public class SettingsActivity extends PreferenceActivity {
             SharedPreferences.Editor editor = appSettings.edit();
 
             String result[] = backend.getNewPseudoID(tumID, token);
+            Log.d(TAG, "New pseudo: " + result[0] + ", salt: " + result[1]);
 
             if (!result[0].equals("0")){
-                editor.putString("pseudo_id", result[0]);
+                editor.putString("pseudo_ID", result[0]);
                 editor.putString("salt", result[1]);
+                Log.d(TAG, "Storing new Pseudo and salt.");
+                editor.commit();
+                Log.d(TAG, "Test pseudo ID: " + appSettings.getString("pseudo_id", ""));
             }
             mProgressDialog.dismiss();
             return null;

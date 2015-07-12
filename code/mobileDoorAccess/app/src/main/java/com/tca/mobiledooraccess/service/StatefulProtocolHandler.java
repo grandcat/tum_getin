@@ -1,5 +1,6 @@
 package com.tca.mobiledooraccess.service;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Message;
@@ -79,8 +80,7 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
      */
     @Override
     public void handleMessage(Message msg) {
-        // Log.d(MessageExchangeService.TAG, "State machine handler is " + Thread.currentThread().getName());
-        Log.d(TAG, "Got message with what " + msg.what);
+        Log.d(TAG, "[Thread" + Thread.currentThread().getName() + "] Got message with what " + msg.what);
 
         switch (msg.what) {
             /**
@@ -237,9 +237,10 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
         // Get pseudo student ID from preferences
         SharedPreferences prefs = appContext.getSharedPreferences(
                 MainActivity.TUM_GETIN_PREFERENCES,
-                appContext.MODE_PRIVATE
+                Context.MODE_PRIVATE | Context.MODE_MULTI_PROCESS
         );
         String pseudoID = prefs.getString("pseudo_ID", "");
+        Log.d(TAG, "Sending pseudo_ID: " + pseudoID);
 
         // Prepare outgoing message: Android --> target terminal
         JSONObject jsonMsg = new JSONObject();
