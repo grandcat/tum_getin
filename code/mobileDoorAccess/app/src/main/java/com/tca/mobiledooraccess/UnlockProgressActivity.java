@@ -9,7 +9,10 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -25,7 +28,7 @@ import java.util.concurrent.ExecutionException;
 /**
  * Created by basti on 22.06.15.
  */
-public class UnlockProgressActivity extends Activity{
+public class UnlockProgressActivity extends ActionBarActivity{
 
     public static final String TUM_GETIN_PREFERENCES = "TGI_PREFS";
     public static final String TAG = "RegisteredActivity";
@@ -86,11 +89,32 @@ public class UnlockProgressActivity extends Activity{
         );
 
     }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
         // Unregister NFC protocol progress
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mNfcProgressReceiver);
+    }
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        switch (id){
+            case R.id.action_settings:
+                //call Settings Activity
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

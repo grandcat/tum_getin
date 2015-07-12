@@ -1,6 +1,8 @@
 package com.tca.mobiledooraccess;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -19,43 +21,33 @@ public class RegisterCompleted extends Fragment implements OnRefreshListener {
     public static final String TUM_GETIN_PREFERENCES = "TGI_PREFS";
     private SharedPreferences appSettings;
 
-    public void updateLayout(View view){
+    public void updateLayout(){
         appSettings = MainActivity.context.getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
-        boolean tokenReceived = appSettings.getBoolean("token_received", false);
-        boolean tokenActivated = appSettings.getBoolean("token_activated", false);
         boolean registered = appSettings.getBoolean("registered", false);
 
+        View view = this.getView();
 
-        ImageView imgTokenReceived = (ImageView) view.findViewById(R.id.registered_token_received_image);
-        ImageView imgTokenActivated = (ImageView) view.findViewById(R.id.registered_token_activated_image);
-        ImageView imgRegistered = (ImageView) view.findViewById(R.id.registered_image);
-        ImageView imgNFC = (ImageView) view.findViewById(R.id.nfc_hand_picture);
+        ImageView imgComplete = (ImageView)view.findViewById(R.id.img_registered_status);
+        TextView txtComplete = (TextView) view.findViewById(R.id.txt_registered_status);
+        Button complete = (Button) view.findViewById(R.id.btn_registered_status);
 
-        if (tokenReceived){
-            imgTokenReceived.setImageResource(R.drawable.token_activated);
-        }else{
-            imgTokenReceived.setImageResource(R.drawable.token_not_activated);
-        }
-        if (tokenActivated){
-            imgTokenActivated.setImageResource(R.drawable.token_activated);
-        }else{
-            imgTokenActivated.setImageResource(R.drawable.token_not_activated);
-        }
         if (registered){
-            imgRegistered.setImageResource(R.drawable.token_activated);
-            imgNFC.setVisibility(View.VISIBLE);
-        }else{
-            imgTokenReceived.setImageResource(R.drawable.token_not_activated);
-            imgNFC.setVisibility(View.INVISIBLE);
-        }
+            imgComplete.setImageResource(R.drawable.token_activated);
+            txtComplete.setTextColor(Color.parseColor("#29b530"));
+            txtComplete.setText("OK");
+            complete.setVisibility(View.VISIBLE);
 
+        }else{
+            imgComplete.setImageResource(R.drawable.token_not_activated);
+            txtComplete.setTextColor(Color.parseColor("#ffee100f"));
+            complete.setVisibility(View.INVISIBLE);
+        }
     }
 
     @Override
     public void onRefresh() {
         Log.d("Lifecycle-"+TAG, "onRefresh");
-        View view = getView();
-        updateLayout(view);
+        updateLayout();
     }
 
     @Override
@@ -68,7 +60,18 @@ public class RegisterCompleted extends Fragment implements OnRefreshListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_registered, container, false);
-        updateLayout(view);
+        Button complete = (Button) view.findViewById(R.id.btn_registered_status);
+        complete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean registered_done = appSettings.getBoolean("registered_done", false);
+                SharedPreferences.Editor editor = appSettings.edit();
+                editor.putBoolean("registered_done", true);
+                editor.commit();
+                Intent intent = new Intent(getActivity(), UnlockProgressActivity.class);
+                startActivity(intent);
+            }
+        });
         return view;
     }
 

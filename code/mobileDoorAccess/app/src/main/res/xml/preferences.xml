@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <Preference
+        android:key="pref_delete_account"
+        android:summary="@string/summary_delete_account"
+        android:title="Reset Account"/>
+    <Preference
+        android:key="pref_new_key_pair"
+        android:summary="@string/summary_new_key_pair"
+        android:title="Create new KeyPair"/>
+    <Preference
+        android:key="pref_new_pseudo_id"
+        android:summary="@string/summary_new_pseudo_id"
+        android:title="Request new Pseudo-ID"/>
+</PreferenceScreen>
