@@ -17,6 +17,8 @@ import android.widget.Toast;
 
 import com.tca.mobiledooraccess.service.StatefulProtocolHandler;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -29,18 +31,23 @@ public class UnlockProgressActivity extends Activity{
     public static final String TAG = "RegisteredActivity";
 
     private ListView mProgressList;
+    private ProgressListAdapter mProgressAdapter;
     private ProgressBar mProgressBar;
 
-    String[] itemname ={
-            "Safari",
-            "Camera",
-            "Global"
+    ArrayList<String> items;
+    String[] itemname = {
+            "Device connected",
+            "Received handshake",
+            "Cryptographic exchange"
     };
 
-    int[] imgid={
-            R.drawable.abc_ic_go,
-            R.drawable.abc_ic_go,
-            0
+    int[] imgid = {
+            R.drawable.btn_check_buttonless_on,
+            R.drawable.btn_check_buttonless_off,
+            R.drawable.ic_dialog_alert_holo_light,
+            R.drawable.ic_dialog_alert_holo_light,
+            R.drawable.ic_dialog_alert_holo_light,
+            R.drawable.ic_dialog_alert_holo_light
     };
 
     private BroadcastReceiver mNfcProgressReceiver = new BroadcastReceiver() {
@@ -54,6 +61,8 @@ public class UnlockProgressActivity extends Activity{
             Log.d(TAG, "Got progress: " + progress);
             // Update progressBar in UI
             mProgressBar.setProgress(progress);
+            items.add("huhu test");
+            mProgressAdapter.notifyDataSetChanged();
         }
     };
 
@@ -66,8 +75,9 @@ public class UnlockProgressActivity extends Activity{
         mProgressList = (ListView)findViewById(R.id.progressList);
         mProgressBar = (ProgressBar)findViewById(R.id.progress_bar_nfc_protocol);
         // Define custom list layout for progress states
-        ProgressListAdapter adapter = new ProgressListAdapter(this, itemname, imgid);
-        mProgressList.setAdapter(adapter);
+        items = new ArrayList<>(Arrays.asList(itemname));
+        mProgressAdapter = new ProgressListAdapter(this, items, imgid);
+        mProgressList.setAdapter(mProgressAdapter);
 
         // Register for NFC protocol progress
         LocalBroadcastManager.getInstance(this).registerReceiver(
