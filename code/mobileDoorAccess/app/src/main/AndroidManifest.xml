@@ -24,7 +24,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".UnlockProgressActivity"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:launchMode="singleTask" />
         <activity android:name=".SettingsActivity"/>
 
         <!-- Service for handling communication with NFC reader. -->
