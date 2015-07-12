@@ -5,7 +5,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.Preference;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -98,32 +100,30 @@ public class UnlockProgressActivity extends ActionBarActivity{
         mProgressAdapter = new ProgressListAdapter(this, statusItems);
         mProgressList.setAdapter(mProgressAdapter);
 
+        // Set already reached progress from intent if supplied
+        int progress = getIntent().getIntExtra("progress", 0);
+        Log.d(TAG, "Progress: " + progress);
+        updateProgressSuccess(progress);
         // Register for NFC protocol progress
         LocalBroadcastManager.getInstance(this).registerReceiver(
                 mNfcProgressReceiver,
                 new IntentFilter(StatefulProtocolHandler.INTENT_PROTOCOL_PROGRESS)
         );
-
-        // Set already reached progress from intent if supplied.
-        //
-        // Do not update if the app was resumed, because Android's bundle extras still
-        // contain old progress data.
-        int progress = getIntent().getIntExtra("progress", 0);
-        int state = 0;
-        if (savedInstanceState != null) {
-            if (savedInstanceState.getBoolean("running", false))
-                state = 2;
-            else
-                state = 1;
-        }
-        Log.d(TAG, "Progress: " + progress + ", running: " + state);
-        updateProgressSuccess(progress);
     }
-
+    
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d(TAG, "Resumed.");
+        //Check if user is still registered
+        if (!stillRegistered()){
+            Intent intent = new Intent(UnlockProgressActivity.this, MainActivity.class);
+            startActivity(intent);
+        }
+    }
+
+    private boolean stillRegistered(){
+        SharedPreferences prefs = getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
+        return prefs.getBoolean("registered",false);
     }
 
     @Override
@@ -170,7 +170,6 @@ public class UnlockProgressActivity extends ActionBarActivity{
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        //
         int id = item.getItemId();
 
         switch (id){
