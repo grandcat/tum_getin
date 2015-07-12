@@ -9,15 +9,32 @@
         android:layout_height="50dp"
         android:layout_margin="5dp"
         android:id="@+id/icon"
-        android:src="@android:drawable/presence_online" />
+        android:src="@drawable/btn_check_buttonless_off" />
+    <!-- Title Of Song-->
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingTop="15dp"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Medium Text"
-        android:id="@+id/label"
-        android:layout_gravity="center_horizontal"
-        android:layout_weight="0.10" />
+        <!--android:layout_gravity="center_horizontal"-->
+        <TextView
+            android:id="@+id/label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="5dp"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Medium Text"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#343434"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:layout_marginTop="1dip"
+            android:text="Some description text..." />
+
+    </LinearLayout>
+
 </LinearLayout>
