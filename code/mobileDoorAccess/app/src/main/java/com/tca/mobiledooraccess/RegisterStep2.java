@@ -36,13 +36,13 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
     ImageButton updateStatus;
 
 
-    public void updateLayout(View view){
+    public void updateLayout(){
         // Reload settings to encouter for changes in register step 1
         appSettings = MainActivity.context.getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
         boolean tokenReceived = appSettings.getBoolean("token_received", false);
         boolean tokenActivated = appSettings.getBoolean("token_activated", false);
         boolean registered = appSettings.getBoolean("registered", false);
-        //View view = this.getView();
+        View view = this.getView();
         ImageView tokenStatus = (ImageView) view.findViewById(R.id.imageTokenStatus);
         TextView infoText = (TextView) view.findViewById(R.id.infoText);
         Button openBrowser = (Button) view.findViewById(R.id.visitTUMOnlineButton);
@@ -87,8 +87,7 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
      */
     public void onRefresh() {
         Log.d("Lifecycle-"+TAG, "onRefresh");
-        View view = getView();
-        updateLayout(view);
+        updateLayout();
     }
 
     public void refreshTokenStatus(View v) {
@@ -119,7 +118,10 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
             SharedPreferences.Editor editor = appSettings.edit();
 
             editor.putBoolean("token_activated", tokenActivated);
-            editor.putBoolean("registered", true);
+
+            if (tokenActivated){
+                editor.putBoolean("registered", true);
+            }
 
             editor.commit();
             mProgressDialog.dismiss();
@@ -129,9 +131,8 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
         @Override
         protected void onPostExecute(Boolean tokenActivated) {
             super.onPostExecute(tokenActivated);
-            updateLayout(getView());
-
-            if (tokenActivated = true) { // TODO: remove this hack introduced for fast debugging
+            updateLayout();
+            if (tokenActivated) {
                 if(!appSettings.getBoolean("keys_generated", false)){
                     new KeyGeneratorTask(getActivity()).execute();
                 }
@@ -173,7 +174,6 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
                 startActivity(launchBrowser);
             }
         });
-        updateLayout(view);
         return view;
     }
 }

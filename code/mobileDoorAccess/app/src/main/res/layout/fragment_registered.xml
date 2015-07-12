@@ -3,83 +3,48 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#ff0a4f9b"
-    android:id="@+id/fragmentRegisterComplete">
+    android:background="#ff0a4f9b">
 
-    <LinearLayout
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingLeft="16dp"
-        android:paddingTop="10dp"
-        android:paddingRight="16dp">
-
-        <ImageView
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="0.3"
-            android:src="@drawable/token_not_activated"
-            android:id="@+id/registered_token_received_image"/>
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="0.7"
-            android:text="Token Received"
-            android:gravity="left|center"
-            android:textColor="#ffffffff"
-            android:textSize="20dp"/>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp">
-        <ImageView
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="0.3"
-            android:src="@drawable/token_not_activated"
-            android:id="@+id/registered_token_activated_image"/>
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="0.7"
-            android:text="Token Activated"
-            android:gravity="left|center"
-            android:textColor="#ffffffff"
-            android:textSize="20dp"/>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingLeft="16dp"
         android:paddingRight="16dp"
-        >
-        <ImageView
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="0.3"
-            android:src="@drawable/token_not_activated"
-            android:id="@+id/registered_image"/>
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="0.7"
-            android:text="Registered"
-            android:gravity="left|center"
-            android:textColor="#ffffffff"
-            android:textSize="20dp"/>
-    </LinearLayout>
-
+        android:paddingLeft="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
+        android:textColor="#ffffffff"
+        android:text="Registration Complete:"
+        android:textAlignment="center"
+        android:gravity="center"
+        android:textSize="30dp"/>
     <ImageView
         android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_gravity="center"
+        android:src="@drawable/token_not_activated"
+        android:id="@+id/img_registered_status"/>
+
+    <TextView
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingLeft="16dp"
         android:paddingRight="16dp"
-        android:src="@drawable/tap_nfc_terminal_white"
-        android:id="@+id/nfc_hand_picture"
-        android:visibility="invisible"/>
+        android:paddingLeft="16dp"
+        android:paddingBottom="30dp"
+        android:textColor="#ffee100f"
+        android:text="No"
+        android:textAlignment="center"
+        android:gravity="center"
+        android:textSize="30dp"
+        android:id="@+id/txt_registered_status"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/btn_registered_status"
+        android:visibility="invisible"
+        android:text="Complete Registration"
+        android:background="#ffe6e6e6"
+        />
+
 
 </LinearLayout>

@@ -9,6 +9,9 @@
     <string name="action_delete_account">Reset Account</string>
     <string name="action_update_key_pair">Get new Key-Pair</string>
     <string name="action_update_pseudo_id">Get new Pseudo-ID</string>
-    <string name="toast_account_deleted_success">Account deleted. Don\'t forget to delete the token in TUMonline, too.</string>
+    <string name="toast_account_deleted_success">Account deleted. Do not forget to delete the token in TUMonline, too.</string>
     <string name="toast_account_deleted_err">Could not delete account online. Please contact the TUM administration.</string>
+    <string name="summary_delete_account">Deletes and resets your account. Please do not forget to delete the TUMOnline tokens by hand</string>
+    <string name="summary_new_key_pair">Creates a new public-private-key pair and sends it to the backend server</string>
+    <string name="summary_new_pseudo_id">Asks for a new pseudo id</string>
 </resources>

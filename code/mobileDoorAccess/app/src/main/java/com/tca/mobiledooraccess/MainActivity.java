@@ -3,6 +3,7 @@ package com.tca.mobiledooraccess;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -125,16 +126,17 @@ public class MainActivity extends ActionBarActivity {
             public void onPageSelected(int position) {
                 ((OnRefreshListener) adapterViewPager.getItem(position)).onRefresh();
             }
-
             @Override
             public void onPageScrollStateChanged(int state) {
 
             }
         });
 
+        if (appSettings.getBoolean("registered_done", false)){
+            Intent intent = new Intent(this, UnlockProgressActivity.class);
+        }
 
     }
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -153,168 +155,14 @@ public class MainActivity extends ActionBarActivity {
         int id = item.getItemId();
 
         switch (id){
-            case R.id.action_delete_account:
-                new DeleteAccount().execute();
-                return true;
-            case R.id.action_update_key_pair:
-                new UpdateKeyPair().execute();
-                return true;
-            case R.id.action_update_pseudo_id:
-                new UpdatePseudoIDandSalt().execute();
+            case R.id.action_settings:
+                //call Settings Activity
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
                 return true;
         }
         return super.onOptionsItemSelected(item);
     }
-
-    final class DeleteAccount extends AsyncTask<Void, Integer, Boolean> {
-        protected void onPreExecute(){
-            mProgressDialog = new ProgressDialog(MainActivity.this);
-            mProgressDialog.setIndeterminate(false);
-            mProgressDialog.setMessage("Connecting to server...");
-            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            mProgressDialog.show();
-        }
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            String tumId = appSettings.getString("tum_id", "");
-            String token = appSettings.getString("tumOnlineToken", "");
-            // Try to delete account
-            int status = backend.deleteAccount(tumId, token);
-            if (0 == status) {
-                // Delete local data
-                SharedPreferences.Editor settings = appSettings.edit();
-                settings.remove("tum_id").remove("pseudo_ID").remove("tumOnlineToken").remove("priv_key");
-                settings.remove("token_activated").remove("token_received").remove("registered").remove("keys_generated");
-                settings.apply();
-                // Notify UI
-                mProgressDialog.dismiss();
-                return true;
-            } else {
-                mProgressDialog.dismiss();
-                return false;
-            }
-        }
-        @Override
-        protected void onPostExecute(Boolean deleteSuccess) {
-            super.onPostExecute(deleteSuccess);
-
-            String msg;
-            if (deleteSuccess) {
-                // Account deleted successfully online
-                msg = getString(R.string.toast_account_deleted_success);
-            } else {
-                msg = getString(R.string.toast_account_deleted_err);
-            }
-            Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
-
-        }
-    }
-    final class UpdateKeyPair extends AsyncTask<Void, Void, Void> {
-        protected void onPreExecute(){
-            mProgressDialog = new ProgressDialog(MainActivity.this);
-            mProgressDialog.setIndeterminate(false);
-            mProgressDialog.setMessage("Connecting to server...");
-            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            mProgressDialog.show();
-        }
-        @Override
-        protected Void doInBackground(Void... params) {
-            String publicKey = appSettings.getString("publicKey", null);
-            String privateKey = appSettings.getString("privateKey", null);
-            String tumID = appSettings.getString("tum_id", null);
-            String token = appSettings.getString("tumOnlineToken", null);
-
-
-            if (publicKey != null && privateKey != null && tumID != null && token != null){
-                new KeyGeneratorTask(context).execute();
-            }else{
-
-            }
-            mProgressDialog.dismiss();
-            return null;
-        }
-    }
-    final class UpdatePseudoIDandSalt extends AsyncTask<Void, Void, Void> {
-        protected void onPreExecute(){
-            mProgressDialog = new ProgressDialog(MainActivity.this);
-            mProgressDialog.setIndeterminate(false);
-            mProgressDialog.setMessage("Connecting to server...");
-            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            mProgressDialog.show();
-        }
-        @Override
-        protected Void doInBackground(Void... params) {
-            String tumID = appSettings.getString("tum_id", null);
-            String token = appSettings.getString("tumOnlineToken", null);
-            SharedPreferences.Editor editor = appSettings.edit();
-
-            String result[] = backend.getNewPseudoID(tumID, token);
-
-            if (!result[0].equals("0")){
-                editor.putString("pseudo_id", result[0]);
-                editor.putString("salt", result[1]);
-            }
-            mProgressDialog.dismiss();
-            return null;
-        }
-    }
-
-
-
-//    private void checkAppStatus(){
-//        SharedPreferences settings;
-//        settings = getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
-//        //get Settings - init with false in case of missing
-//        boolean registered = settings.getBoolean("registered",false);
-//        boolean token_received = settings.getBoolean("token_received", false);
-//        boolean token_activated = settings.getBoolean("token_activated", false);
-//
-//        final class IncomingHandler extends Handler {
-//            @Override
-//            public void handleMessage(Message msg) {
-//                Log.d(TAG, "Mainactivity handler: message " + msg.arg1);
-//            }
-//        }
-//        mConnection = new MyServiceConnection();
-//
-//        final Messenger mMessenger = new Messenger(new IncomingHandler());
-//        // Try binding and send a message to worker thread
-//        Intent bindIntent = new Intent(this, MessageExchangeService.class);
-////        // Service should now be resistance to unbinding
-////        bindService(bindIntent, mConnection, Context.BIND_AUTO_CREATE);
-//        startService(bindIntent);
-//        // TODO: action has to be done within bindConnection
-//        // unbindService(mConnection);
-//
-//        //Check status of the App...
-//        if (registered){
-//            Log.d(TAG, "User registered, starting RegisteredActivity...");
-//            //start Regeistered Activity
-//            Intent intent = new Intent(this, RegisteredActivity.class);
-//            startActivity(intent);
-//            finish();
-//        }else{
-//            Log.d(TAG, "User not registered, checking for token status...");
-//            if (token_received){
-//                if (token_activated){
-//                    Log.e(TAG, "This should not happen! Registered flag missing!");
-//                }else{
-//                    Log.d(TAG, "Token already received, starting TokenActivation Activity...");
-//                    //start TokenActivation Activity
-//                    Intent intent = new Intent(this, TokenActivationActivity.class);
-//                    startActivity(intent);
-//                    finish();
-//                }
-//            }else{
-//                Log.d(TAG, "No token received yet, starting NotRegistered Activity...");
-//                //start NotRegisteredActivity
-//                Intent intent = new Intent(this, NotRegisteredActivity.class);
-//                startActivity(intent);
-//                finish();
-//            }
-//        }
-//    }
-
     @Override
     protected void onStop() {
         super.onStop();
