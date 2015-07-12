@@ -178,9 +178,18 @@ public class MainActivity extends ActionBarActivity {
             }
         }
         @Override
-        protected void onPostExecute(Boolean aBoolean) {
-            Toast.makeText(MainActivity.this, "Deletion complete, dont forget to delete your token in TUMOnline", Toast.LENGTH_SHORT).show();
-            super.onPostExecute(aBoolean);
+        protected void onPostExecute(Boolean deleteSuccess) {
+            super.onPostExecute(deleteSuccess);
+
+            String msg;
+            if (deleteSuccess) {
+                // Account deleted successfully online
+                msg = getString(R.string.toast_account_deleted_success);
+            } else {
+                msg = getString(R.string.toast_account_deleted_err);
+            }
+            Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
+
         }
     }
     final class UpdateKeyPair extends AsyncTask<Void, Void, Void> {

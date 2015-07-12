@@ -7,13 +7,12 @@
     android:id="@+id/registered_activity"
     android:weightSum="1">
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Remove local and remote account"
-        android:id="@+id/button_delete_keys"
+    <ImageView
+        android:layout_width="202dp"
+        android:layout_height="188dp"
         android:layout_gravity="center_horizontal"
-        android:onClick="deleteKeys" />
+        android:id="@+id/imageView_instructions"
+        android:src="@drawable/tap_nfc_terminal_white" />
 
     <ProgressBar
         style="?android:attr/progressBarStyleHorizontal"
@@ -24,5 +23,10 @@
         android:max="3"
         android:progress="0"
         android:indeterminate="false" />
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/progressList" />
 
 </LinearLayout>

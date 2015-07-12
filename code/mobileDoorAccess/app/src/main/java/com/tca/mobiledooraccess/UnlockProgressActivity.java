@@ -11,11 +11,13 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.tca.mobiledooraccess.service.StatefulProtocolHandler;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -26,37 +28,20 @@ public class UnlockProgressActivity extends Activity{
     public static final String TUM_GETIN_PREFERENCES = "TGI_PREFS";
     public static final String TAG = "RegisteredActivity";
 
+    private ListView mProgressList;
     private ProgressBar mProgressBar;
 
-    final class DeleteAccount extends AsyncTask<Void, Integer, Boolean> {
+    String[] itemname ={
+            "Safari",
+            "Camera",
+            "Global"
+    };
 
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            // Get settings
-            SharedPreferences prefs = getSharedPreferences(
-                    MainActivity.TUM_GETIN_PREFERENCES,
-                    Context.MODE_PRIVATE
-            );
-            String tumId = prefs.getString("tum_id", "");
-            String token = prefs.getString("tumOnlineToken", "");
-            // Try to delete account
-            Backend backend = new Backend("www.grandcat.org", "3000");
-            int status = backend.deleteAccount(tumId, token);
-            if (0 == status) {
-                // Delete local data
-                SharedPreferences.Editor settings = prefs.edit();
-                settings.remove("tum_id").remove("pseudo_ID").remove("tumOnlineToken").remove("priv_key");
-                settings.remove("token_activated").remove("token_received").remove("registered");
-                settings.apply();
-                // Notify UI
-                return true;
-
-            } else {
-                // Something went wrong
-                return false;
-            }
-        }
-    }
+    int[] imgid={
+            R.drawable.abc_ic_go,
+            R.drawable.abc_ic_go,
+            0
+    };
 
     private BroadcastReceiver mNfcProgressReceiver = new BroadcastReceiver() {
         @Override
@@ -75,10 +60,14 @@ public class UnlockProgressActivity extends Activity{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.registered_activity);
+        setContentView(R.layout.unlock_progress_activity);
 
-        // Fields
-        mProgressBar = (ProgressBar) findViewById(R.id.progress_bar_nfc_protocol);
+        // UI fields
+        mProgressList = (ListView)findViewById(R.id.progressList);
+        mProgressBar = (ProgressBar)findViewById(R.id.progress_bar_nfc_protocol);
+        // Define custom list layout for progress states
+        ProgressListAdapter adapter = new ProgressListAdapter(this, itemname, imgid);
+        mProgressList.setAdapter(adapter);
 
         // Register for NFC protocol progress
         LocalBroadcastManager.getInstance(this).registerReceiver(
@@ -93,29 +82,5 @@ public class UnlockProgressActivity extends Activity{
         super.onDestroy();
         // Unregister NFC protocol progress
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mNfcProgressReceiver);
-    }
-
-    public void deleteKeys(View v) {
-        Log.d(TAG, "DeleteKeys called.");
-
-        try {
-            boolean success = new DeleteAccount().execute().get();
-            if (success) {
-                // Account deleted successfully online
-                Toast.makeText(
-                        this,
-                        "Account deleted. Don't forget to delete the token in TUMonline, too.",
-                        Toast.LENGTH_LONG
-                ).show();
-            } else {
-                Toast.makeText(
-                        this,
-                        "Could not delete account online. Please contact the TUM administration.",
-                        Toast.LENGTH_SHORT
-                ).show();
-            }
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
     }
 }

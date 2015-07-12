@@ -95,7 +95,7 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
     }
 
     public void refreshTokenStatus(View v) {
-        RotateAnimation ra = new RotateAnimation(0, 360,
+        RotateAnimation ra = new RotateAnimation(0, -360,
                 Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
         ra.setFillAfter(true);
         ra.setDuration(1000);
