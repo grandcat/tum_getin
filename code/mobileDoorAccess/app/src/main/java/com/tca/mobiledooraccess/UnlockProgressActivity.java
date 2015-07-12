@@ -96,8 +96,7 @@ public class UnlockProgressActivity extends ActionBarActivity{
         mProgressList.setAdapter(mProgressAdapter);
 
         // Set already reached progress from intent if supplied
-        Bundle extras = getIntent().getExtras();
-        int progress = extras.getInt("progress");
+        int progress = getIntent().getIntExtra("progress", 0);
         Log.d(TAG, "Progress: " + progress);
         updateProgressSuccess(progress);
 
