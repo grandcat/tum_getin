@@ -195,14 +195,15 @@ class NFCReader(object):
 
         return connection_loop
 
-    def shutdown_nfc_reader(self):
+    def shutdown_nfc_reader(self, delay_time=0):
         if self.running:
             self.running = False
             try:
                 nfc.nfc_close(self.__device)
                 nfc.nfc_exit(self.__context)
             finally:
-               self.log.info('NFC clean shutdown')
+                self.log.info('NFC clean shutdown. Delay some time until restart.')
+                time.sleep(delay_time)
 
     def send_uid(self):
         """Send UID to allow the Android app to recognize our reader"""

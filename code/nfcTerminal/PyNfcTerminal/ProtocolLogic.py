@@ -26,6 +26,7 @@ class ProtocolLogic(ReaderIO):
         backend = Backend()
 
         hw_activated = True
+        delay_time = 0
         while hw_activated:
             try:
                 self.device.start_nfc_reader()
@@ -101,23 +102,27 @@ class ProtocolLogic(ReaderIO):
                     self.log.info('ACCESS GRANTED.')
                 else:
                     self.log.error('Nonce r_T and received value or token hashes do not match. Replay attack?')
+                    self.log.error('Nonce values match: %s, token hash values match: %s',
+                                   nonce_r_T == msg_r_T,
+                                   backend_token_hash == msg_token_hash)
 
                 self.device.shutdown_nfc_reader()
 
                 # Wait some time before permitting a client to connect again
-                # Otherwise Android tries to reconnect, but actually, it should be not necessary
-                time.sleep(3)
+                # Otherwise Android tries to reconnect, but actually, it should not be necessary
+                delay_time = 3
 
             except (KeyboardInterrupt, SystemExit):
                 hw_activated = False
             except AttributeError as e:
                 self.log.error("AttributeError due to mismatch in protocol: " + str(e))
                 hw_activated = True
+                delay_time = 5
             except ValueError as e:
                 # Probably the decryption failed
                 self.log.error("ValueError occurred. Could be an attack! Details: " + str(e))
-                time.sleep(5)
                 hw_activated = True
+                delay_time = 5
             except IOError as e:
                 self.log.error("IOError Exception: " + str(e))
                 hw_activated = True
@@ -125,7 +130,7 @@ class ProtocolLogic(ReaderIO):
                 self.log.error("Assuming misbehaving target. BufferError: " + str(e))
                 hw_activated = True
             finally:
-                self.device.shutdown_nfc_reader()
+                self.device.shutdown_nfc_reader(delay_time)
 
     def receive_and_decrypt(self):
         # Receive raw NFC message
