@@ -14,4 +14,5 @@
     <string name="summary_delete_account">Deletes and resets your account. Please do not forget to delete the TUMOnline tokens by hand</string>
     <string name="summary_new_key_pair">Creates a new public-private-key pair and sends it to the backend server</string>
     <string name="summary_new_pseudo_id">Asks for a new pseudo id</string>
+    <string name="wiz_step3_launch_reader">Everything ok, let\'s go</string>
 </resources>

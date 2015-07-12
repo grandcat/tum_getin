@@ -32,7 +32,7 @@
             android:gravity="center"
             android:id="@+id/visitTUMOnlineButton"
             android:background="#ffe8e8e8"
-            android:text="Open TUMOnline Site"
+            android:text="Open TUMonline Site"
             android:visibility="invisible"
             />
     </LinearLayout>

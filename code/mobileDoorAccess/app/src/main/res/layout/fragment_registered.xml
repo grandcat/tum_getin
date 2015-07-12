@@ -42,7 +42,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/btn_registered_status"
         android:visibility="invisible"
-        android:text="Complete Registration"
+        android:text="@string/wiz_step3_launch_reader"
         android:background="#ffe6e6e6"
         />
 

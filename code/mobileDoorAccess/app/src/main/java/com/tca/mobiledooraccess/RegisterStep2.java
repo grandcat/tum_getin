@@ -37,12 +37,13 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
 
 
     public void updateLayout(){
-        // Reload settings to encouter for changes in register step 1
+        // Reload settings to account for changes in register step 1
         appSettings = MainActivity.context.getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
         boolean tokenReceived = appSettings.getBoolean("token_received", false);
         boolean tokenActivated = appSettings.getBoolean("token_activated", false);
         boolean registered = appSettings.getBoolean("registered", false);
         View view = this.getView();
+        // TODO: do these bindings only once onCreate
         ImageView tokenStatus = (ImageView) view.findViewById(R.id.imageTokenStatus);
         TextView infoText = (TextView) view.findViewById(R.id.infoText);
         Button openBrowser = (Button) view.findViewById(R.id.visitTUMOnlineButton);
@@ -57,23 +58,21 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
         statusText.setVisibility(View.VISIBLE);
         tokenStatusText.setVisibility(View.VISIBLE);
 
-        if (!tokenReceived){
+        if (!tokenReceived) {
             infoText.setText("Please request a token at Step 1");
             tokenStatus.setImageResource(R.drawable.token_not_activated);
             openBrowser.setVisibility(View.INVISIBLE);
             tokenStatusText.setTextColor(Color.parseColor("#ee100f"));
             tokenStatusText.setText("!Activated");
-        }
-
-        if (tokenReceived && !tokenActivated){
+        } else
+        if (tokenReceived && !tokenActivated) {
             infoText.setText("Please visit TUMonline and activate your token");
             openBrowser.setVisibility(View.VISIBLE);
             tokenStatusText.setTextColor(Color.parseColor("#ee100f"));
             tokenStatusText.setText("!Activated");
             tokenStatus.setImageResource(R.drawable.token_not_activated);
-        }
-        if(tokenReceived && tokenActivated){
-            // Todo: forward to regisiterd fragment
+        } else
+        if (tokenReceived && tokenActivated) {
             infoText.setText("Your token is activated");
             tokenStatus.setImageResource(R.drawable.token_activated);
             tokenStatusText.setTextColor(Color.parseColor("#29b530"));
@@ -113,17 +112,15 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
 
         protected Boolean doInBackground(String... params) {
             boolean tokenActivated = backend.tokenActivated(params[0]);
-            String userCredentials[] = backend.getUserCredentials(params[1]);
             Log.d(TAG, "Token activated: " + tokenActivated);
             SharedPreferences.Editor editor = appSettings.edit();
 
             editor.putBoolean("token_activated", tokenActivated);
-
             if (tokenActivated){
                 editor.putBoolean("registered", true);
             }
-
             editor.commit();
+
             mProgressDialog.dismiss();
             return tokenActivated;
         }

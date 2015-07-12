@@ -110,7 +110,7 @@ public class UnlockProgressActivity extends ActionBarActivity{
                 new IntentFilter(StatefulProtocolHandler.INTENT_PROTOCOL_PROGRESS)
         );
     }
-    
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -118,6 +118,7 @@ public class UnlockProgressActivity extends ActionBarActivity{
         if (!stillRegistered()){
             Intent intent = new Intent(UnlockProgressActivity.this, MainActivity.class);
             startActivity(intent);
+            finish();
         }
     }
 
