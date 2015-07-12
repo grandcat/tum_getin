@@ -89,6 +89,10 @@ Ablauf:
 		{ status: 200,
 		  code: 0, //OK
 		  message: 'Key stored successfully. User registration complete.' }
+  Error possibility:	The user has not yet activated his token	
+  Answer:	{ status: 403,
+		  code: 4, //NOT_ACTIVE
+		  message: 'Please activate your token!' }
   Error possibility:	tum_id, token or key missing in the request
   Answer:	{ status: 400,
 		  code: 20, //ARG_MISS

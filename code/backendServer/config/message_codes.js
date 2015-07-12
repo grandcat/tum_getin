@@ -6,6 +6,7 @@
 module.exports = {
 	// 0 - 9: general status codes
 	OK: 0,		// OK, everything fine
+	NOT_ACTIVE: 4, 	// cannot do this because the user's token is not active
 	FORBIDDEN: 5,	// user is not allowed (e.g. no student anymore)
 	ERR: 9,		// general server error
 

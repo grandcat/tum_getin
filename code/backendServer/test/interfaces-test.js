@@ -139,7 +139,7 @@ vows.describe('Backend - NFC Reader Interface /check').addBatch({
 			callback = this.callback;
 			var user = {
 			  tum_id: realUser.tum_id,
-			  token: realUserNewToken,
+			  token: realUser.token,//realUserNewToken,
 			  key: realUser.key
 			};
 			sendPost('/register', user);

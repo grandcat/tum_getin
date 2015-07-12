@@ -108,6 +108,27 @@ exports.register_get_token = function(req, res) {
 
 /**
  * Proceeds with the register_store_key method 
+ * after we have checked that his token is active in TUMonline
+ */ 
+function onTokenActiveStoreKey(res, user, tumAnswerJson) {
+	log.info('onTokActiveStoreKey; id: ' + user.tum_id + 
+		'; jsonAns: ' + JSON.stringify(tumAnswerJson));
+
+	var active = tumAnswerJson.confirmed;
+	
+	if(active === null || active === undefined || active === 'false') {
+		out.reply(res, 403, cd.NOT_ACTIVE, 
+			'Please activate your token!');
+	} else {
+		// actually store key
+		user.save(db.handleDBsave);
+		out.reply(res, 200, cd.OK,
+			'Key stored successfully. User registration complete.');
+	}
+}
+
+/**
+ * Proceeds with the register_store_key method 
  * after a user has been searched in DB
  */
 function registerStoreKeyForUser(req, res, tum_id, user) {
@@ -123,11 +144,10 @@ function registerStoreKeyForUser(req, res, tum_id, user) {
 			out.reply(res, 400, cd.WRONG_TOK, 
 				'token seems to be wrong!');	
 		} else {
-			// actually store key
 			user.key = key;
-			user.save(db.handleDBsave);
-			out.reply(res, 200, cd.OK,
-				'Key stored successfully. User registration complete.');
+			var path = config.tumOnl_url_path + config.tumOnl_isTokenConf + 
+				'pToken=' + token;
+			out.tumOnlineReq(res, path, user, onTokenActiveStoreKey);		
 		}
 	}
 }
