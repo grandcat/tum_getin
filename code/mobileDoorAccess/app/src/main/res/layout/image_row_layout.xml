@@ -10,7 +10,7 @@
         android:layout_margin="5dp"
         android:id="@+id/icon"
         android:src="@drawable/btn_check_buttonless_off" />
-    <!-- Title Of Song-->
+
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
@@ -23,7 +23,7 @@
             android:layout_height="wrap_content"
             android:paddingTop="5dp"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Medium Text"
+            android:text="Medium Bold Text"
             android:textStyle="bold" />
 
         <TextView

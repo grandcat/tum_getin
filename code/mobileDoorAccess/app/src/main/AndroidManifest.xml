@@ -23,7 +23,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".UnlockProgressActivity" />
+        <activity android:name=".UnlockProgressActivity"
+            android:screenOrientation="portrait" />
 
         <!-- Service for handling communication with NFC reader. -->
         <service
@@ -32,7 +33,6 @@
             android:permission="android.permission.BIND_NFC_SERVICE" >
             <intent-filter>
                 <action android:name="android.nfc.cardemulation.action.HOST_APDU_SERVICE" />
-
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <!--

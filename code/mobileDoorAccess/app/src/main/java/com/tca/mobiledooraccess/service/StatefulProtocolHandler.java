@@ -55,7 +55,7 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
     public final static int PROTO_MSG1_TUM_ID_AND_NONCE = 1;
     public final static int PROTO_MSG2_RECEIVE_NONCE = 2;
     public final static int PROTO_MSG3_SEND_TOKEN_AND_NONCE = 3;
-    private int stmNextState = 1;
+    private int stmNextState = 0;
     // Protocol nonce
     private String r_S = "";    //< Random nonce r_S
     private String r_T = "";    //< Received nonce r_T from terminal
@@ -91,6 +91,8 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
                 // it binds to a new terminal.
                 mNfcCardEmulationService = msg.replyTo;
 
+                // Reset this state machine to the initial protocol step 1
+                // and reset stored nonces
                 resetStates();
                 initCryptoOnce();
 
@@ -176,11 +178,26 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
                 }
             }
             break;
+
+            /**
+             * Connection lost to interfacing NFC terminal.
+             *
+             * If the current protocol was not finished, there is a problem with the terminal
+             * or our behavior (e.g., invalid account).
+             */
+            case MSG_NFC_CONNECTION_LOST: {
+                if (stmNextState < PROTO_MSG3_SEND_TOKEN_AND_NONCE) {
+                    // The protocol specification could not be fulfilled.
+                    // Communication was aborted in-between. Have to notify the user.
+                    broadcastProgress(1, stmNextState);
+                }
+            }
+            break;
         }
     }
 
     private void resetStates() {
-        stmNextState = 1;
+        stmNextState = PROTO_MSG1_TUM_ID_AND_NONCE;
         r_T = r_S = "";
     }
 
@@ -224,6 +241,7 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
         );
         String pseudoID = prefs.getString("pseudo_ID", "");
 
+        // Prepare outgoing message: Android --> target terminal
         JSONObject jsonMsg = new JSONObject();
         try {
             jsonMsg.put("type", PROTO_MSG1_TUM_ID_AND_NONCE);   //< Message type
@@ -315,9 +333,15 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
     }
 
     private void broadcastProtocolProgress(int finishedStep) {
-        Log.d(TAG, "Broadcasting protocol step: " + finishedStep);
+        // Status code 0: protocol step finished successfully
+        broadcastProgress(0, finishedStep);
+    }
+
+    private void broadcastProgress(int statusCode, int relatedStep) {
+        Log.d(TAG, "Broadcasting protocol status " + statusCode + " in step " + relatedStep);
         Intent intent = new Intent(INTENT_PROTOCOL_PROGRESS);
-        intent.putExtra("progress", finishedStep);
+        intent.putExtra("status", statusCode);
+        intent.putExtra("progress", relatedStep);
         LocalBroadcastManager.getInstance(appContext).sendBroadcast(intent);
     }
 }

@@ -202,9 +202,10 @@ public class CardEmulationService extends HostApduService {
                     Log.d(TAG, "NFC communication channel established.");
 
                     // Start responsible activity to visualize unlock progress
-                    Intent unlockActivity = new Intent(this, UnlockProgressActivity.class);
-                    unlockActivity.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(unlockActivity);
+                    Intent intent = new Intent(this, UnlockProgressActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.putExtra("progress", 1);
+                    startActivity(intent);
 
                     return APDU.StatusMessage.SUCCESS;
                 } catch (RemoteException e) {

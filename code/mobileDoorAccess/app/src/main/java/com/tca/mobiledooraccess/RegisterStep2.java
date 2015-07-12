@@ -131,7 +131,7 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
             super.onPostExecute(tokenActivated);
             updateLayout(getView());
 
-            if (tokenActivated) {
+            if (tokenActivated = true) { // TODO: remove this hack introduced for fast debugging
                 if(!appSettings.getBoolean("keys_generated", false)){
                     new KeyGeneratorTask(getActivity()).execute();
                 }
