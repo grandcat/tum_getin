@@ -97,6 +97,14 @@ public final class KeyGeneratorTask extends AsyncTask<Void, Void, Integer> {
     protected void onPostExecute(Integer result) {
         super.onPostExecute(result);
         dialog.dismiss();
+        SharedPreferences prefs = MainActivity.context.getSharedPreferences(
+                MainActivity.TUM_GETIN_PREFERENCES,
+                Context.MODE_PRIVATE
+        );
+        SharedPreferences.Editor settings = prefs.edit();
+        settings.putBoolean("keys_generated", true);
+        settings.commit();
+        MainActivity.viewPager.setCurrentItem(2);
         // Todo: on error, reset the state and rollback any changes
     }
 }

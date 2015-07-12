@@ -41,9 +41,9 @@ public class MainActivity extends ActionBarActivity {
     public static Context context;
     private static final String TAG = "MainActivity";
     SharedPreferences appSettings;
-    private static Fragment fragmentStep1;
-    private static Fragment fragmentStep2;
-    private static Fragment fragmentRegistered;
+    private static RegisterStep1 fragmentStep1;
+    private static RegisterStep2 fragmentStep2;
+    private static RegisterCompleted fragmentRegistered;
     private Backend backend;
     ProgressDialog mProgressDialog;
 
@@ -88,21 +88,39 @@ public class MainActivity extends ActionBarActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d("Lifecycle-" + TAG, "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
         viewPager = (ViewPager) findViewById(R.id.viewPager);
         fragmentStep1 = new RegisterStep1();
         fragmentStep2 = new RegisterStep2();
         fragmentRegistered = new RegisterCompleted();
-        adapterViewPager = new MyPagerAdapter(getSupportFragmentManager());
+        FragmentManager fm = getSupportFragmentManager();
+        adapterViewPager = new MyPagerAdapter(fm);
         viewPager.setAdapter(adapterViewPager);
+
+        appSettings = getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
+
+        boolean tokenReceived = appSettings.getBoolean("token_received", false);
+        boolean tokenActivated = appSettings.getBoolean("token_activated", false);
+        boolean registered = appSettings.getBoolean("registered", false);
+
+        MainActivity.context = getApplicationContext();
+        backend = new Backend("www.grandcat.org", "3000");
+
+        if (registered){
+            viewPager.setCurrentItem(2);
+        }else if(tokenReceived & !tokenActivated){
+            viewPager.setCurrentItem(1);
+        }else{
+            viewPager.setCurrentItem(0);
+        }
 
         viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
 
             }
-
             @Override
             public void onPageSelected(int position) {
                 ((OnRefreshListener) adapterViewPager.getItem(position)).onRefresh();
@@ -113,9 +131,8 @@ public class MainActivity extends ActionBarActivity {
 
             }
         });
-        MainActivity.context = getApplicationContext();
-        backend = new Backend("www.grandcat.org", "3000");
-        appSettings = getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
+
+
     }
 
     @Override
@@ -167,7 +184,7 @@ public class MainActivity extends ActionBarActivity {
                 // Delete local data
                 SharedPreferences.Editor settings = appSettings.edit();
                 settings.remove("tum_id").remove("pseudo_ID").remove("tumOnlineToken").remove("priv_key");
-                settings.remove("token_activated").remove("token_received").remove("registered");
+                settings.remove("token_activated").remove("token_received").remove("registered").remove("keys_generated");
                 settings.apply();
                 // Notify UI
                 mProgressDialog.dismiss();
@@ -206,6 +223,7 @@ public class MainActivity extends ActionBarActivity {
             String privateKey = appSettings.getString("privateKey", null);
             String tumID = appSettings.getString("tum_id", null);
             String token = appSettings.getString("tumOnlineToken", null);
+
 
             if (publicKey != null && privateKey != null && tumID != null && token != null){
                 new KeyGeneratorTask(context).execute();

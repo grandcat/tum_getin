@@ -36,13 +36,13 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
     ImageButton updateStatus;
 
 
-    private void updateLayout(){
+    public void updateLayout(View view){
         // Reload settings to encouter for changes in register step 1
         appSettings = MainActivity.context.getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
         boolean tokenReceived = appSettings.getBoolean("token_received", false);
         boolean tokenActivated = appSettings.getBoolean("token_activated", false);
         boolean registered = appSettings.getBoolean("registered", false);
-        View view = this.getView();
+        //View view = this.getView();
         ImageView tokenStatus = (ImageView) view.findViewById(R.id.imageTokenStatus);
         TextView infoText = (TextView) view.findViewById(R.id.infoText);
         Button openBrowser = (Button) view.findViewById(R.id.visitTUMOnlineButton);
@@ -86,12 +86,9 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
      * Triggered if fragment is visible.
      */
     public void onRefresh() {
-        Log.d(TAG, "Refresh");
-//        appSettings = MainActivity.context.getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
-//        String token = appSettings.getString("tumOnlineToken", null);
-//        String userID = appSettings.getString("tum_id", null);
-//        new GetUserStatus().execute(token, userID);
-        updateLayout();
+        Log.d("Lifecycle-"+TAG, "onRefresh");
+        View view = getView();
+        updateLayout(view);
     }
 
     public void refreshTokenStatus(View v) {
@@ -106,7 +103,7 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
         new GetUserStatus().execute(token, userID);
     }
 
-    final class GetUserStatus extends AsyncTask<String, Void, Integer> {
+    final class GetUserStatus extends AsyncTask<String, Void, Boolean> {
         protected void onPreExecute(){
             mProgressDialog = new ProgressDialog(getActivity());
             mProgressDialog.setIndeterminate(false);
@@ -115,35 +112,29 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
             mProgressDialog.show();
         }
 
-        protected Integer doInBackground(String... params) {
+        protected Boolean doInBackground(String... params) {
             boolean tokenActivated = backend.tokenActivated(params[0]);
             String userCredentials[] = backend.getUserCredentials(params[1]);
             Log.d(TAG, "Token activated: " + tokenActivated);
             SharedPreferences.Editor editor = appSettings.edit();
 
             editor.putBoolean("token_activated", tokenActivated);
+            editor.putBoolean("registered", true);
 
-            int tokenStatus = -1;
-            // Note: do not see the sense of using userCredentials[] here
-            if (tokenActivated){
-                // Duplicate token, therefore one exists
-                editor.putBoolean("token_received", true);
-                tokenStatus = 0;
-            }else{
-                editor.putBoolean("token_received",false);
-                tokenStatus = -1;
-            }
             editor.commit();
             mProgressDialog.dismiss();
-            return tokenStatus;
+            return tokenActivated;
         }
 
         @Override
-        protected void onPostExecute(Integer tokenResult) {
-            super.onPostExecute(tokenResult);
-            updateLayout();
-            if (0 == tokenResult) {
-                new KeyGeneratorTask(getActivity()).execute();
+        protected void onPostExecute(Boolean tokenActivated) {
+            super.onPostExecute(tokenActivated);
+            updateLayout(getView());
+
+            if (tokenActivated) {
+                if(!appSettings.getBoolean("keys_generated", false)){
+                    new KeyGeneratorTask(getActivity()).execute();
+                }
             }
         }
 
@@ -153,9 +144,10 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
     // Store instance variables based on arguments passed
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Log.d("Lifecycle-" + TAG, "onCreate");
         super.onCreate(savedInstanceState);
         // Logic bindings
-        appSettings = getActivity().getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
+        appSettings = MainActivity.context.getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
         backend = new Backend("www.grandcat.org", "3000");
     }
     // Inflate the view for the fragment based on layout XML
@@ -181,7 +173,7 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
                 startActivity(launchBrowser);
             }
         });
-
+        updateLayout(view);
         return view;
     }
 }

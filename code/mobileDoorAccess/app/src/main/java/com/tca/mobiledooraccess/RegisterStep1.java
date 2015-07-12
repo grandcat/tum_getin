@@ -35,13 +35,13 @@ public class RegisterStep1 extends Fragment implements OnRefreshListener{
 
 
     public void onRefresh(){
-        Log.d(TAG, "Refresh");
+        Log.d("Lifecycle-"+TAG, "onRefresh");
     }
 
     // Store instance variables based on arguments passed
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.d(TAG, "onCreate");
+        Log.d("Lifecycle-"+TAG, "onCreate");
         super.onCreate(savedInstanceState);
         backend = new Backend("www.grandcat.org", "3000");
         appSettings = getActivity().getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
@@ -83,6 +83,7 @@ public class RegisterStep1 extends Fragment implements OnRefreshListener{
                 return handled;
             }
         });
+
         return view;
     }
 

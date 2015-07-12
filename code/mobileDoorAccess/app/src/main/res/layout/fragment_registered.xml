@@ -1,6 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ff0a4f9b"
+    android:id="@+id/fragmentRegisterComplete">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingLeft="16dp"
+        android:paddingTop="10dp"
+        android:paddingRight="16dp">
+
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="0.3"
+            android:src="@drawable/token_not_activated"
+            android:id="@+id/registered_token_received_image"/>
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="0.7"
+            android:text="Token Received"
+            android:gravity="left|center"
+            android:textColor="#ffffffff"
+            android:textSize="20dp"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp">
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="0.3"
+            android:src="@drawable/token_not_activated"
+            android:id="@+id/registered_token_activated_image"/>
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="0.7"
+            android:text="Token Activated"
+            android:gravity="left|center"
+            android:textColor="#ffffffff"
+            android:textSize="20dp"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        >
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="0.3"
+            android:src="@drawable/token_not_activated"
+            android:id="@+id/registered_image"/>
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="0.7"
+            android:text="Registered"
+            android:gravity="left|center"
+            android:textColor="#ffffffff"
+            android:textSize="20dp"/>
+    </LinearLayout>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:src="@drawable/tap_nfc_terminal_white"
+        android:id="@+id/nfc_hand_picture"
+        android:visibility="invisible"/>
 
 </LinearLayout>
