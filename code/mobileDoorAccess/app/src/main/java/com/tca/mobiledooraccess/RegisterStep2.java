@@ -33,6 +33,12 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
     private Backend backend;
     ProgressDialog mProgressDialog;
 
+    ImageView tokenStatus;
+    TextView infoText;
+    Button openBrowser;
+    TextView updateText;
+    TextView statusText;
+    TextView tokenStatusText;
     ImageButton updateStatus;
 
 
@@ -42,14 +48,6 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
         boolean tokenReceived = appSettings.getBoolean("token_received", false);
         boolean tokenActivated = appSettings.getBoolean("token_activated", false);
         boolean registered = appSettings.getBoolean("registered", false);
-        View view = this.getView();
-        // TODO: do these bindings only once onCreate
-        ImageView tokenStatus = (ImageView) view.findViewById(R.id.imageTokenStatus);
-        TextView infoText = (TextView) view.findViewById(R.id.infoText);
-        Button openBrowser = (Button) view.findViewById(R.id.visitTUMOnlineButton);
-        TextView updateText = (TextView) view.findViewById(R.id.textUpdate);
-        TextView statusText = (TextView) view.findViewById(R.id.statusText);
-        TextView tokenStatusText = (TextView) view.findViewById(R.id.tokenStatusText);
 
         infoText.setVisibility(View.VISIBLE);
         tokenStatus.setVisibility(View.VISIBLE);
@@ -79,6 +77,13 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
             tokenStatusText.setText("Activated");
             openBrowser.setVisibility(View.INVISIBLE);
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG, "OnResume");
+        updateLayout();
     }
 
     /**
@@ -156,6 +161,12 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
 
         // Reference UI fields
         updateStatus = (ImageButton)view.findViewById(R.id.imageUpdate);
+        tokenStatus = (ImageView) view.findViewById(R.id.imageTokenStatus);
+        infoText = (TextView) view.findViewById(R.id.infoText);
+        openBrowser = (Button) view.findViewById(R.id.visitTUMOnlineButton);
+        updateText = (TextView) view.findViewById(R.id.textUpdate);
+        statusText = (TextView) view.findViewById(R.id.statusText);
+        tokenStatusText = (TextView) view.findViewById(R.id.tokenStatusText);
 
         view.findViewById(R.id.imageUpdate).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -171,6 +182,9 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
                 startActivity(launchBrowser);
             }
         });
+
+        updateLayout();
+
         return view;
     }
 }
