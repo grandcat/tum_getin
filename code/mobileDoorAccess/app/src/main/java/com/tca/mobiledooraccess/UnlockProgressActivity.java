@@ -5,7 +5,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.Preference;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -105,11 +107,23 @@ public class UnlockProgressActivity extends ActionBarActivity{
                 mNfcProgressReceiver,
                 new IntentFilter(StatefulProtocolHandler.INTENT_PROTOCOL_PROGRESS)
         );
-
+        //Check if user is still registered
+        if (!stillRegistered()){
+            Intent intent = new Intent(UnlockProgressActivity.this, MainActivity.class);
+            startActivity(intent);
+        }
     }
     protected void onResume() {
         super.onResume();
+        if (!stillRegistered()){
+            Intent intent = new Intent(UnlockProgressActivity.this, MainActivity.class);
+            startActivity(intent);
+        }
+    }
 
+    private boolean stillRegistered(){
+        SharedPreferences prefs = getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
+        return prefs.getBoolean("registered",false);
     }
 
     protected void onSaveInstanceState(Bundle outState) {
