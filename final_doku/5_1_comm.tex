@@ -12,7 +12,7 @@ This section demonstrates competing drafts for the concrete design of central pa
 Due to dependent advantages and drawbacks, different approaches are reasonable for the same goal. These are discussed as follows.
 
 
-\subsection{Hardware Setup}
+\subsubsection{Hardware Setup}
 A major part is a reliable communication link between an Android smartphone and a NFC reader.
 To reach this goal, the NFC reader must support common NFC standards (e.g., ISO/IEC 14443) and provide stable transmission properties.
 Therefore, we examine two different hardware setups to finally get a proper solution:
@@ -31,17 +31,8 @@ On the other side, a smartphone with NFC transceiver and Android 4.4 (or higher 
 Additionally, integrated capabilities like Wifi or Bluetooth allow enhanced applications. The downsides of this approach are much higher costs, missing interfaces to interact directly with most door electronics and required user interaction for certain tasks (e.g.~OS upgrade).
 
 
-\subsection{Back-end}\label{sec:alt:backend}
-As introduced in section \ref{sec:arch}, a central part of the overall project is a reliable back-end.
-Its task is either to store and distribute public keys for the public-key cryptography implementation (see section \ref{sec:alt:proto:pubkey}) or to manage secret hashes as dynamic keys for the hash lock implementation (see section \ref{sec:alt:proto:hashlock}).
-It is also responsible for authentication of a new user using TUM Web Services to prevent identity theft.
 
-We intend to use Node.js as technology for the back-end. Referring to projects it is already being used for, it provides a reliable and fast service.
-The exposed web service API allows a fast integration with Android and provides a secure communication channel using standards like TLS.
-For persistent storage, the key-value database MongoDB is the preferred choice.
-
-
-\subsection{Protocols for Authentication between Smartphone and NFC Reader}\label{sec:alt:proto}
+\subsubsection{Protocols for Authentication between Smartphone and NFC Reader}\label{sec:alt:proto}
 A critical aspect in our project is the communication between a smartphone $ S $ and the NFC component $ T $.
 It is important that it is safe so that no unauthorized party can easily gain access or eavesdrop sensitive information like the student ID.
 By placing the reader's antenna in the inner side of the door, it should be safe from physical threats from outside.
