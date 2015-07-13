@@ -2,6 +2,12 @@
 
 \subsection{NFC Communication}\label{sec:comm}
 \todo{alternativen rauß? Verwendetes Protokoll muss aber drin bleiben. Na logo!}
+A fundamental part of our \app door entrance solution is the secured NFC communication between a mobile device and a terminal installed at a gate.
+NFC devices are specified for a maximum range of $10cm$.
+
+
+As one of our project's vision is security, 
+One main goal of our solution is security to the end-user and the 
 
 In the previous section, the overall architecture is presented without going into detail about the used hardware, the back-end or how secure channels are implemented.
 This section demonstrates competing drafts for the concrete design of central parts of our project. 
@@ -36,7 +42,7 @@ By placing the reader's antenna in the inner side of the door, it should be safe
 To ensure a secure communication on top of the data carrier, we plan to use one of the protocols introduced in this section.
 Which one to finally choose depends on multiple aspects like the capabilities of the NFC hardware (e.g.~processing power), Android support or fault tolerance. This needs some testing done during the project. 
 
-\subsubsection{Public-Key Cryptography}\label{sec:alt:proto:pubkey}
+\subsubsection{Protocol with Public-Key Cryptography}\label{sec:alt:proto:pubkey}
 The first proposed protocol uses a Public Key Infrastructure to establish secure communication links between the participants.
 For authentication on both sides and mitigation of several attack scenarios, it uses some ideas of the Needham-Schroeder-Lowe Public Key protocol. Lowe contributes an important security fix we use.
 The scheme is enhanced to provide further security features specific for the utilised backend and the scenario.

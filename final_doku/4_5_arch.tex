@@ -31,7 +31,8 @@ The door system needs access an intranet in order to check if the student/employ
 Therefore, some kind of computer is needed, interacting with the NFC hardware as well as with the backend.
 \item A backend system, which checks student ID, the corresponding TUMOnline token and fetches the generated public key from the smartphone.
 It finally stores the public key of every registered student.
-At every door access attempt it checks the TUM active directory if the person is still a student.\\
+This local public-key infrastructure is necessary to supply the terminals with an individual public key of each mobile device to deploy a confidential message exchange and a part of authentication.
+Furthermore, at every door access attempt it checks the TUM active directory if the person is still a valid student.\\
 Important note: All connections to the backend are secured via TLS.
 \item The TUMOnline system, which provides a secure way to confirm that a user is real.
 This is done via a token that the user has to activate in TUMOnline.
@@ -70,7 +71,7 @@ $\rightarrow$ A malicious user can generate at most one token for a different pe
 After the user has activated his token, his smartphone creates an asymmetric key pair and sends the public part to the backend server.
 This key pair will be needed for NFC communications with the door terminal.
 Since the door terminal needs to know the public keys of its communication partners, the backend serves as a reliable source to distribute these keys.
-Important note: the backend server will reject every attempt to perform this step if the token is not activated. The backend can do this check via the TUMOnline Webservice API.
+Important note: the backend server will reject every attempt to perform this step if the token is not activated by this specific user. The backend can do this check via the TUMOnline Webservice API.
 
 
 
