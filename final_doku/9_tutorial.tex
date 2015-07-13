@@ -44,8 +44,41 @@ Experienced users may also install some components locally (without the $-g$ opt
 \end{lstlisting}
 
 \subsection{Install and Launch NFC Terminal}
+Install the necessary components by issuing the following command on a Raspberry Pi:
+\begin{lstlisting}[breaklines=true]
+   # apt-get install libusb-dev build-essential autoconf2.64 libtool python3 gettext libreadline-dev
+\end{lstlisting}
+%
+First, install libnfc in the following manner:
+\begin{lstlisting}[breaklines=true]
+   $ cd ~
+   $ git clone https://github.com/nfc-tools/libnfc.git
+   $ cd libnfc
+   $ # Compilation
+   $ autoreconf -vis
+   $ ./configure --sysconfdir=/etc --with-drivers=pn532_spi
+   $ make
+   # make install
+\end{lstlisting}
+Copy the sample configuration file to the system location:
+\begin{lstlisting}[breaklines=true]
+   # mkdir /etc/nfc
+   # cp libnfc.conf.sample /etc/nfc/libnfc.conf
+\end{lstlisting}
+%
+Edit the content of the configuration file. The relevant lines should be configured as follows:
+\begin{lstlisting}[breaklines=true]
+allow_autoscan = true
+log_level = 2
+device.name = "itead_pn532"
+device.connstring = "pn532_spi:/dev/spidev0.0:500000"
+\end{lstlisting}
+%
+Install pyNFC (\url{https://github.com/grandcat/pynfc}) for Python 3 as described in its \texttt{README.md}.
 
-%cd ~
+\todo{Finish}
+
+%cd ~git d
 %git clone https://github.com/grandcat/tum_getin.git
 %
 %sudo apt-get install python3-crypto
