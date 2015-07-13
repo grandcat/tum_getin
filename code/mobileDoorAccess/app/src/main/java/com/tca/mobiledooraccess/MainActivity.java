@@ -55,6 +55,38 @@ public class MainActivity extends ActionBarActivity {
     MyServiceConnection mConnection;
     Messenger mService;
 
+    final class CheckUserStatus extends AsyncTask<String, Void, Boolean> {
+        protected void onPreExecute(){
+            mProgressDialog = new ProgressDialog(MainActivity.this);
+            mProgressDialog.setIndeterminate(false);
+            mProgressDialog.setMessage("Checking user status...");
+            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            mProgressDialog.show();
+        }
+
+        protected Boolean doInBackground(String... params) {
+            boolean tokenActivated = backend.tokenActivated(params[0]);
+            Log.d(TAG, "Token activated: " + tokenActivated);
+            SharedPreferences.Editor editor = appSettings.edit();
+
+            editor.putBoolean("token_activated", tokenActivated);
+            if (tokenActivated){
+                editor.putBoolean("registered", true);
+            }else{
+                editor.putBoolean("registered", false);
+            }
+            editor.commit();
+            mProgressDialog.dismiss();
+            return tokenActivated;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean tokenActivated) {
+            super.onPostExecute(tokenActivated);
+            setPage();
+        }
+    }
+
     /**
      * Class for interacting with the main interface of the service.
      */
@@ -87,27 +119,10 @@ public class MainActivity extends ActionBarActivity {
         }
     };
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        Log.d("Lifecycle-" + TAG, "onCreate");
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.main_activity);
-        viewPager = (ViewPager) findViewById(R.id.viewPager);
-        fragmentStep1 = new RegisterStep1();
-        fragmentStep2 = new RegisterStep2();
-        fragmentRegistered = new RegisterCompleted();
-        FragmentManager fm = getSupportFragmentManager();
-        adapterViewPager = new MyPagerAdapter(fm);
-        viewPager.setAdapter(adapterViewPager);
-
-        appSettings = getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
-
+    private void setPage(){
         boolean tokenReceived = appSettings.getBoolean("token_received", false);
         boolean tokenActivated = appSettings.getBoolean("token_activated", false);
         boolean registered = appSettings.getBoolean("registered", false);
-
-        MainActivity.context = getApplicationContext();
-        backend = new Backend("www.grandcat.org", "3000");
 
         if (registered){
             viewPager.setCurrentItem(2);
@@ -116,7 +131,6 @@ public class MainActivity extends ActionBarActivity {
         }else{
             viewPager.setCurrentItem(0);
         }
-
         viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -131,15 +145,34 @@ public class MainActivity extends ActionBarActivity {
 
             }
         });
+    }
 
-        if (appSettings.getBoolean("registered_done", false)){
-            Intent intent = new Intent(this, UnlockProgressActivity.class);
-        }
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        Log.d("Lifecycle-" + TAG, "onCreate");
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main_activity);
+        viewPager = (ViewPager) findViewById(R.id.viewPager);
+        viewPager.setOffscreenPageLimit(3);
+        fragmentStep1 = new RegisterStep1();
+        fragmentStep2 = new RegisterStep2();
+        fragmentRegistered = new RegisterCompleted();
+        FragmentManager fm = getSupportFragmentManager();
+        adapterViewPager = new MyPagerAdapter(fm);
+        viewPager.setAdapter(adapterViewPager);
 
+        appSettings = getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
+
+        MainActivity.context = getApplicationContext();
+        backend = new Backend("www.grandcat.org", "3000");
     }
     @Override
     protected void onResume() {
+        Log.d("Lifecycle-"+TAG, "onResume");
         super.onResume();
+        String token = appSettings.getString("tumOnlineToken", "");
+        String userID = appSettings.getString("tum_id", "");
+        new CheckUserStatus().execute(token, userID);
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -210,5 +243,10 @@ public class MainActivity extends ActionBarActivity {
            }
         }
 
+
+
     }
+
+
+
 }

@@ -21,15 +21,13 @@ public class RegisterCompleted extends Fragment implements OnRefreshListener {
     public static final String TUM_GETIN_PREFERENCES = "TGI_PREFS";
     private SharedPreferences appSettings;
 
+    ImageView imgComplete;
+    TextView txtComplete;
+    Button complete;
+
     public void updateLayout(){
         appSettings = MainActivity.context.getSharedPreferences(TUM_GETIN_PREFERENCES, 0);
         boolean registered = appSettings.getBoolean("registered", false);
-
-        View view = this.getView();
-
-        ImageView imgComplete = (ImageView)view.findViewById(R.id.img_registered_status);
-        TextView txtComplete = (TextView) view.findViewById(R.id.txt_registered_status);
-        Button complete = (Button) view.findViewById(R.id.btn_registered_status);
 
         if (registered){
             imgComplete.setImageResource(R.drawable.token_activated);
@@ -60,7 +58,7 @@ public class RegisterCompleted extends Fragment implements OnRefreshListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_registered, container, false);
-        Button complete = (Button) view.findViewById(R.id.btn_registered_status);
+        complete = (Button) view.findViewById(R.id.btn_registered_status);
         complete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -72,6 +70,9 @@ public class RegisterCompleted extends Fragment implements OnRefreshListener {
                 startActivity(intent);
             }
         });
+        imgComplete = (ImageView)view.findViewById(R.id.img_registered_status);
+        txtComplete = (TextView) view.findViewById(R.id.txt_registered_status);
+        updateLayout();
         return view;
     }
 

@@ -123,6 +123,8 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
             editor.putBoolean("token_activated", tokenActivated);
             if (tokenActivated){
                 editor.putBoolean("registered", true);
+            }else{
+                editor.putBoolean("registered", false);
             }
             editor.commit();
 
@@ -184,7 +186,6 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
         });
 
         updateLayout();
-
         return view;
     }
 }
