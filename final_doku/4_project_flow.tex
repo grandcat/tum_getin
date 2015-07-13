@@ -1,12 +1,33 @@
 \section{Project Flow}\label{sec:project_flow}
 
-any problems? Differences to the planned functionality?\todo{TODO}
+Concerning the implementation of all planned functionality of \app we faced few obstacles.
+Most issues of the initial project plan could be finalized smoothly.
 
-problems:
+In several details the functionality could even be improved by \textbf{additional features}.
+The following list explains all important changes and new features:
+\begin{itemize}
+\item The smartphone app can now ask the backend if the user has already activated his token in TUMOnline.
+This ensures that the smartphone does not constantly try to proceed with the next step (upload public key) but of course always fails because only activated user accounts are allowed to perform this task.
+\item A user can now ask the backend to generate a new pseudo ID for him.
+This effectively increases the user's privacy, as NFC terminals are no longer able to track his actions.
+\item Users can now delete their accounts from the backend's database, which in general should be a useful feature.
+\item ...?\todo{mehr}
+\end{itemize}
+
+\bigskip
+
+
+
+\textbf{Problems}:\todo{TODO}
 hatten wir ja ein paar: Zusammenspiel mit anderen Lesegeräten (Legic), ...
+-> dadurch: unwahrscheinlicher, dass die Lösung in der Praxis eingesetzt werden wird.
 
+
+\iffalse
+any problems? Differences to the planned functionality?
 
 Differences to the planned functionality:
 gibt's bei uns eher nicht, oder?
 
 Stefan: Ne, eigentlich sogar noch mehr Funktionalität und erhöhte Sicherheit/Anonymität als spezifiziert.
+\fi
