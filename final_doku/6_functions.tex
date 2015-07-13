@@ -1,1 +1,36 @@
 \section{Implemented Functions}\label{sec:functions}
+
+Ph: smartphone
+BE: backend server
+Ter: NFC terminal
+TuO: TUMOnline
+TuAD: TUM Active Directory
+
+\bigskip
+
+All functions follow the general workflow.
+
+\bigskip
+
+passt das in dieser Form?\todo{???}
+
+
+\begin{tabularx}{\textwidth}{ l X c X } 
+Components & Function & Planned & Implemented \\ \hline\hline
+
+
+Ph $\rightarrow$ BE & Register user TUM ID and ask for a new token & \checkmark & \checkmark \\ 
+BE $\rightarrow$ TuO & Request new token & \checkmark & \checkmark \\ 
+BE & Store user data in a database & \checkmark & \checkmark \\ 
+Ph $\rightarrow$ BE & Ask if new token has been activated &  & \checkmark (added to avoid vain attempts of following steps) \\ 
+BE $\rightarrow$ TuO & Ask if new token has been activated & \checkmark & \checkmark \\ 
+Ph & Generate asymmetric key pair & \checkmark & \checkmark \\ 
+Ph $\rightarrow$ BE & Send public key to server & \checkmark & \checkmark \\ 
+BE & Generate pseudo ID for user & \checkmark & \checkmark \\ 
+Ph $\rightarrow$ BE & Renew the pseudo ID &  & \checkmark (to improve privacy) \\ 
+Ph $\rightarrow$ BE & Remove user account &  & \checkmark \\ \hline
+
+
+Ter $\rightarrow$ BE & Ask for public key corresponding to a pseudo ID & \checkmark & \checkmark \\ 
+BE $\rightarrow$ TuAD & Ask for student status & \checkmark & \checkmark (changed from $\rightarrow$ TuO to $\rightarrow$ TuAD for precision) \\ 
+\end{tabularx}
