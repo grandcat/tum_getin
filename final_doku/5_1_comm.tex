@@ -1,9 +1,6 @@
 %\section{Design Alternatives}\label{sec:alt}
 
 \subsection{NFC Communication}\label{sec:comm}
-\todo{so nennen? oder anders?}
-
-
 \todo{alternativen rauß? Verwendetes Protokoll muss aber drin bleiben. Na logo!}
 
 In the previous section, the overall architecture is presented without going into detail about the used hardware, the back-end or how secure channels are implemented.
@@ -101,37 +98,3 @@ Explanation:
 		Still, by comparing the hash values received by the back-end on retrieval of the user's public key, and the one sent by the smartphone in this step, the identity of the user is proven indirectly.
 	\end{itemize}
 \end{enumerate}
-
-%Points to mention:
-%Key revocation
-
-\subsubsection{SRFID: Extended Randomized Hash Lock}\label{sec:alt:proto:hashlock}
-A second interesting protocol is the hashed-based security scheme by Walid I. Khedr\footnote{\url{http://www.sciencedirect.com/science/article/pii/S1110866513000054}}.
-This might be an alternative to the public key based system, because it is more lightweight.
-For cryptography on both sides, it only needs a strong one-way hash function $ H $.
-%In case that this protocol is used instead of the more demanding public key cryptography, 
-%
-\begin{sequencediagram}
-	\newinst{S}{Smartphone $ S $}
-	\newinst[9]{T}{NFC Reader $ T $}
-	% \newinst[4]{rnc}{RNC}
-	\mess{T}{1. $ r_T $}{S}
-	\postlevel
-	\mess{S}{2. $ ID_T = H(ID_H || SQN), M_1 = H(ID_H || r_T || r_S), r_S $}{T}
-	\postlevel
-	\mess{T}{3. $ ID_T, M_2 = H(ID_H || SQN || r_T || r_S), r_T, r_S $}{S}
-	%\mess{nodeb}{Synchronization Indication}{rnc}
-	%\filldraw[fill=black!30] ($(RRC Connection Setup to)+(0,-.3)$) rectangle ($(Synchronization Indication from) +(0,.3)$)
-	%node[midway] {L1 Synchronization};
-\end{sequencediagram}
-%
-Details will not be presented here, because it is discussed in detail in the referred paper above.
-Nevertheless, some aspects have to be highlighted in the scope of this project:
-\begin{itemize}
-	\item In contrast to the original protocol, the smartphone $ S $ also generates a random number $ r_S $ beside $ r_T $ from the reader.
-	Consequently, it is more likely to identify a replay attack by a fake reader. This could optionally be reported by the app.
-	\item The sequence counter $ SQN $ is incremented both on the back-end and the smartphone for each handshake.
-	Like this, the identifier of the smartphone $ ID_T $, derived from the shared secrets $ID_H$ and $SQN$, is not the same on every connection to mitigate tracing.
-	Still the reader / back-end is able to identify the communicating party, because it also knows the shared secrets $ID_H$ and $SQN$.
-	In case of a desynchronization attack, the relation can be re-established by asking the back-end to present the unique $studentToken$ (from TUM Webservice).
-\end{itemize}
