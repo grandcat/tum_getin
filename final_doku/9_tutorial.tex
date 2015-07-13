@@ -45,7 +45,27 @@ Experienced users may also install some components locally (without the $-g$ opt
 
 \subsection{Install and Launch NFC Terminal}
 
-...
+%cd ~
+%git clone https://github.com/grandcat/tum_getin.git
+%
+%sudo apt-get install python3-crypto
+%
+%libnfc:
+%wget https://libnfc.googlecode.com/files/libnfc-1.7.0.tar.bz2
+%tar -jxvf libnfc-1.7.0.tar.bz2
+%cd libnfc-1.7.0 
+%./configure --prefix=/usr --sysconfdir=/etc --with-drivers=pn532_uart,pn532_spi,pn532_i2c 
+%make install all 
+%
+%git clone https://github.com/ikelos/pynfc.git
+%cd pynfc/src	
+%2to3 -w nfc.py
+%
+%mv nfc.py ~/tum_getin/code/nfcTerminal/PyNfcTerminal
+%cd ~/tum_getin/code/nfcTerminal/PyNfcTerminal
+%
+%python3 main.py
+
 
 \subsection{Use the GetInTUM Android Application}
 
