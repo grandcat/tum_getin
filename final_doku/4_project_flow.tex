@@ -11,19 +11,38 @@ This ensures that the smartphone does not constantly try to proceed with the nex
 \item A user can now ask the backend to generate a new pseudo ID for him.
 This effectively increases the user's privacy, as NFC terminals are no longer able to track his actions.
 \item Users can now delete their accounts from the backend's database, which in general should be a useful feature.
-\item ...?\todo{mehr}
+\item ...?\todo{mehr?}
 \end{itemize}
 
 \bigskip
 
 
+But as in most projects we also faced a few setbacks and \textbf{problems}.
+Our original ambition was to see the \app solution employed in a real environment at TUM.
+To accomplish this goal we had several meetings with Mr.~Bernhofer from the TUM IT Management and later with Mr.~Recksiegel from the TUM physics department.
+The latter already runs several door terminals which allow registered users to enter rooms by holding their student cards to a NFC reader.
+As we did not and still do not want to promote our solution as competition to the solution already employed in some rooms of the physics department, we searched for a way to integrate \app into the existing system of the TUM physicists.
+For several reasons this turned out to be more difficult than expected.
+\begin{itemize}
+\item TUM student cards communicate via NFC standards from the company LEGIC, which are not compatible with the NFC standards that Android smartphones understand.
+\item The NFC reader built into the TUM physics solution is not able to communicate via NFC standards other than LEGIC.
+\item Since the NFC reader used by the TUM physics department is a proprietary product and ships with a rather small housing, we did not manage to easily mount a second NFC antenna into this housing.
+\item Integrating two different NFC readers into the door terminal entailed several physical problems.
+For two NFC readers to function independently they would need to be mounted with at least about five centimetres distance to each other.
+This led to concerns that a terminal with two distinct NFC readers might not be intuitive for users.
+\item Diese Liste muss in Details noch überarbeitet werden!\todo{!!!}
+\item Ist not etwas wirr und unstrukturiert...
+\item ...hab ich was vergessen?\todo{???}
+\end{itemize}
 
-\textbf{Problems}:\todo{TODO}
+
+% -------------- Kommentare und alter Mist ----------------------- %
+\iffalse
+
+:\todo{TODO}
 hatten wir ja ein paar: Zusammenspiel mit anderen Lesegeräten (Legic), ...
 -> dadurch: unwahrscheinlicher, dass die Lösung in der Praxis eingesetzt werden wird.
 
-
-\iffalse
 any problems? Differences to the planned functionality?
 
 Differences to the planned functionality:
