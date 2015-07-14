@@ -30,6 +30,16 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
 			// save token in temp object
 			// later we can check if the server has saved it, too
 			realUserNewToken = topic.token;
+			realUser.temp_token = topic.token;
+			realUser.pseudo_id = topic.pseudo_id;
+			realUser.salt = topic.salt;
+			fs.writeFile("../../testResources/real_user.json", 
+				JSON.stringify(realUser), function(err) {
+			    if(err) {
+			        return console.log(err);
+			    }
+			    console.log("The file was saved!");
+			}); 
         	},
 		'Check response pseudo_id': function (topic) {
 			assert.isNotNull (topic.pseudo_id);
@@ -54,7 +64,7 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
         	}
 	}
 }).addBatch({
-	'/register post key correct': {
+	'/register post key correct - token not active': {
 		topic: function() {
 			callback = this.callback;
 			var user = {
@@ -65,8 +75,7 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
 			sendPost('/register', user);
 		},
 		'Check response status': function (topic) {
-            		assert.equal (topic.status, 200);
-            		assert.equal (topic.code, 0);
+            		assert.equal (topic.status, 403);
         	}
 	}
 }).addBatch({
@@ -133,45 +142,6 @@ vows.describe('Backend - Smartphone Interface /register').addBatch({
 }).export(module);
 
 //////////////////////////////////////////////////////////////////////////////////////
-vows.describe('Backend - NFC Reader Interface /check').addBatch({
-	'/register post key correct - needed so that the real user has a key': {
-		topic: function() {
-			callback = this.callback;
-			var user = {
-			  tum_id: realUser.tum_id,
-			  token: realUser.token,//realUserNewToken,
-			  key: realUser.key
-			};
-			sendPost('/register', user);
-		},
-		'Check response status': function (topic) {
-            		assert.equal (topic.status, 200);
-            		assert.equal (topic.code, 0);
-        	}
-	}
-}).addBatch({
-	'/check get user public key correct': {
-		topic: function() {
-			callback = this.callback;
-			sendGet('/check?pseudo_id=' + realUserPseudoId);
-		},
-		'Check response status': function (topic) {
-            		assert.equal (topic.status, 200);
-            		assert.equal (topic.code, 0);
-        	},
-		'Check response user data': function (topic) {
-			assert.equal (topic.pseudo_id, realUserPseudoId);
-			assert.equal (topic.student_status, 'student');
-			assert.equal (topic.key, realUser.key);
-        	},
-		'Check that the token hash exists': function(topic) {
-			assert.isNotNull(topic.token_hash);
-			assert.isFalse(topic.token_hash === undefined);
-		}
-	}
-}).export(module);
-
-//////////////////////////////////////////////////////////////////////////////////////
 vows.describe('Backend - Smartphone Interface /register for real user!').addBatch({
 	'/register get token correct': {
 		topic: function() {
@@ -196,10 +166,22 @@ vows.describe('Backend - Smartphone Interface /register for real user!').addBatc
 		'Check response has token': function (topic) {
 			assert.isNotNull (topic.token);
 			assert.isFalse (topic.token === undefined);
+			// save token in temp object
+			// later we can check if the server has saved it, too
+			realUserNewToken = topic.token;
+			realUser.temp_token = topic.token;
+			fs.writeFile("../../testResources/real_user.json", 
+				JSON.stringify(realUser), function(err) {
+			    if(err) {
+			        return console.log(err);
+			    }
+			    console.log("The file was saved!");
+			}); 
+
         	}
 
 	}
-}); //////// !!!!!!!!!!!! stupid test -- not active -- should lead to error!!!!!!!
+});
 
 //////////////////////////////////////////////////////////////////////////////////////
 vows.describe('Backend - Smartphone Interface /tokenActive for real user!').addBatch({
@@ -228,31 +210,6 @@ vows.describe('Backend - Smartphone Interface /tokenActive for real user!').addB
         	},
 		'Check response active field': function (topic) {
 			assert.equal (topic.active, 'false');
-        	}
-	}
-}).export(module);
-
-//////////////////////////////////////////////////////////////////////////////////////
-vows.describe('Backend - Smartphone Interface /remove for real user!').addBatch({
-	'/remove for inactive token correct, easy request': {
-		topic: function() {
-			callback = this.callback;
-			sendGet('/remove?tum_id=' + realUser.tum_id);
-		},
-		'Check response status': function (topic) {
-            		assert.equal (topic.status, 200);
-            		assert.equal (topic.code, 0);
-        	}
-	}
-}).addBatch({
-	'Now a new register should work again because the user has been deleted.': {
-		topic: function() {
-			callback = this.callback;
-			sendGet('/register?tum_id=' + realUser.tum_id);
-		},
-		'Check response status': function (topic) {
-            		assert.equal (topic.status, 200);
-            		assert.equal (topic.code, 0);
         	}
 	}
 }).export(module);
