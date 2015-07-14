@@ -4,9 +4,17 @@
 
 
 \subsubsection{Android architecture}
-The Android app architecture consists of two activities. The $MainActivity$ is responsible for the registration process with the backend and the $UnlockProgressActivity$ provides a UI that shows the status of the NFC-communication. To provide a standard Android look and feel, the $MainActivity$ is using a ViewPager to guide the user through the different registration steps. Therefore, the three registration steps (send ID, activate token, finish registration) are represented as fragments.
+The Android app architecture consists of two activities. The $MainActivity$ is responsible for the registration process with the backend and the $UnlockProgressActivity$ provides a UI that shows the status of the NFC-communication after the registration process is complete. To provide a standard Android look and feel, the $MainActivity$ is using a ViewPager to guide the user through the different registration steps. Therefore, the three registration steps (send ID, activate token, finish registration) are represented as fragments.
 
-\subsubsection{Backend Communication}
+To initialize all fragments at once (normally, the $onCreate()$ only gets called by adjacent pages of the current page), the $setOffscreenPageLimit$ must be set to the number of pages, three in this case.
+
+When sliding to a specific fragment, its content should be updated. To provide this functionality, a $setOnPageChangeListener$ must be added to the ViewPager to detect a page selection. There, the $OnPageSelected()$ method can be overwritten to call the $onRefresh()$ method of the page. As a result, every fragment implements an $OnRefreshListener$ interface that contains this $onRefresh()$ method.
+
+To keep track of the registration progress, the $SharedPreference$ model of Android is used internally. It makes it very simple to access the app data from different activities and fragments while the content stays consistent.
+
+A $Backend$ class is responsible for the backend communication over HTTPS/TLS. Since the certificate of the backend server is self signed, the certificate must be shipped with the app in the assets folder as a $*.crt$ file. The constructor of the backend then needs to manually create a $CertificateFactory$ as well as a $KeyStore$ containing the one certificate to create the final SSL context.
+
+Android forbids network operations in the UI-Thread by design. Thats why every backend request is embedded in an $AsyncTask$ showing a progress circle.
 
 \subsubsection{NFC background service}
 ...

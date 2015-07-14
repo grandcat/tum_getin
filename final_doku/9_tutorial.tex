@@ -65,6 +65,8 @@ Copy the sample configuration file to the system location:
    # mkdir /etc/nfc
    # cp libnfc.conf.sample /etc/nfc/libnfc.conf
 \end{lstlisting}
+
+
 %
 Edit the content of the configuration file. The relevant lines should be configured as follows:
 \begin{lstlisting}[breaklines=true]
@@ -100,14 +102,10 @@ Install pyNFC (\url{https://github.com/grandcat/pynfc}) for Python 3 as describe
 %python3 main.py
 
 
-\subsection{Use the GetInTUM Android Application}
-
-...
 
 
-
-\iffalse
-\bigskip
+%\iffalse
+%\bigskip
 % -------------------------------------------------------------------
 %[language={[x86masm]Assembler}, escapeinside={(*§}{§*)}, basicstyle=\ttfamily\scriptsize, caption={blablabla}, label={lst:1}]
 \begin{lstlisting}
@@ -116,6 +114,28 @@ Install pyNFC (\url{https://github.com/grandcat/pynfc}) for Python 3 as describe
 # npm install -g vows		(optional; runs unit tests)
 $ npm install
 \end{lstlisting}
-\bigskip
+%\bigskip
 
-\fi
+%\fi
+
+
+\subsection{Use the GetInTUM Android Application}
+\begin{enumerate}
+   \item The first app start will show the following page:
+   \begin{figure}
+   \centering
+   \begin{minipage}{.5\textwidth}
+     \centering
+     \includegraphics[width=.4\linewidth]{RegisterStep1}
+     \captionof{figure}{A figure}
+     \label{fig:test1}
+   \end{minipage}%
+   \begin{minipage}{.5\textwidth}
+     \centering
+     \includegraphics[width=.4\linewidth]{RegisterStep2_Activated}
+     \captionof{figure}{Another figure}
+     \label{fig:test2}
+   \end{minipage}
+   \end{figure}
+
+\end{enumerate}
