@@ -27,10 +27,12 @@ BE $\rightarrow$ TuO & Ask if new token has been activated & \checkmark & \check
 Ph & Generate asymmetric key pair & \checkmark & \checkmark \\ 
 Ph $\rightarrow$ BE & Send public key to server & \checkmark & \checkmark \\ 
 BE & Generate pseudo ID for user & \checkmark & \checkmark \\ 
-Ph $\rightarrow$ BE & Renew the pseudo ID &  & \checkmark (to improve privacy) \\ 
+Ph $\rightarrow$ BE & Renew pseudo ID and salt &  & \checkmark (to improve privacy) \\ 
 Ph $\rightarrow$ BE & Remove user account &  & \checkmark \\ \hline
 
 
-Ter $\rightarrow$ BE & Ask for public key corresponding to a pseudo ID & \checkmark & \checkmark \\ 
+Ter $\rightarrow$ BE & Ask for public key corresponding to a pseudo ID & \checkmark & \checkmark \\
+Ter $\rightarrow$ BE & Ask for salted hash of user token to a pseudo ID & & \checkmark \\
+Ph $\rightarrow$ Te & Additional security layer by comparing hashed token both for BE and Ph. &  & \checkmark \\ 
 BE $\rightarrow$ TuAD & Ask for student status & \checkmark & \checkmark (changed from $\rightarrow$ TuO to $\rightarrow$ TuAD for precision) \\ 
 \end{tabularx}

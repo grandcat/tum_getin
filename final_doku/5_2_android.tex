@@ -19,4 +19,7 @@ Android forbids network operations in the UI-Thread by design. That is why every
 
 \subsubsection{NFC Background Service}
 As described in more detail in the subsequent section \ref{sec:comm}, the Raspberry Pi acts as a NFC reader and the matching Android device behaves like a NFC card.
-Involving NFC Host-based Card Emulation,  
+For NFC Host-based Card Emulation, Android's HCE service is used to route incoming NFC requests to the \app application.
+Due to the fact that it is based on a common Android service, it is restricted to the same main UI thread as the main application.
+
+%Involving NFC Host-based Card Emulation,  
