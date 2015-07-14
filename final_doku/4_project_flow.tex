@@ -28,15 +28,15 @@ As we did not and still do not want to promote our solution as competition to th
 For several reasons this turned out to be more difficult than expected.
 \begin{itemize}
 \item TUM student cards communicate via proprietary NFC standards from the company LEGIC, which are not compatible with the NFC ISO standards that Android smartphones understand.
-\item The NFC reader built into the TUM physics solution is not able to communicate via NFC standards other than a restricted set of LEGIC commands.
-\item Since the NFC reader used by the TUM physics department is a proprietary product and ships with a rather small housing, we did not manage to easily mount a second NFC antenna into its housing.
-\item Integrating two different NFC readers into the door terminal entailed several physical problems.
-For two NFC readers to function independently they would need to be mounted with at least about five centimetres distance to each other.
-This led to concerns that a terminal with two distinct NFC readers might not be intuitive for users.\\
-Another idea would be to mount the two NFC readers into one housing but keep only one of them running at a time.
-If the NFC reader which is running by default (the ISO standards reader) detects a TUM student card, it sends a command to switch to the LEGIC reader.
-After the LEGIC reader has handled NFC communication with this student card it is switched off again and the default NFC reader is listening again.
-If the default NFC reader detects a smartphone, it can handle the communication itself.
+\item The NFC terminal built into the TUM physics solution is not able to communicate via NFC standards other than a restricted set of LEGIC commands.
+\item Since the NFC terminal used by the TUM physics department is a proprietary product and ships with a rather small housing, we did not manage to easily mount a second NFC antenna into its housing.
+\item Integrating two different NFC units into the door terminal entailed several physical problems.
+For two NFC units to function independently they would need to be mounted with at least about five centimetres distance to each other.
+This led to concerns that a terminal with two distinct NFC terminals might not be intuitive for users.\\
+Another idea would be to mount the two NFC units into one housing but keep only one of them running at a time.
+If the NFC unit which is running by default (the ISO standards transceiver) detects a TUM student card, it sends a command to switch to the LEGIC reader.
+After the LEGIC transceiver has handled NFC communication with this student card it is switched off again and the default NFC reader is listening again.
+If the default NFC units detects a smartphone, it can handle the communication itself.
 %\item Diese Liste muss in Details noch überarbeitet werden! Bis hier aber schon ganz gut =)\todo{!!!}
 %\item Ist not etwas wirr und unstrukturiert...
 %\item ...hab ich was vergessen? Vll, ein zukünftiges Ziel wäre die parallele Integration mit abwechselndem Betrieb einzuführen\todo{???}
