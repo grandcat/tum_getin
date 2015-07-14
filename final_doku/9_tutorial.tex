@@ -120,22 +120,33 @@ $ npm install
 
 
 \subsection{Use the GetInTUM Android Application}
-\begin{enumerate}
-   \item The first app start will show the following page:
-   \begin{figure}
-   \centering
-   \begin{minipage}{.5\textwidth}
-     \centering
-     \includegraphics[width=.4\linewidth]{RegisterStep1}
-     \caption{A figure}
-     \label{fig:test1}
-   \end{minipage}%
-   \begin{minipage}{.5\textwidth}
-     \centering
-     \includegraphics[width=.4\linewidth]{RegisterStep2_Activated}
-     \caption{Another figure}
-     \label{fig:test2}
-   \end{minipage}
-   \end{figure}
 
-\end{enumerate}
+To use the GetInTum application, the backend server address needs to be adjusted in the fragments and the activities.
+The workflow for the user is descibed as followed.  
+
+\begin{table}[ht]
+\caption{App user workflow description}
+\centering
+\begin{tabular}{*{2}{m{0.48\textwidth}}}
+\hline
+On the first app start, this is the page
+that is displayed. The user has to enter his TUM-ID (e.g ga00aaa).
+He gets feedback if his ID is valid as soon as he clicks the $Send$ Button
+&\includegraphics[scale=0.1]{RegisterStep1}\\
+\hline
+If the entered ID is valid, the backend answers with a created token for
+the user which is listed in the private user TUMOnline account.
+The user can open the TUMOnline site directly with a click on the button.
+Additionally, the status of the token activation can be updated. On an app restart or resume, the status will also be checked and the user will be forwarded to the next page.
+&\includegraphics[scale=0.1]{RegisterStep2_not_Activated}\\
+\hline
+If the registration is completed, the user will see the last page of the registration process.
+In case of swiping through the pages that are not completed, an appropriate status will be displayed. On a button click, the ProgressActivity will be shown.
+An explicit app start is not needed to use the door NFC terminals. The app will start the
+ProgressActivity by itself, informing the user about the communication process
+&\includegraphics[scale=0.1]{RegisterStep3_Registered}\\
+
+\end{tabular}
+\label{tab:gt}
+\end{table}
+

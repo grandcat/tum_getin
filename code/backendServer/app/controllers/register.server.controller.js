@@ -140,6 +140,8 @@ function registerStoreKeyForUser(req, res, tum_id, user) {
 		'tum_id not found in DB. Please start with step 1!');	
 	} else { 
 		if(user.token !== token) {
+			log.error('Problem: token in req: ' + token + 
+				' - token in DB: ' + user.token);
 			// if token in the request does not equal the DB
 			out.reply(res, 400, cd.WRONG_TOK, 
 				'token seems to be wrong!');	
