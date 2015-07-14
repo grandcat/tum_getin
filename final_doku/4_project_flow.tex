@@ -11,8 +11,10 @@ This ensures that the smartphone does not constantly try to proceed with the nex
 \item A user can now ask the backend to generate a new pseudo ID for him.
 This effectively increases the user's privacy, as NFC terminals are no longer able to track his actions.
 \item Users can now delete their accounts from the backend's database, which in general should be a useful feature.
-\item \todo{...} token wird gehashed. Sicherheit. Terminal kennt Token nicht.
-\item ...?\todo{mehr?}
+\item In contrast to the original project plan we now hash the user's token (SHA256 + salt) whenever communicating with the NFC terminal.
+As a consequence the attack surface for learning the token is effectively reduced because this token is never sent via NFC nor via Ethernet to the terminal.
+The terminal never learns the user's token, only a salted hash of it.
+%\item ...?\todo{mehr?}
 \end{itemize}
 
 \bigskip
@@ -30,10 +32,14 @@ For several reasons this turned out to be more difficult than expected.
 \item Since the NFC reader used by the TUM physics department is a proprietary product and ships with a rather small housing, we did not manage to easily mount a second NFC antenna into its housing.
 \item Integrating two different NFC readers into the door terminal entailed several physical problems.
 For two NFC readers to function independently they would need to be mounted with at least about five centimetres distance to each other.
-This led to concerns that a terminal with two distinct NFC readers might not be intuitive for users.
-\item Diese Liste muss in Details noch überarbeitet werden! Bis hier aber schon ganz gut =)\todo{!!!}
-\item Ist not etwas wirr und unstrukturiert...
-\item ...hab ich was vergessen? Vll, ein zukünftiges Ziel wäre die parallele Integration mit abwechselndem Betrieb einzuführen\todo{???}
+This led to concerns that a terminal with two distinct NFC readers might not be intuitive for users.\\
+Another idea would be to mount the two NFC readers into one housing but keep only one of them running at a time.
+If the NFC reader which is running by default (the ISO standards reader) detects a TUM student card, it sends a command to switch to the LEGIC reader.
+After the LEGIC reader has handled NFC communication with this student card it is switched off again and the default NFC reader is listening again.
+If the default NFC reader detects a smartphone, it can handle the communication itself.
+%\item Diese Liste muss in Details noch überarbeitet werden! Bis hier aber schon ganz gut =)\todo{!!!}
+%\item Ist not etwas wirr und unstrukturiert...
+%\item ...hab ich was vergessen? Vll, ein zukünftiges Ziel wäre die parallele Integration mit abwechselndem Betrieb einzuführen\todo{???}
 \end{itemize}
 
 
