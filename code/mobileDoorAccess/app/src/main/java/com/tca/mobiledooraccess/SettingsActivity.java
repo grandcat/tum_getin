@@ -14,7 +14,11 @@ import android.widget.Toast;
 import com.tca.mobiledooraccess.utils.KeyGeneratorTask;
 
 /**
- * Created by basti on 12.07.15.
+ * Settings Activity
+ *
+ * provides security features as well as the possibility to delete the account
+ * and start a fresh registration
+ *
  */
 public class SettingsActivity extends PreferenceActivity {
 

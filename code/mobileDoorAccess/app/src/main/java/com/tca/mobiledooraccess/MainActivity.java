@@ -23,6 +23,12 @@ import android.widget.Toast;
 import com.tca.mobiledooraccess.utils.KeyGeneratorTask;
 
 /**
+ * Main Activity with ActionBar
+ *
+ * implements a viewpager with 3 fragments for every registration step
+ * Checks user status with backend on every onCreate() and onResume()
+ * and shows the corresponding fragment
+ *
  * Available Preferences:
  * Bool - "registered"
  * Bool - "token_received"
@@ -38,7 +44,7 @@ import com.tca.mobiledooraccess.utils.KeyGeneratorTask;
  */
 public class MainActivity extends ActionBarActivity {
 
-    public static final String TUM_GETIN_PREFERENCES = "TGI_PREFS";
+    public static final String TUM_GETIN_PREFERENCES = "TGI_PREFS"; //Reference for Preferences
     public static Context context;
     private static final String TAG = "MainActivity";
     SharedPreferences appSettings;
@@ -55,15 +61,17 @@ public class MainActivity extends ActionBarActivity {
     MyServiceConnection mConnection;
     Messenger mService;
 
+
+    //crosschecks the user status with the backend
     final class CheckUserStatus extends AsyncTask<String, Void, Boolean> {
         protected void onPreExecute(){
+            //Show a progress dialog with a spinning weel
             mProgressDialog = new ProgressDialog(MainActivity.this);
             mProgressDialog.setIndeterminate(false);
             mProgressDialog.setMessage("Checking user status...");
             mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             mProgressDialog.show();
         }
-
         protected Boolean doInBackground(String... params) {
             boolean tokenActivated = backend.tokenActivated(params[0]);
             Log.d(TAG, "Token activated: " + tokenActivated);
@@ -79,11 +87,10 @@ public class MainActivity extends ActionBarActivity {
             mProgressDialog.dismiss();
             return tokenActivated;
         }
-
         @Override
         protected void onPostExecute(Boolean tokenActivated) {
             super.onPostExecute(tokenActivated);
-            setPage();
+            setPage(); //set the page depending on the user registration status
         }
     }
 
@@ -111,7 +118,6 @@ public class MainActivity extends ActionBarActivity {
                 }
             }
         }
-
         @Override
         public void onServiceDisconnected(ComponentName name) {
             mService = null;
@@ -119,6 +125,8 @@ public class MainActivity extends ActionBarActivity {
         }
     };
 
+    // Checks the user status internally and shows the fragment responsible for the next
+    // registration steps
     private void setPage(){
         boolean tokenReceived = appSettings.getBoolean("token_received", false);
         boolean tokenActivated = appSettings.getBoolean("token_activated", false);
@@ -131,6 +139,8 @@ public class MainActivity extends ActionBarActivity {
         }else{
             viewPager.setCurrentItem(0);
         }
+
+        //to detect a page change and update the content of the destination page
         viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -138,6 +148,7 @@ public class MainActivity extends ActionBarActivity {
             }
             @Override
             public void onPageSelected(int position) {
+                // Call the onRefresh() interface of the selected fragment
                 ((OnRefreshListener) adapterViewPager.getItem(position)).onRefresh();
             }
             @Override
@@ -153,7 +164,7 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
         viewPager = (ViewPager) findViewById(R.id.viewPager);
-        viewPager.setOffscreenPageLimit(3);
+        viewPager.setOffscreenPageLimit(3); // forces the pageviewer to create all fragments at once
         fragmentStep1 = new RegisterStep1();
         fragmentStep2 = new RegisterStep2();
         fragmentRegistered = new RegisterCompleted();
@@ -172,7 +183,7 @@ public class MainActivity extends ActionBarActivity {
         super.onResume();
         String token = appSettings.getString("tumOnlineToken", "");
         String userID = appSettings.getString("tum_id", "");
-        new CheckUserStatus().execute(token, userID);
+        new CheckUserStatus().execute(token, userID); //which calls setPage() on PostExecut to update content
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {

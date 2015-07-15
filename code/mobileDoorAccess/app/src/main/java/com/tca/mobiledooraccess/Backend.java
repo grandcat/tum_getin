@@ -27,7 +27,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- * Created by Sebastian on 19.06.2015.
+ * Backend Class
  * The Class com.tca.mobiledooraccess.Backend is used to create
  * an URL Connection via SSL to our Server
  * Since the certificate is self signed,

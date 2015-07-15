@@ -14,7 +14,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 /**
- * Created by basti on 09.07.15.
+ * Register Completed Fragment
+ *
+ * Checks the user status internally and externally by checking TUMOnline
+ *
+ * if registration complete, it will show a button to start the UnlockProgressActivity
+ *
+ *
  */
 public class RegisterCompleted extends Fragment implements OnRefreshListener {
     private static final String TAG = "RegisterCompl";

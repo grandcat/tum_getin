@@ -23,7 +23,15 @@ import android.widget.TextView;
 import com.tca.mobiledooraccess.utils.KeyGeneratorTask;
 
 /**
- * Created by basti on 07.07.15.
+ * Register Step 2 Fragment
+ *
+ * Informs the user about the token activation status in TUMOnline
+ *
+ * offers a button that opens the TUMOnline page directly from the app
+ * as well as a button for manual updating - sends a server request
+ *
+ * will get updated on every app start or resume
+ *
  */
 public class RegisterStep2 extends Fragment implements OnRefreshListener{
 
@@ -56,6 +64,8 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
         statusText.setVisibility(View.VISIBLE);
         tokenStatusText.setVisibility(View.VISIBLE);
 
+
+        //change layout appearance depending on the internal state and the TUMOnline token state
         if (!tokenReceived) {
             infoText.setText("Please request a token at Step 1");
             tokenStatus.setImageResource(R.drawable.token_not_activated);
@@ -94,6 +104,7 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
         updateLayout();
     }
 
+    //refreshs the status of the token with a rotate animation of the update button
     public void refreshTokenStatus(View v) {
         RotateAnimation ra = new RotateAnimation(0, -360,
                 Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
