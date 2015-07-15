@@ -15,7 +15,7 @@ To keep track of the registration progress, the $SharedPreference$ model of Andr
 A $Backend$ class is responsible for the backend communication over HTTPS/TLS. Since the certificate of the backend server is self signed, the certificate must be shipped with the app in the assets folder as a $*.crt$ file. The constructor of the backend then needs to manually create a $CertificateFactory$ as well as a $KeyStore$ containing the one certificate to create the final SSL context.
 For certificate pinning, it is a good advice to only store valid certificates of the backend infrastructure in the corresponding $*.crt$ file.
 
-Android forbids network operations in the UI-Thread by design. That is why every backend request is embedded in an $AsyncTask$ showing a progress circle.
+Android forbids network operations in the UI-Thread by design. That is why every backend request is embedded in an $AsyncTask$ showing a progress circle. It can also be aborted by the user if the backend is not reachable.
 
 \subsubsection{NFC Background Service}
 As described in more detail in the subsequent section \ref{sec:comm}, the Raspberry Pi acts as a NFC reader and the matching Android device behaves like a NFC card.
