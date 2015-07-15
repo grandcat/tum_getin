@@ -101,7 +101,7 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
      */
     public void onRefresh() {
         Log.d("Lifecycle-"+TAG, "onRefresh");
-        updateLayout();
+        refreshTokenStatus(getView());
     }
 
     //refreshs the status of the token with a rotate animation of the update button
@@ -153,7 +153,6 @@ public class RegisterStep2 extends Fragment implements OnRefreshListener{
                 }
             }
         }
-
     }
 
 

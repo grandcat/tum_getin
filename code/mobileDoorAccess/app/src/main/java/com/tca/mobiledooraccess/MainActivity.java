@@ -74,11 +74,12 @@ public class MainActivity extends ActionBarActivity {
         }
         protected Boolean doInBackground(String... params) {
             boolean tokenActivated = backend.tokenActivated(params[0]);
+            boolean keysGenerated = appSettings.getBoolean("keys_generated", false);
             Log.d(TAG, "Token activated: " + tokenActivated);
             SharedPreferences.Editor editor = appSettings.edit();
 
             editor.putBoolean("token_activated", tokenActivated);
-            if (tokenActivated){
+            if (tokenActivated && keysGenerated){
                 editor.putBoolean("registered", true);
             }else{
                 editor.putBoolean("registered", false);
@@ -134,8 +135,9 @@ public class MainActivity extends ActionBarActivity {
 
         if (registered){
             viewPager.setCurrentItem(2);
-        }else if(tokenReceived & !tokenActivated){
+        }else if(tokenReceived){
             viewPager.setCurrentItem(1);
+            ((OnRefreshListener) adapterViewPager.getItem(1)).onRefresh();
         }else{
             viewPager.setCurrentItem(0);
         }

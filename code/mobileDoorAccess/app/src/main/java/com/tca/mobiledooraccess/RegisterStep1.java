@@ -32,8 +32,6 @@ import com.tca.mobiledooraccess.utils.KeyGeneratorTask;
  *
  */
 
-
-
 public class RegisterStep1 extends Fragment implements OnRefreshListener{
     private static final String TAG = "RegisterStep1";
     public static final String TUM_GETIN_PREFERENCES = "TGI_PREFS";
