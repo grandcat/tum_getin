@@ -121,8 +121,6 @@ public class RegisterStep1 extends Fragment implements OnRefreshListener{
 
         protected Void doInBackground(String... params) {
             String result[] = backend.getUserCredentials(params[0]);
-            // TODO: remove critical data
-            Log.d(TAG, "Result from server: " + result[0] + " | " + result[1]);
             SharedPreferences.Editor editor = appSettings.edit();
 
             switch (result[0]){

@@ -149,7 +149,7 @@ public class SettingsActivity extends PreferenceActivity {
             SharedPreferences.Editor editor = appSettings.edit();
 
             String result[] = backend.getNewPseudoID(tumID, token);
-            Log.d(TAG, "New pseudo: " + result[0] + ", salt: " + result[1]);
+            // Log.d(TAG, "New pseudo: " + result[0] + ", salt: " + result[1]);
 
             if (!result[0].equals("0")){
                 editor.putString("pseudo_ID", result[0]);

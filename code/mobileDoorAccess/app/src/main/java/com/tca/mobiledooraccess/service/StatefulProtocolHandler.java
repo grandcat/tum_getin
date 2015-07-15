@@ -132,12 +132,12 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
                 try {
                     // Decrypt message
                     byte[] rawMsgIn = crypto.decryptCiphertext(dataIn);
-                    // Todo: if error: shutdown and cleanup
+                    // Todo: if error: clean shutdown
                     msgIn = new String(rawMsgIn, "UTF-8");
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
-                Log.i(TAG, "Decrypted msg: " + msgIn);
+                Log.d(TAG, "Decrypted msg: " + msgIn);
 
                 byte[] rawMsg = null;
                 switch (stmNextState) {
@@ -150,7 +150,7 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
                         Log.d(TAG, "Current protocol step: PROTO_MSG2_RECEIVE_NONCE");
                         // Inform UI about entering step 2
                         broadcastProtocolProgress(stmNextState);
-                        // TODO: add try block
+                        // TODO: add try block eventually
                         rawMsg = checkResponseFromTerminal(msgIn);
 
                         // Last step in state machine already reached
@@ -196,6 +196,9 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
         }
     }
 
+    /**
+     * Reset the state machine.
+     */
     private void resetStates() {
         stmNextState = PROTO_MSG1_TUM_ID_AND_NONCE;
         r_T = r_S = "";
@@ -206,10 +209,11 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
             // Initialize crypto
             crypto = new RSACrypto(appContext);
             try {
-                //crypto.loadPrivateKeyFromResource(R.raw.private_key_android);
-                //crypto.initDecryption();
+                // Note: public key should be loaded dynamically in production based on
+                // ID from terminal and a list of allowed IDs. This black list helps to ignore
+                // illegal readers (and report them)
 
-                // Note: public key should be loaded dynamically in production
+                // Public key for terminal
                 crypto.loadPublicKeyFromResource(R.raw.public_key_android);
                 crypto.initEncryption();
             } catch (InvalidKeyException e) {
@@ -284,9 +288,9 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
                 r_T = msgR_T;
                 matchingNonceRS = true;
             } else {
+                resetStates();
                 Log.e(TAG, "Received nonce r_S not the same as the one we sent. Replay attack?");
                 // TODO: generate error, abort communication or hide this detection to prevent oracle attacks
-                // TODO: reset state machine
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -303,7 +307,6 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
             );
             String salt = prefs.getString("salt", "");
             String token = prefs.getString("tumOnlineToken", "");
-            Log.d(TAG, "Salt: " + salt + ", token: " + token);
             String tokenHash = "";
             try {
                 // sha256(salt + token) as base64
@@ -338,6 +341,16 @@ public final class StatefulProtocolHandler extends BaseMsgHandler {
         broadcastProgress(0, finishedStep);
     }
 
+    /**
+     * Broadcast the progress to the UI.
+     * @param statusCode    0 if successfully finished the current step.
+     *                      Otherwise, an error occurred.
+     * @param relatedStep   The step which currently ended. Possible options are the sate machine
+     *                      states for this protocol:
+     *                      - PROTO_MSG1_TUM_ID_AND_NONCE
+     *                      - PROTO_MSG2_RECEIVE_NONCE
+     *                      - PROTO_MSG3_SEND_TOKEN_AND_NONCE
+     */
     private void broadcastProgress(int statusCode, int relatedStep) {
         Log.d(TAG, "Broadcasting protocol status " + statusCode + " in step " + relatedStep);
         Intent intent = new Intent(INTENT_PROTOCOL_PROGRESS);
