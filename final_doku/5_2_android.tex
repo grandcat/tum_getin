@@ -19,8 +19,13 @@ Android forbids network operations in the UI-Thread by design. That is why every
 
 \subsubsection{NFC Background Service}
 As described in more detail in the subsequent section \ref{sec:comm}, the Raspberry Pi acts as a NFC reader and the matching Android device behaves like a NFC card.
-For NFC Host-based Card Emulation, Android's HCE service is used to route incoming NFC requests to the \app application. In our implementation, this is \texttt{CardEmulationService}.
-Due to the fact that it is based on a common Android service, it is restricted to the same main UI thread as the main application.
+For NFC Host-based Card Emulation (\textit{HCE}), Android's HCE service is used to route incoming NFC requests to the \app application. In our implementation, this is \texttt{CardEmulationService}.
+This is also the place where the initial connection with the terminal is negotiated and where message fragmentation comes in.
+Incoming data chunks are aggregated in a \texttt{ByteArrayOutputStream} with the function \texttt{pushDataChunk}.
+Outgoing data chunks are retrieved and segmented from \texttt{ByteArrayInputStream} by the function \texttt{receiveDataChunk}.
+
+%
+Due to the fact that the HCE service is based on a common Android service, it is restricted to the same UI thread as the main application.
 There are two problems that arise from this situation:
 %
 \begin{itemize}
@@ -29,8 +34,16 @@ There are two problems that arise from this situation:
 \end{itemize}
 %
 A single threaded model cannot provide a proper solution to those circumstances.
-However, this service is the place where the initial connection with the terminal is negotiated and where message fragmentation comes in.
 
+%
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=.6\linewidth]{android_nfc_architecture}
+    \caption{Android NFC architecture.}
+    \label{fig:android:nfc_arch}
+\end{figure}
+%
 Therefore, Android offers the looper framework that allows to process tasks in a separate thread and provides a message passing infrastructure to communicate with the looper thread in a safe way.
-
+For the application, this framework is embedded within a second service \texttt{MessageExchangeService} which is started on demand if there is a connection to a known terminal.
+When the \texttt{CardEmulationService} finishes data packets, 
 %Involving NFC Host-based Card Emulation,  
