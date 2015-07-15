@@ -16,6 +16,11 @@ Only then did we begin to actually implement the defined functionality.
 \medskip
 
 \noindent
+For testing all interfaces to and from the backend you may also refer to the specifications document ($spec.txt$) which lists all possible server messages, including all possible responses to potential expected and unexpected errors.
+
+\bigskip
+
+\noindent
 High-level testing of the entire \app solution was done by using three different scenarios:
 \begin{itemize}
 \item A user has a valid TUMOnline account and is student.
@@ -50,34 +55,43 @@ Ph $\rightarrow$ BE: Register with valid TUM ID & BE returns token, pseudo ID an
 
 Ph $\rightarrow$ BE: Ask if token is activated & BE returns $true/false$ & $\rightarrow$ BE returns $true/false$ & \checkmark \\ 
  &  & $\rightarrow$ BE returns error & $\times$ \\ 
- &  & $\rightarrow$ No answer & $\times$ \\ \hline
+ &  & $\rightarrow$ No answer & $\times$ \\ 
+ &  & $\rightarrow$ BE or Ph crash & $\times$ \\ \hline
 
 Ph $\rightarrow$ BE: Send $K_{pub}$ & BE returns OK & $\rightarrow$ BE returns OK & \checkmark \\ 
  &  & $\rightarrow$ BE returns error & $\times$ \\ 
- &  & $\rightarrow$ No answer & $\times$ \\ \hline
+ &  & $\rightarrow$ No answer & $\times$ \\ 
+ &  & $\rightarrow$ BE or Ph crash & $\times$ \\ \hline
 
 Ph $\rightarrow$ BE: Renew pseudo ID and salt  & BE returns new pseudo ID and salt & $\rightarrow$ BE returns new pseudo ID and salt & \checkmark \\ 
  &  & $\rightarrow$ BE returns error & $\times$ \\ 
- &  & $\rightarrow$ No answer & $\times$ \\ \hline
+ &  & $\rightarrow$ No answer & $\times$ \\ 
+ &  & $\rightarrow$ BE or Ph crash & $\times$ \\ \hline
 
 Ph $\rightarrow$ BE: Remove user account & BE returns OK & $\rightarrow$ BE returns OK & \checkmark \\ 
  &  & $\rightarrow$ BE returns error & $\times$ \\ 
- &  & $\rightarrow$ No answer & $\times$ \\ \hline
+ &  & $\rightarrow$ No answer & $\times$ \\ 
+ &  & $\rightarrow$ BE or Ph crash & $\times$ \\ \hline
 
 \end{tabularx}
 
+\bigskip
 \noindent
 \begin{tabularx}{\textwidth}{ X X X c } 
 Test case & Expected result & Result & OK? \\ \hline\hline
 
-Ter $\rightarrow$ BE: Ask for $K_{pub}$ of a pseudo ID & What we expect & as we expected & \checkmark \\ 
+Ter $\rightarrow$ BE: Ask for $K_{pub}$ of a pseudo ID & BE returns $K_{pub}$, H(token) and salt & BE returns $K_{pub}$, H(token) and salt & \checkmark \\ 
+ &  & $\rightarrow$ BE returns error & $\times$ \\ 
+ &  & $\rightarrow$ No answer & $\times$ \\ 
+ &  & $\rightarrow$ BE or Ter crash & $\times$ \\ \hline
 
 
-Make something... & What we expect & as we expected & \checkmark \\ 
-Make something... & What we expect & as we expected & \checkmark \\ 
-Make something... & What we expect & as we expected & \checkmark \\ 
-Make something... & What we expect & as we expected & \checkmark \\ 
-Make something... & What we expect & as we expected & \checkmark \\ 
+\end{tabularx}
+
+\bigskip
+\noindent
+\begin{tabularx}{\textwidth}{ X X X c } 
+Test case & Expected result & Result & OK? \\ \hline\hline
 
 Enter no ID at step 1 & Please enter ID message & as we expected & \checkmark \\ 
 Enter non existent ID at step 1 & Wrong ID message & as we expected & \checkmark \\ 
