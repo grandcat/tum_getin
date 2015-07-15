@@ -80,7 +80,7 @@ Ph $\rightarrow$ BE: Remove user account & BE returns OK & $\rightarrow$ BE retu
 \begin{tabularx}{\textwidth}{ X X X c } 
 Test case & Expected result & Result & OK? \\ \hline\hline
 
-Ter $\rightarrow$ BE: Ask for $K_{pub}$ of a pseudo ID & BE returns $K_{pub}$, H(token) and salt & BE returns $K_{pub}$, H(token) and salt & \checkmark \\ 
+Ter $\rightarrow$ BE: Ask for $K_{pub}$ of a pseudo ID & BE returns $K_{pub}$, H(token) and salt & $\rightarrow$ BE returns $K_{pub}$, H(token) and salt & \checkmark \\ 
  &  & $\rightarrow$ BE returns error & $\times$ \\ 
  &  & $\rightarrow$ No answer & $\times$ \\ 
  &  & $\rightarrow$ BE or Ter crash & $\times$ \\ \hline
@@ -93,15 +93,15 @@ Ter $\rightarrow$ BE: Ask for $K_{pub}$ of a pseudo ID & BE returns $K_{pub}$, H
 \begin{tabularx}{\textwidth}{ X X X c } 
 Test case & Expected result & Result & OK? \\ \hline\hline
 
-Enter no ID at step 1 & Please enter ID message & as we expected & \checkmark \\ 
-Enter non existent ID at step 1 & Wrong ID message & as we expected & \checkmark \\ 
-Enter real ID & Backend connection and forwarding to step 2 & as we expected & \checkmark \\ 
-Swipe through pages without entering an ID & Display status correctly at all times & as we expected & \checkmark \\ 
-Open/resume app & crosscheck user status with backend and display the appropriate page & as we expected& \checkmark \\ 
-Resume app after token activation & update step 2 and forward the user to register complete & as we expected & \checkmark \\ 
-Delete token by hand, resume to app & pages need to be updated properly, user gets forwarded to step 1 & as we expected & \checkmark \\ 
+Enter no ID at step 1 & Please enter ID message & as expected & \checkmark \\ 
+Enter non existent ID at step 1 & Wrong ID message & as expected & \checkmark \\ 
+Enter real ID & Backend connection and forwarding to step 2 & as expected & \checkmark \\ 
+Swipe through pages without entering an ID & Display status correctly at all times & as expected & \checkmark \\ 
+Open/resume app & crosscheck user status with backend and display the appropriate page & as expected& \checkmark \\ 
+Resume app after token activation & update step 2 and forward the user to register complete & as expected & \checkmark \\ 
+Delete token by hand, resume to app & pages need to be updated properly, user gets forwarded to step 1 & as expected & \checkmark \\ 
 
-Select settings menu at any time & open settings page & rarely sporadically, the app crashes & $\times$ \\ 
+%Select settings menu at any time & open settings page & rarely sporadically, the app crashes & $\times$ \\ 
 \end{tabularx}
 
 
