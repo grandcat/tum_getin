@@ -65,26 +65,26 @@ Copy the sample configuration file to the system location:
    # mkdir /etc/nfc
    # cp libnfc.conf.sample /etc/nfc/libnfc.conf
 \end{lstlisting}
-
-
 %
 Edit the content of the configuration file. The relevant lines should be configured as follows:
 \begin{lstlisting}[breaklines=true]
-allow_autoscan = true
-log_level = 2
-device.name = "itead_pn532"
-device.connstring = "pn532_spi:/dev/spidev0.0:500000"
+   allow_autoscan = true
+   log_level = 2
+   device.name = "itead_pn532"
+   device.connstring = "pn532_spi:/dev/spidev0.0:500000"
 \end{lstlisting}
 %
 Install pyNFC (\url{https://github.com/grandcat/pynfc}) for Python 3 as described in its \texttt{README.md}.
-Open terminal and change into the cloned directory.
+%
+\\
+\noindent
+To run the final terminal application, fetch the \app repository and start the application.
 \begin{lstlisting}
-cd ~/tum_getin/code/nfcTerminal/PyNfcTerminal
+   $ cd tum_getin/code/nfcTerminal/PyNfcTerminal
+   $ python3 main.py
 \end{lstlisting}
-Execute the main.py:
-\begin{lstlisting}
-python3 main.py
-\end{lstlisting}
+%
+\textbf{Important note:} it is highly advised to generate a new key pair for the terminal. Its public key has also to be included in the Android application.
 
 
 %cd ~git d
@@ -145,8 +145,8 @@ ProgressActivity by itself, informing the user about the communication process
 \begin{tabular}{*{2}{m{0.48\textwidth}}}
 \hline
 A settings page is available in every stage of the registration process. 
-Here, the user can delete his account at any time. Also for security reasons, it is possible to create a new key pair and push it to the backend
-as well as requesting a new pseudo id.
+Here, the user can delete his account at any time. For users concerned about privacy and security, it is even possible to create a new key pair and push it to the backend
+as well as requesting a new pseudo identification.
 &\includegraphics[scale=0.1]{Settings}\\
 \hline
 \end{tabular}

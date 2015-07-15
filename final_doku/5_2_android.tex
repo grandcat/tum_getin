@@ -21,6 +21,7 @@ Android forbids network operations in the UI-Thread by design. That is why every
 As described in more detail in the subsequent section \ref{sec:comm}, the Raspberry Pi acts as a NFC reader and the matching Android device behaves like a NFC card.
 For NFC Host-based Card Emulation (\textit{HCE}), Android's HCE service is used to route incoming NFC requests to the \app application. In our implementation, this is \texttt{CardEmulationService}.
 This is also the place where the initial connection with the terminal is negotiated and where message fragmentation comes in.
+Referencing to figure \ref{fig:android:nfc_arch}, it is illustrated in the right half.
 Incoming data chunks are aggregated in a \texttt{ByteArrayOutputStream} with the function \texttt{pushDataChunk}.
 Outgoing data chunks are retrieved and segmented from \texttt{ByteArrayInputStream} by the function \texttt{receiveDataChunk}.
 
@@ -45,5 +46,13 @@ A single threaded model cannot provide a proper solution to those circumstances.
 %
 Therefore, Android offers the looper framework that allows to process tasks in a separate thread and provides a message passing infrastructure to communicate with the looper thread in a safe way.
 For the application, this framework is embedded within a second service \texttt{MessageExchangeService} which is started on demand if there is a connection to a known terminal.
-When the \texttt{CardEmulationService} finishes data packets, 
-%Involving NFC Host-based Card Emulation,  
+% When the \texttt{CardEmulationService} finishes incoming data packets,
+Incoming packets which are completely assembled by \texttt{CardEmulationService}, are added to the message queue of the looper within \texttt{MessageExchangeService}.
+As \texttt{CardEmulationService} also provides an Android \texttt{messenger} instance, the return path enables a way to set outgoing messages to the NFC target.
+Similar to the input direction, the emulation service fragments the message into chunks and cares about asynchronous transmission.
+Figure \ref{fig:android:nfc_arch} depicts the interconnection based on message passing between \texttt{MessageExchangeService} and \texttt{CardEmulationService} powered by different threads, respectively.
+
+The handler \texttt{StatefulProtocolHandler} is the core of the NFC application. It decrypts and encrypts interchanged messages by using its dynamically generated private key and the public key of the terminal, respectively.
+In addition to that, it handles the high-level protocol to support an secured authentication mechanism. For details about the deployed protocol, please refer to section \ref{sec:proto:pubkey}.
+Another important fact is that the simple state machine deployed remembers proceedings in the protocol so that it cannot be tricked like some NFC cards.
+The progress of the authentication is submitted by a \texttt{LocalBroadcastManager}. \texttt{UnlockProgressActivity} visualizes the progress as soon as the mobile device touches a terminal.
