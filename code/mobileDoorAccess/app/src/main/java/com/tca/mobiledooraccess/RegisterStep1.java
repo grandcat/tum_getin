@@ -21,10 +21,16 @@ import android.widget.Toast;
 import com.tca.mobiledooraccess.utils.KeyGeneratorTask;
 
 /**
- * Created by basti on 07.07.15.
+ * Register Step 1 Fragment
+ *
+ * Asks for a user ID
+ *
+ * Checks the userinput if its valid
+ * If the id is valid, the backend answers with a user token that can be stored
+ * The fragment will forward the user to the next registration step when backend communication
+ * is finished
+ *
  */
-
-
 
 public class RegisterStep1 extends Fragment implements OnRefreshListener{
     private static final String TAG = "RegisterStep1";
@@ -67,27 +73,30 @@ public class RegisterStep1 extends Fragment implements OnRefreshListener{
                     Toast.makeText(getActivity(), "You did not enter a TUM-ID", Toast.LENGTH_SHORT).show();
                     return;
                 } else {
-                    new SendTUMID().execute(tumID);
+                    new SendTUMID().execute(tumID); //calls onServerResponse after execution
+                                                    // which will set the next page
                 }
             }
         });
 
+
+        //Supports posting the id over the keyboard action button on the right lower corner
         EditText editText = (EditText) view.findViewById(R.id.editTextTUMID);
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 boolean handled = false;
                 if (actionId == EditorInfo.IME_ACTION_SEND) {
-                    button.performClick();
+                    button.performClick(); // calls the button onClick method
                     handled = true;
                 }
                 return handled;
             }
         });
-
         return view;
     }
 
+    //Called as an PostExecute Method of the AsyncTask that communicates with the backend
     public void onServerResponse(){
         EditText editText = (EditText) getView().findViewById(R.id.editTextTUMID);
         editText.setText("");
@@ -95,11 +104,8 @@ public class RegisterStep1 extends Fragment implements OnRefreshListener{
         if (appSettings.getBoolean("token_received", false)){
             InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
-            // new KeyGeneratorTask(MainActivity.context);
             MainActivity.viewPager.setCurrentItem(1);
         } else {
-            //InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-            //imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
             Toast.makeText(getActivity(), "Your TUM ID is invalid or already registered.", Toast.LENGTH_LONG).show();
         }
     }
@@ -120,6 +126,7 @@ public class RegisterStep1 extends Fragment implements OnRefreshListener{
             SharedPreferences.Editor editor = appSettings.edit();
 
             switch (result[0]){
+                //all kind of error codes, break if one of those are the answer of the backend
                 case "20":
                 case "21":
                 case "30":

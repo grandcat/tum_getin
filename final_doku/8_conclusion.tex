@@ -1,21 +1,31 @@
 \section{Conclusion}\label{sec:conclusion}
 
-The represented area access solution is an easy and comfortable way for users to authenticate themself. Even though the solution in this case only uses
-the immatriculation status of the users, it can easily be adapted for more advanced rules if the information is linked to the users in a database (e.g. chair access restricted to chair members).
-The app is built modular, so it can be easily integrated into the existing TUM-Campus-App to provide an overall student solution. To get the system out of the prototype stage, the backend needs to be hosted at a TUM-Server with  a valid not self signed certificate.
+The presented area access solution is an easy and comfortable way for users to authenticate themselves via smartphone NFC communication.
+Even though the \app solution currently only uses the immatriculation status of the users, it can easily be adapted for more advanced rules.
+The current focus on secure authentication could then be extended by useful authorization mechanisms.
+Linking further user information in a database would allow scenarios like ``chair access restricted to chair members only''.
+
+Since \app is built modularly, it can easily be integrated into the existing TUM-Campus-App to provide an overall student solution.
+
+When proceeding into a production phase the backend of course will need to be hosted on a TUM server.
+Additionally, the backend's current X509 certificate would need to be replaced by one that is signed by the TU München.
+Since we employ \textit{key pinning} for additional security, this will also entail changes in the Android app and the NFC terminal.
+
+A productive version should also contain the possibility to interoperate with a LEGIC transceiver as explained in section \ref{sec:project_flow} in order to provide smartphone and student card NFC communication in one housing.
+This would require an additional small script on the NFC terminal which manages and switches the two NFC readers.
+Backend and Android app are not affected by this change.
+
+Altogether, after these little additional steps \app is a mature solution and ready to be employed in practice.
 
 
+\iffalse
 Outlook?
-
-- Can be adapted for more advanced rules. Do more fine-grained access control. E.g. doors at chair X only open if someone from chair X is allowed to.
 
 - Die Lösung im Zusammenspiel mit dem Legic-Zeugs beschreiben. Das mit zwischen den zwei Readern hin- und herschalten.
 Wobei Teile dieser Problembeschreibung schon ins Kapitel ``project flow'' müssen.
 
-- Könnte man in die TUM-Campus-App integrieren...
-
 - Was man in der Praxis machen müsste: halbfertige Registrierungen (Token nicht aktiviert) nach einiger Zeit wieder aus dem Backend löschen. Sonst könnte jemand das Backend total zumüllen. DoS-mäßig...
 
-- Natürlich müsste man das Backend irgendwo auf einem TUM-Server hosten und neue Zertifikate verwenden (von der TUM ausgestellt und signiert).
-
 - (eventuell) Man müsste IP-Adressen von requests im backend loggen. Sonst könnte man mittels Backend als Proxy TUMOnline spammen.
+
+\fi
