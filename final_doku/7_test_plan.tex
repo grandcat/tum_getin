@@ -43,26 +43,26 @@ E.g.~TUMOnline may send an error message if a user has reached his token limit (
 \begin{tabularx}{\textwidth}{ X X X c } 
 Test case & Expected result & Result & OK? \\ \hline\hline
 
-\multirow{4}{*}{Ph $\rightarrow$ BE: Register with valid TUM ID} & BE returns token, pseudo ID and salt & BE returns token, pseudo ID and salt & \checkmark \\ 
- & BE returns token, pseudo ID and salt & BE returns error & $\times$ \\ 
- & BE returns token, pseudo ID and salt & No answer & $\times$ \\ 
- & BE returns token, pseudo ID and salt & BE or Ph crash & $\times$ \\ \hline
+Ph $\rightarrow$ BE: Register with valid TUM ID & BE returns token, pseudo ID and salt & $\rightarrow$ BE returns token, pseudo ID and salt & \checkmark \\ 
+ &  & $\rightarrow$ BE returns error & $\times$ \\ 
+ &  & $\rightarrow$ No answer & $\times$ \\ 
+ &  & $\rightarrow$ BE or Ph crash & $\times$ \\ \hline
 
-Ph $\rightarrow$ BE: Ask if token is activated & BE returns $true/false$ & BE returns $true/false$ & \checkmark \\ 
-Ph $\rightarrow$ BE: Ask if token is activated & BE returns $true/false$ & BE returns error & $\times$ \\ 
-Ph $\rightarrow$ BE: Ask if token is activated & BE returns $true/false$ & No answer & $\times$ \\ \hline
+Ph $\rightarrow$ BE: Ask if token is activated & BE returns $true/false$ & $\rightarrow$ BE returns $true/false$ & \checkmark \\ 
+ &  & $\rightarrow$ BE returns error & $\times$ \\ 
+ &  & $\rightarrow$ No answer & $\times$ \\ \hline
 
-Ph $\rightarrow$ BE: Send $K_{pub}$ & BE returns OK & BE returns OK & \checkmark \\ 
-Ph $\rightarrow$ BE: Send $K_{pub}$ & BE returns OK & BE returns error & $\times$ \\ 
-Ph $\rightarrow$ BE: Send $K_{pub}$ & BE returns OK & No answer & $\times$ \\ \hline
+Ph $\rightarrow$ BE: Send $K_{pub}$ & BE returns OK & $\rightarrow$ BE returns OK & \checkmark \\ 
+ &  & $\rightarrow$ BE returns error & $\times$ \\ 
+ &  & $\rightarrow$ No answer & $\times$ \\ \hline
 
-Ph $\rightarrow$ BE: Renew pseudo ID and salt  & BE returns new pseudo ID and salt & BE returns new pseudo ID and salt & \checkmark \\ 
-Ph $\rightarrow$ BE: Renew pseudo ID and salt  & BE returns new pseudo ID and salt & BE returns error & $\times$ \\ 
-Ph $\rightarrow$ BE: Renew pseudo ID and salt  & BE returns new pseudo ID and salt & No answer & $\times$ \\ \hline
+Ph $\rightarrow$ BE: Renew pseudo ID and salt  & BE returns new pseudo ID and salt & $\rightarrow$ BE returns new pseudo ID and salt & \checkmark \\ 
+ &  & $\rightarrow$ BE returns error & $\times$ \\ 
+ &  & $\rightarrow$ No answer & $\times$ \\ \hline
 
-Ph $\rightarrow$ BE: Remove user account & BE returns OK & BE returns OK & \checkmark \\ 
-Ph $\rightarrow$ BE: Remove user account & BE returns OK & BE returns error & $\times$ \\ 
-Ph $\rightarrow$ BE: Remove user account & BE returns OK & No answer & $\times$ \\ \hline
+Ph $\rightarrow$ BE: Remove user account & BE returns OK & $\rightarrow$ BE returns OK & \checkmark \\ 
+ &  & $\rightarrow$ BE returns error & $\times$ \\ 
+ &  & $\rightarrow$ No answer & $\times$ \\ \hline
 
 \end{tabularx}
 
