@@ -82,7 +82,7 @@ The scheme is enhanced to provide further security features specific for the uti
   {#3};
 }
 %
-\begin{figure}[h!]
+\begin{figure}[h]
 	\begin{sequencediagram}
 		\newinst{S}{Smartphone $ S $}
 		\newinst[8.5]{T}{NFC Terminal $ T $}
@@ -96,9 +96,12 @@ The scheme is enhanced to provide further security features specific for the uti
 		%\filldraw[fill=black!30] ($(RRC Connection Setup to)+(0,-.3)$) rectangle ($(Synchronization Indication from) +(0,.3)$)
 		%node[midway] {L1 Synchronization};
 	\end{sequencediagram}
+	\caption{Protocol design for secured communication between NFC terminal and mobile device.}
+	\label{fig:nfc:protocol}
 \end{figure}
 %
 \noindent
+Figure \ref{fig:nfc:protocol} describes our proposed protocol.
 Explanations:
 %
 \begin{enumerate}
