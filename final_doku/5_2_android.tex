@@ -19,7 +19,18 @@ Android forbids network operations in the UI-Thread by design. That is why every
 
 \subsubsection{NFC Background Service}
 As described in more detail in the subsequent section \ref{sec:comm}, the Raspberry Pi acts as a NFC reader and the matching Android device behaves like a NFC card.
-For NFC Host-based Card Emulation, Android's HCE service is used to route incoming NFC requests to the \app application.
+For NFC Host-based Card Emulation, Android's HCE service is used to route incoming NFC requests to the \app application. In our implementation, this is \texttt{CardEmulationService}.
 Due to the fact that it is based on a common Android service, it is restricted to the same main UI thread as the main application.
+There are two problems that arise from this situation:
+%
+\begin{itemize}
+	\item Doing complex NFC communication on the main thread might reduce the responsiveness of the visible UI.
+	\item NFC readers require immediate feedback from a card. In our case, the emulated card must always response although still having to finish some cryptography, for instance.
+\end{itemize}
+%
+A single threaded model cannot provide a proper solution to those circumstances.
+However, this service is the place where the initial connection with the terminal is negotiated and where message fragmentation comes in.
+
+Therefore, Android offers the looper framework that allows to process tasks in a separate thread and provides a message passing infrastructure to communicate with the looper thread in a safe way.
 
 %Involving NFC Host-based Card Emulation,  
